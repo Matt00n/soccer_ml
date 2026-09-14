@@ -1,0 +1,39 @@
+# Default Configuration for Soccer GATv2 with D2 Group Equivariance
+# Based on TacticAI (arXiv:2310.10553) & DeepMind CLRS GATv2FullD2
+
+data:
+  num_players: 22
+  node_dim: 7       # x, y, vx, vy, height, weight, ball_possession
+  edge_dim: 1       # opposing team indicator
+  graph_dim: 4      # global attributes / conditioning
+  pitch_length: 105.0
+  pitch_width: 68.0
+
+model:
+  hidden_dim: 64
+  num_layers: 4     # T = 4 group convolution layers as in TacticAI
+  nb_heads: 8       # 8 attention heads
+  dropout: 0.0
+  enable_receiver_head: true
+  enable_shot_head: true
+  enable_creativity_head: true
+  enable_vae_head: true
+  vae_latent_dim: 16
+
+training:
+  batch_size: 128   # 128 / 256 from TacticAI S.Table 1
+  epochs: 50
+  lr: 0.0001        # 1e-4 from TacticAI S.Table 1
+  weight_decay: 0.0001  # 1e-4 L2 regularization from TacticAI S.Table 1
+  beta1: 0.9
+  beta2: 0.999
+  eps: 1e-8
+  clip_grad_norm: 1.0
+  checkpoint_dir: "checkpoints"
+
+loss_weights:
+  receiver_weight: 1.0
+  shot_weight: 1.0
+  creativity_weight: 1.0
+  vae_weight: 1.0
+  vae_kl_weight: 0.01

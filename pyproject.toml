@@ -1,15 +1,21 @@
 [project]
 name = "soccer-ml"
 version = "0.1.0"
-description = ""
+description = "Soccer analytics using Graph Attention Networks (GATv2) with D2 group equivariance"
 authors = [
-    {name = "Matthias Lehmann",email = "matthiaslehmann@MacBook-Pro.com"}
+    {name = "Matthias Lehmann", email = "matthiaslehmann@MacBook-Pro.com"}
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
+    "torch>=2.2.0",
+    "numpy>=1.26.0",
+    "scipy>=1.12.0",
+    "pyyaml>=6.0",
+    "tqdm>=4.66.0",
+    "pytest>=8.0.0",
 ]
-
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
