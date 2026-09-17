@@ -67,10 +67,24 @@ def load_config(config_path: Optional[str] = None) -> SoccerConfig:
     with open(config_path, "r", encoding="utf-8") as f:
         raw_dict = yaml.safe_load(f) or {}
 
-    data_cfg = DataConfig(**raw_dict.get("data", {}))
-    model_cfg = ModelConfig(**raw_dict.get("model", {}))
-    train_cfg = TrainingConfig(**raw_dict.get("training", {}))
-    loss_cfg = LossWeightsConfig(**raw_dict.get("loss_weights", {}))
+    data_dict = raw_dict.get("data", {})
+    model_dict = raw_dict.get("model", {})
+    train_dict = raw_dict.get("training", {})
+    loss_dict = raw_dict.get("loss_weights", {})
+
+    # Ensure float types for training parameters that YAML might parse as str or int
+    for float_key in ["lr", "weight_decay", "beta1", "beta2", "eps", "clip_grad_norm"]:
+        if float_key in train_dict:
+            train_dict[float_key] = float(train_dict[float_key])
+
+    for float_key in ["receiver_weight", "shot_weight", "creativity_weight", "vae_weight", "vae_kl_weight"]:
+        if float_key in loss_dict:
+            loss_dict[float_key] = float(loss_dict[float_key])
+
+    data_cfg = DataConfig(**data_dict)
+    model_cfg = ModelConfig(**model_dict)
+    train_cfg = TrainingConfig(**train_dict)
+    loss_cfg = LossWeightsConfig(**loss_dict)
 
     return SoccerConfig(
         data=data_cfg,

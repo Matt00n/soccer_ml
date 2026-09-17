@@ -1,6 +1,12 @@
 """CLI script to evaluate Soccer GATv2 model from a saved checkpoint."""
 
 import argparse
+import sys
+from pathlib import Path
+
+# Ensure soccer_ml package root is on sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from torch.utils.data import DataLoader
 
 from soccer_ml.data.dataset import SyntheticSoccerDataset, collate_soccer_graphs

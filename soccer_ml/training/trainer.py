@@ -1,7 +1,8 @@
 """Full Training Pipeline for Soccer GATv2."""
 
-from typing import Optional, Dict, Any
 from pathlib import Path
+from typing import Any, Dict, Optional
+
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -9,10 +10,10 @@ from tqdm import tqdm
 from soccer_ml.models.soccer_gat import SoccerGATv2Model
 from soccer_ml.training.losses import SoccerMultiTaskLoss
 from soccer_ml.training.metrics import (
-    compute_topk_accuracy,
+    MetricTracker,
     compute_binary_metrics,
     compute_regression_metrics,
-    MetricTracker,
+    compute_topk_accuracy,
 )
 
 
@@ -75,7 +76,7 @@ class SoccerTrainer:
         self.model.train()
         tracker = MetricTracker()
 
-        pbar = tqdm(self.train_loader, desc=f"Epoch {self.current_epoch + 1} [Train]")
+        pbar = tqdm(self.train_loader, desc=f"Epoch {self.current_epoch} [Train]")
         for batch in pbar:
             batch = batch.to(self.device)
             self.optimizer.zero_grad()
@@ -87,7 +88,9 @@ class SoccerTrainer:
             total_loss.backward()
 
             if self.clip_grad_norm is not None:
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_grad_norm)
+                torch.nn.utils.clip_grad_norm_(
+                    self.model.parameters(), self.clip_grad_norm
+                )
 
             self.optimizer.step()
 
@@ -111,7 +114,7 @@ class SoccerTrainer:
         self.model.eval()
         tracker = MetricTracker()
 
-        pbar = tqdm(loader, desc=f"Epoch {self.current_epoch + 1} [Eval]")
+        pbar = tqdm(loader, desc=f"Epoch {self.current_epoch} [Eval]")
         for batch in pbar:
             batch = batch.to(self.device)
             outputs = self.model(batch)
@@ -121,13 +124,17 @@ class SoccerTrainer:
 
             # Task 1: Receiver prediction top-1 & top-3 accuracy
             if "receiver_logits" in outputs and batch.receiver_label is not None:
-                topk = compute_topk_accuracy(outputs["receiver_logits"], batch.receiver_label)
+                topk = compute_topk_accuracy(
+                    outputs["receiver_logits"], batch.receiver_label
+                )
                 for k, v in topk.items():
                     batch_metrics[f"val_receiver_{k}"] = v
 
             # Task 2: Shot prediction F1 & accuracy
             if "shot_logits" in outputs and batch.shot_label is not None:
-                shot_metrics = compute_binary_metrics(outputs["shot_logits"], batch.shot_label)
+                shot_metrics = compute_binary_metrics(
+                    outputs["shot_logits"], batch.shot_label
+                )
                 for k, v in shot_metrics.items():
                     batch_metrics[f"val_shot_{k}"] = v
 
@@ -143,6 +150,60 @@ class SoccerTrainer:
 
         return tracker.compute()
 
+    @staticmethod
+    def _format_metrics(metrics: Dict[str, float], prefix: str = "") -> str:
+        """Convert a dict of metrics to a compact readable string."""
+        if not metrics:
+            return ""
+
+        parts = []
+        for key, value in metrics.items():
+            if prefix and not key.startswith(prefix):
+                continue
+            if "loss" in key:
+                parts.append(f"{key}={value:.4f}")
+            elif "acc" in key or "accuracy" in key:
+                parts.append(f"{key}={value:.2%}")
+            elif "mse" in key or "mae" in key:
+                parts.append(f"{key}={value:.4f}")
+            elif "f1" in key or "precision" in key or "recall" in key:
+                parts.append(f"{key}={value:.3f}")
+            else:
+                parts.append(f"{key}={value:.4f}")
+
+        return ", ".join(parts)
+
+    def _print_epoch_summary(
+        self,
+        train_metrics: Dict[str, float],
+        val_metrics: Dict[str, float],
+        train_eval_metrics: Dict[str, float],
+        epoch: int,
+    ):
+        """Print a compact epoch summary including receiver accuracy metrics."""
+        metric_parts = [
+            f"Epoch {epoch:03d}",
+            f"train_loss={train_metrics.get('total_loss', 0.0):.4f}",
+        ]
+
+        if train_eval_metrics:
+            metric_parts.append(
+                f"train_eval_loss={train_eval_metrics.get('train_total_loss', 0.0):.4f}"
+            )
+            for key in ["train_receiver_top_1_acc", "train_receiver_top_3_acc"]:
+                if key in train_eval_metrics:
+                    metric_parts.append(f"{key}={train_eval_metrics[key]:.2%}")
+
+        if val_metrics:
+            metric_parts.append(
+                f"val_loss={val_metrics.get('val_total_loss', 0.0):.4f}"
+            )
+            for key in ["val_receiver_top_1_acc", "val_receiver_top_3_acc"]:
+                if key in val_metrics:
+                    metric_parts.append(f"{key}={val_metrics[key]:.2%}")
+
+        print(" | ".join(metric_parts))
+
     def fit(self, num_epochs: int) -> Dict[str, Any]:
         """Train the model for a specified number of epochs."""
         history: Dict[str, list] = {}
@@ -151,9 +212,18 @@ class SoccerTrainer:
             self.current_epoch += 1
 
             train_metrics = self.train_epoch()
+            train_eval_metrics_raw = (
+                self.evaluate(data_loader=self.train_loader)
+                if self.train_loader is not None
+                else {}
+            )
+            train_eval_metrics = {
+                k.replace("val_", "train_"): v
+                for k, v in train_eval_metrics_raw.items()
+            }
             val_metrics = self.evaluate() if self.val_loader is not None else {}
 
-            combined_metrics = {**train_metrics, **val_metrics}
+            combined_metrics = {**train_metrics, **train_eval_metrics, **val_metrics}
 
             for k, v in combined_metrics.items():
                 if k not in history:
@@ -162,21 +232,20 @@ class SoccerTrainer:
 
             # Checkpoint management
             if self.checkpoint_dir:
-                val_loss = combined_metrics.get("val_total_loss", train_metrics.get("total_loss"))
+                val_loss = combined_metrics.get(
+                    "val_total_loss", train_metrics.get("total_loss")
+                )
                 is_best = val_loss < self.best_val_loss
                 if is_best:
                     self.best_val_loss = val_loss
                     self.save_checkpoint("best_model.pt")
                 self.save_checkpoint("last_model.pt")
 
-            print(
-                f"Epoch {self.current_epoch:03d} | "
-                f"Train Loss: {train_metrics.get('total_loss', 0.0):.4f} | "
-                + (
-                    f"Val Loss: {val_metrics.get('val_total_loss', 0.0):.4f}"
-                    if val_metrics
-                    else ""
-                )
+            self._print_epoch_summary(
+                train_metrics=train_metrics,
+                val_metrics=val_metrics,
+                train_eval_metrics=train_eval_metrics,
+                epoch=self.current_epoch,
             )
 
         return history

@@ -1,7 +1,13 @@
 """CLI script to train Soccer GATv2 model."""
 
 import argparse
-from torch.utils.data import DataLoader
+import sys
+from pathlib import Path
+import torch
+from torch.utils.data import DataLoader, random_split
+
+# Ensure soccer_ml package root is on sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from soccer_ml.data.dataset import SyntheticSoccerDataset, collate_soccer_graphs
 from soccer_ml.models.soccer_gat import SoccerGATv2Model
@@ -16,7 +22,9 @@ def parse_args():
     parser.add_argument("--epochs", type=int, default=None, help="Override number of epochs")
     parser.add_argument("--batch-size", type=int, default=None, help="Override batch size")
     parser.add_argument("--lr", type=float, default=None, help="Override learning rate")
-    parser.add_argument("--num-samples", type=int, default=256, help="Number of synthetic samples (for testing)")
+    parser.add_argument("--num-samples", type=int, default=256, help="Number of synthetic samples (if no 360 path)")
+    parser.add_argument("--three-sixty", type=str, default=None, help="Path to StatsBomb 360 JSON file")
+    parser.add_argument("--events", type=str, default=None, help="Path to StatsBomb events JSON file")
     return parser.parse_args()
 
 
@@ -34,23 +42,40 @@ def main():
     print(f"Epochs: {epochs} | Batch size: {batch_size} | Learning rate: {lr}")
     print("=" * 60)
 
-    # Prepare datasets (using synthetic soccer dataset until raw StatsBomb data parser is plugged in)
-    train_dataset = SyntheticSoccerDataset(
-        num_samples=args.num_samples,
-        num_players=config.data.num_players,
-        node_dim=config.data.node_dim,
-        edge_dim=config.data.edge_dim,
-        graph_dim=config.data.graph_dim,
-        seed=42,
-    )
-    val_dataset = SyntheticSoccerDataset(
-        num_samples=max(32, args.num_samples // 4),
-        num_players=config.data.num_players,
-        node_dim=config.data.node_dim,
-        edge_dim=config.data.edge_dim,
-        graph_dim=config.data.graph_dim,
-        seed=1337,
-    )
+    # Prepare datasets
+    if args.three_sixty:
+        from soccer_ml.data.statsbomb import StatsBomb360Dataset
+        print(f"Loading StatsBomb 360 data from: {args.three_sixty}")
+        full_dataset = StatsBomb360Dataset(
+            three_sixty_path=args.three_sixty,
+            events_path=args.events,
+        )
+        n_total = len(full_dataset)
+        n_train = int(0.8 * n_total)
+        n_val = n_total - n_train
+        from torch.utils.data import random_split
+        train_dataset, val_dataset = random_split(
+            full_dataset, [n_train, n_val], generator=torch.Generator().manual_seed(42)
+        )
+        print(f"Loaded {n_total} total frames (Train: {len(train_dataset)}, Val: {len(val_dataset)})")
+    else:
+        print("Using synthetic soccer dataset for training")
+        train_dataset = SyntheticSoccerDataset(
+            num_samples=args.num_samples,
+            num_players=config.data.num_players,
+            node_dim=config.data.node_dim,
+            edge_dim=config.data.edge_dim,
+            graph_dim=config.data.graph_dim,
+            seed=42,
+        )
+        val_dataset = SyntheticSoccerDataset(
+            num_samples=max(32, args.num_samples // 4),
+            num_players=config.data.num_players,
+            node_dim=config.data.node_dim,
+            edge_dim=config.data.edge_dim,
+            graph_dim=config.data.graph_dim,
+            seed=1337,
+        )
 
     train_loader = DataLoader(
         train_dataset,
