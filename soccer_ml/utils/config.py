@@ -9,11 +9,13 @@ import yaml
 @dataclass
 class DataConfig:
     num_players: int = 22
-    node_dim: int = 7
+    node_dim: int = 9
     edge_dim: int = 1
-    graph_dim: int = 4
-    pitch_length: float = 105.0
-    pitch_width: float = 68.0
+    graph_dim: int = 7
+    pitch_length: float = 120.0
+    pitch_width: float = 80.0
+    grid_m: int = 12
+    grid_n: int = 8
 
 
 @dataclass
@@ -22,7 +24,9 @@ class ModelConfig:
     num_layers: int = 4
     nb_heads: int = 8
     dropout: float = 0.0
+    use_mlp: bool = False
     enable_receiver_head: bool = True
+    enable_target_location_head: bool = True
     enable_shot_head: bool = True
     enable_creativity_head: bool = True
     enable_vae_head: bool = True
@@ -45,6 +49,7 @@ class TrainingConfig:
 @dataclass
 class LossWeightsConfig:
     receiver_weight: float = 1.0
+    target_location_weight: float = 1.0
     shot_weight: float = 1.0
     creativity_weight: float = 1.0
     vae_weight: float = 1.0

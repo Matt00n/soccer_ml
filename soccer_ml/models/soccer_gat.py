@@ -9,6 +9,7 @@ from soccer_ml.models.backbone import D2GATv2Backbone
 from soccer_ml.models.heads import (
     NodeInvariantHead,
     GraphInvariantHead,
+    PitchTargetGridHead,
     EquivariantVAEHead,
     frame_average_views,
 )
@@ -19,21 +20,25 @@ class SoccerGATv2Model(nn.Module):
 
     Supports:
         1. Node classification (e.g., Receiver prediction, ball target player)
-        2. Node regression (e.g., Player creativity index, expected threat per player)
-        3. Graph classification / regression (e.g., Threatening shot likelihood, expected goals)
-        4. Generative VAE refinement (e.g., Adjusting player positions and velocities conditioned on outcome)
+        2. Pitch target grid prediction (e.g., Target location discretized into M x N zones)
+        3. Node regression (e.g., Player creativity index, expected threat per player)
+        4. Graph classification / regression (e.g., Threatening shot likelihood, expected goals)
+        5. Generative VAE refinement (e.g., Adjusting player positions and velocities conditioned on outcome)
     """
 
     def __init__(
         self,
-        in_node_dim: int = 7,
+        in_node_dim: int = 9,
         in_edge_dim: int = 1,
-        in_graph_dim: int = 4,
+        in_graph_dim: int = 7,
         hidden_dim: int = 64,
         num_layers: int = 4,
         nb_heads: int = 8,
+        num_zones: int = 96,
+        use_mlp: bool = False,
         dropout: float = 0.0,
         enable_receiver_head: bool = True,
+        enable_target_location_head: bool = True,
         enable_shot_head: bool = True,
         enable_creativity_head: bool = True,
         enable_vae_head: bool = True,
@@ -44,6 +49,7 @@ class SoccerGATv2Model(nn.Module):
         self.in_edge_dim = in_edge_dim
         self.in_graph_dim = in_graph_dim
         self.hidden_dim = hidden_dim
+        self.num_zones = num_zones
 
         # Core D2 GATv2 Backbone
         self.backbone = D2GATv2Backbone(
@@ -60,6 +66,18 @@ class SoccerGATv2Model(nn.Module):
         self.receiver_head = (
             NodeInvariantHead(hidden_dim=hidden_dim, out_dim=1, dropout=dropout)
             if enable_receiver_head
+            else None
+        )
+
+        # Invariant Head for Pitch Target Grid Location (outputs num_zones logits)
+        self.target_location_head = (
+            PitchTargetGridHead(
+                hidden_dim=hidden_dim,
+                num_zones=num_zones,
+                use_mlp=use_mlp,
+                dropout=dropout,
+            )
+            if enable_target_location_head
             else None
         )
 
@@ -130,6 +148,13 @@ class SoccerGATv2Model(nn.Module):
         # Receiver Prediction Head
         if self.receiver_head is not None:
             outputs["receiver_logits"] = self.receiver_head(views, mask=player_mask)
+
+        # Target Location Grid Prediction Head
+        if self.target_location_head is not None:
+            actor_mask = (node_fts[..., 6] > 0.5) if node_fts.shape[-1] > 6 else None
+            outputs["target_zone_logits"] = self.target_location_head(
+                views, mask=player_mask, actor_mask=actor_mask
+            )
 
         # Shot Prediction Head
         if self.shot_head is not None:

@@ -1,0 +1,14 @@
+- sequence modelling (temporal encoder?) + GATv2
+    - Include delta-time Δt
+- Prediction Target:
+    - Action Type Head (Categorical Distribution): Targets: Pass, Carry, Dribble, Shot, Clearance, etc.
+    - Spatial End-Location Head (Continuous / Spatial Grid):
+        - Option A (Mixture Density Network - MDN): Predict parameters (μk, Σk, πk) for a Gaussian Mixture over pitch coordinates (x,y)∈[0,120]×[0,80].
+        - Option B (Spatial Softmax Grid): Discretize the pitch into a 60×40 grid and compute cross-entropy loss against the true end location.
+- value model
+    - Implicit Q-Learning (IQL) or Conservative Q-Learning (CQL) trained on the historical dataset
+    - Maximum Entropy IRL
+    - distributional RL: creative can fail but have a chance to be very good (e.g. QR and taken the 75% value instead of mean)
+- Sequence Creativity
+    - Concept: True football creativity often spans multi-event combinations (e.g., a dummy run → wall pass → blind backheel). Single-action metrics miss multi-agent combinatorics.
+    - Formulation: Evaluate trajectory surprise S(τ)=−∑​logπ for a sequence of m actions multiplied by the cumulative advantage Q(st+m,at+m)−V(st).

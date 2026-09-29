@@ -1,5 +1,11 @@
 data_test/
 data/
+# Keep data assets out of version control, but source modules under
+# soccer_ml/data remain code rather than datasets.  receiver_dataset.py is an
+# existing local experiment and deliberately remains ignored here.
+!soccer_ml/data/
+soccer_ml/data/*
+!soccer_ml/data/temporal_receiver_dataset.py
 checkpoints/
 
 # Byte-compiled / optimized / DLL files

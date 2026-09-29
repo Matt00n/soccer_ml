@@ -20,6 +20,16 @@ def collate_soccer_graphs(batch: List[SoccerSample]) -> SoccerGraphBatch:
         if batch[0].receiver_label is not None
         else None
     )
+    target_zone_label = (
+        torch.stack([s.target_zone_label for s in batch], dim=0)
+        if batch[0].target_zone_label is not None
+        else None
+    )
+    pass_end_location = (
+        torch.stack([s.pass_end_location for s in batch], dim=0)
+        if batch[0].pass_end_location is not None
+        else None
+    )
     shot_label = (
         torch.stack([s.shot_label for s in batch], dim=0)
         if batch[0].shot_label is not None
@@ -42,6 +52,8 @@ def collate_soccer_graphs(batch: List[SoccerSample]) -> SoccerGraphBatch:
         graph_features=graph_fts,
         adj_mat=adj_mat,
         receiver_label=receiver_label,
+        target_zone_label=target_zone_label,
+        pass_end_location=pass_end_location,
         shot_label=shot_label,
         creativity_label=creativity_label,
         player_mask=player_mask,

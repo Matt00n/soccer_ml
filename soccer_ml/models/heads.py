@@ -206,3 +206,72 @@ class EquivariantVAEHead(nn.Module):
         reconstruction = self.decoder(z_cond)  # (B, N, out_channels)
 
         return reconstruction, mu, logvar
+
+
+class PitchTargetGridHead(nn.Module):
+    """Predicts pass target destination as a probability distribution over an M x N pitch grid.
+
+    Combines pooled graph embedding and the ball carrier/passer representation.
+    Has configurable use_mlp (default False: single linear projection consistent with TacticAI).
+    """
+
+    def __init__(
+        self,
+        hidden_dim: int,
+        num_zones: int = 96,
+        use_mlp: bool = False,
+        mlp_hidden_dim: Optional[int] = None,
+        dropout: float = 0.0,
+    ):
+        super().__init__()
+        self.hidden_dim = hidden_dim
+        self.num_zones = num_zones
+        self.use_mlp = use_mlp
+
+        in_dim = hidden_dim * 2
+        if use_mlp:
+            mlp_dim = mlp_hidden_dim or hidden_dim
+            self.decoder = nn.Sequential(
+                nn.Linear(in_dim, mlp_dim),
+                nn.GELU(),
+                nn.Dropout(dropout) if dropout > 0.0 else nn.Identity(),
+                nn.Linear(mlp_dim, num_zones),
+            )
+        else:
+            self.decoder = nn.Linear(in_dim, num_zones)
+
+    def forward(
+        self,
+        views: List[torch.Tensor],
+        mask: Optional[torch.Tensor] = None,
+        actor_mask: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        """Decode pitch target zone logits from D2 views.
+
+        Args:
+            views: List of 4 view tensors (B, N, hidden_dim).
+            mask: Optional (B, N) player mask.
+            actor_mask: Optional (B, N) boolean or float mask for actor/passer.
+
+        Returns:
+            Logits of shape (B, num_zones).
+        """
+        h_node = frame_average_views(views)  # (B, N, hidden_dim)
+
+        if mask is not None:
+            w = mask.unsqueeze(-1).float()
+            h_graph = (h_node * w).sum(dim=1) / w.sum(dim=1).clamp_min(1.0)
+        else:
+            h_graph = h_node.mean(dim=1)
+
+        if actor_mask is not None:
+            w_actor = actor_mask.unsqueeze(-1).float()
+            has_actor = w_actor.sum(dim=1, keepdim=True) > 0
+            actor_emb = (h_node * w_actor).sum(dim=1) / w_actor.sum(dim=1).clamp_min(1.0)
+            actor_emb = torch.where(has_actor, actor_emb, h_graph)
+        else:
+            actor_emb = h_graph
+
+        combined = torch.cat([h_graph, actor_emb], dim=-1)  # (B, 2 * hidden_dim)
+        return self.decoder(combined)
+

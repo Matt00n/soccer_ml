@@ -182,17 +182,17 @@ def build_multimatch_dataset(file_pairs, max_samples=None):
 
 def compute_baseline_scores(data_loader):
     """Compute baseline receiver prediction accuracies for a dataset.
-    
+
     Args:
         data_loader: DataLoader yielding SoccerGraphBatch instances
-        
+
     Returns:
         dict with keys: closest_teammate_top_1, random_top_1, most_frequent_top_1
     """
     from soccer_ml.data.receiver_dataset import (
         closest_teammate_baseline,
-        random_teammate_baseline,
         most_frequent_receiver_baseline,
+        random_teammate_baseline,
     )
     from soccer_ml.training.metrics import compute_topk_accuracy
 
@@ -208,7 +208,7 @@ def compute_baseline_scores(data_loader):
 
     for batch in data_loader:
         batch = batch.to(device)
-        
+
         if batch.receiver_label is None:
             continue
 
@@ -410,7 +410,7 @@ def main():
     print("\n" + "=" * 60)
     print("Baseline Receiver Prediction Accuracies (on this run's data)")
     print("=" * 60)
-    
+
     train_baselines = compute_baseline_scores(train_loader)
     if train_baselines:
         print("\nTrain dataset baselines:")
