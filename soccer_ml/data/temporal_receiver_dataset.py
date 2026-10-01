@@ -12,6 +12,12 @@ frame.  Player IDs are not present in the public 360 freeze frames.  We retain
 the variable visible-player masks and expose coordinates/team/actor/known
 recipient roles; temporal models can consequently learn soft geometric
 alignment instead of assuming that node index ``i`` has a persistent identity.
+
+StatsBomb stores every event, and its freeze frame, in the frame of the team
+*performing* it (that team attacks left to right).  Events by the other team
+(pressures, duels, clearances, ...) are therefore rotated by 180 degrees and
+have inverted ``teammate`` flags relative to the target pass.  Every history
+element is mapped into the frame of the target passer's team before use.
 """
 
 from __future__ import annotations
@@ -25,6 +31,7 @@ from typing import Any, Dict, Iterable, List, Literal, Optional, Sequence, Union
 import torch
 from torch.utils.data import Dataset
 
+from soccer_ml.data.pitch_grid import DEFAULT_GRID_M, DEFAULT_GRID_N
 from soccer_ml.data.receiver_dataset import ReceiverParser
 from soccer_ml.data.schema import SoccerGraphBatch, SoccerSample
 from soccer_ml.data.statsbomb import StatsBomb360Parser
@@ -36,8 +43,26 @@ from soccer_ml.data.statsbomb import StatsBomb360Parser
 NUM_EVENT_TYPES = 64
 NUM_OUTCOMES = 32
 NUM_BODY_PARTS = 16
-EVENT_NUMERIC_DIM = 8
-ROLE_FEATURE_DIM = 3  # actor, known historical recipient, teammate of actor
+ROLE_FEATURE_DIM = 3  # actor, known historical recipient, teammate of target passer
+
+# Layout of the continuous per-event features (all in the target team's frame).
+EVENT_DELTA_T_IDX = 0  # log time since previous included event
+EVENT_DURATION_IDX = 1  # log event duration
+EVENT_LENGTH_IDX = 2  # start -> end distance / 120 (passes, carries, shots)
+EVENT_SIN_IDX = 3  # sin of start -> end direction
+EVENT_COS_IDX = 4  # cos of start -> end direction
+EVENT_PRESSURE_IDX = 5  # under_pressure flag
+EVENT_X_IDX = 6  # start x / 120
+EVENT_Y_IDX = 7  # start y / 80
+EVENT_END_X_IDX = 8  # end x / 120 (start x when the event has no end location)
+EVENT_END_Y_IDX = 9  # end y / 80
+EVENT_SAME_TEAM_IDX = 10  # 1 if performed by the target passer's team
+EVENT_NUMERIC_DIM = 11
+
+# Graph feature channels describing *how* a pass is played (height, body
+# part).  For the target pass these are part of the decision being predicted
+# and unknown at next-action time, so they are zeroed unless requested.
+TARGET_PASS_ATTRIBUTE_INDICES = (5, 6)
 
 _OUTCOME_NAMES = {
     "": 0,
@@ -124,30 +149,101 @@ def _event_categoricals(event: Dict[str, Any]) -> tuple[int, int, int]:
     return type_id, min(outcome_id, NUM_OUTCOMES - 1), min(body_part_id, NUM_BODY_PARTS - 1)
 
 
-def _event_numeric_features(event: Dict[str, Any], delta_seconds: float) -> torch.Tensor:
+def _event_end_location(event: Dict[str, Any]) -> Optional[List[float]]:
+    for key in ("pass", "carry", "shot"):
+        details = event.get(key)
+        if isinstance(details, dict):
+            end = details.get("end_location")
+            if isinstance(end, list) and len(end) >= 2:
+                return [float(end[0]), float(end[1])]
+    return None
+
+
+def _event_numeric_features(
+    event: Dict[str, Any],
+    delta_seconds: float,
+    same_team: bool,
+    pitch_length: float = 120.0,
+    pitch_width: float = 80.0,
+) -> torch.Tensor:
     """Build continuous, pre-event-safe context for an historical event.
 
     Outcome is represented separately as a categorical label.  Only previous
     events call this function in a temporal sample; values for the target pass
-    are zeroed in :class:`TemporalReceiverDataset`.
+    are zeroed in :class:`TemporalReceiverDataset`.  Events by the opposing
+    team (``same_team=False``) are rotated into the target team's frame.
     """
-    pass_info = event.get("pass", {}) if isinstance(event.get("pass"), dict) else {}
-    location = event.get("location") or [60.0, 40.0]
-    pass_angle = float(pass_info.get("angle", 0.0) or 0.0)
+    location = event.get("location")
+    if not isinstance(location, list) or len(location) < 2:
+        location = [pitch_length / 2.0, pitch_width / 2.0]
+    start = [float(location[0]), float(location[1])]
+    end = _event_end_location(event) or list(start)
+    if not same_team:
+        start = [pitch_length - start[0], pitch_width - start[1]]
+        end = [pitch_length - end[0], pitch_width - end[1]]
+    dx, dy = end[0] - start[0], end[1] - start[1]
+    length = math.hypot(dx, dy)
+    # StatsBomb's pass angle is atan2(dy, dx) in pitch coordinates; the same
+    # definition is used for carries and shots.  Stationary events get (0, 0).
+    sin_angle, cos_angle = (dy / length, dx / length) if length > 1e-6 else (0.0, 0.0)
     duration = float(event.get("duration", 0.0) or 0.0)
-    return torch.tensor(
-        [
-            math.log1p(max(delta_seconds, 0.0)) / math.log1p(120.0),
-            math.log1p(max(duration, 0.0)) / math.log1p(30.0),
-            float(pass_info.get("length", 0.0) or 0.0) / 120.0,
-            math.sin(pass_angle),
-            math.cos(pass_angle),
-            float(bool(event.get("under_pressure", False))),
-            (float(location[0]) / 120.0) if len(location) >= 2 else 0.5,
-            (float(location[1]) / 80.0) if len(location) >= 2 else 0.5,
-        ],
-        dtype=torch.float32,
+    features = torch.zeros(EVENT_NUMERIC_DIM, dtype=torch.float32)
+    features[EVENT_DELTA_T_IDX] = math.log1p(max(delta_seconds, 0.0)) / math.log1p(120.0)
+    features[EVENT_DURATION_IDX] = math.log1p(max(duration, 0.0)) / math.log1p(30.0)
+    features[EVENT_LENGTH_IDX] = length / pitch_length
+    features[EVENT_SIN_IDX] = sin_angle
+    features[EVENT_COS_IDX] = cos_angle
+    features[EVENT_PRESSURE_IDX] = float(bool(event.get("under_pressure", False)))
+    features[EVENT_X_IDX] = start[0] / pitch_length
+    features[EVENT_Y_IDX] = start[1] / pitch_width
+    features[EVENT_END_X_IDX] = end[0] / pitch_length
+    features[EVENT_END_Y_IDX] = end[1] / pitch_width
+    features[EVENT_SAME_TEAM_IDX] = float(same_team)
+    return features
+
+
+def transform_event_numeric(event_numeric: torch.Tensor, action: int) -> torch.Tensor:
+    """Apply a D2 pitch reflection to (..., EVENT_NUMERIC_DIM) event features.
+
+    Matches :class:`~soccer_ml.data.transforms.D2GroupTransform`: action 1
+    flips the pitch length (x), action 2 the width (y), action 3 both.
+    """
+    if action == 0:
+        return event_numeric
+    out = event_numeric.clone()
+    if action in (1, 3):
+        for index in (EVENT_X_IDX, EVENT_END_X_IDX):
+            out[..., index] = 1.0 - out[..., index]
+        out[..., EVENT_COS_IDX] = -out[..., EVENT_COS_IDX]
+    if action in (2, 3):
+        for index in (EVENT_Y_IDX, EVENT_END_Y_IDX):
+            out[..., index] = 1.0 - out[..., index]
+        out[..., EVENT_SIN_IDX] = -out[..., EVENT_SIN_IDX]
+    return out
+
+
+def _rotate_to_target_frame(graph: SoccerSample, roles: torch.Tensor) -> tuple[SoccerSample, torch.Tensor]:
+    """Rotate an opposing-team frame by 180 degrees and invert team flags.
+
+    Normalized coordinates are zero-centered, so the rotation negates x, y and
+    the velocities.  Teammate flags become relative to the target passer's
+    team; the opposing-team edge feature is symmetric and unchanged.
+    """
+    valid = graph.player_mask.to(graph.node_features.dtype)
+    node_features = graph.node_features.clone()
+    node_features[:, 0:4] = -node_features[:, 0:4]
+    if node_features.shape[-1] > 7:
+        node_features[:, 7] = (1.0 - node_features[:, 7]) * valid
+    rotated_roles = roles.clone()
+    rotated_roles[:, 2] = (1.0 - rotated_roles[:, 2]) * valid
+    rotated = SoccerSample(
+        node_features=node_features,
+        edge_features=graph.edge_features,
+        graph_features=graph.graph_features,
+        adj_mat=graph.adj_mat,
+        player_mask=graph.player_mask,
     )
+    return rotated, rotated_roles
 
 
 def _historical_roles(
@@ -203,7 +299,7 @@ class TemporalReceiverSample:
     event_type: torch.Tensor  # (T,)
     event_outcome: torch.Tensor  # (T,)
     event_body_part: torch.Tensor  # (T,)
-    event_numeric: torch.Tensor  # (T, 8)
+    event_numeric: torch.Tensor  # (T, EVENT_NUMERIC_DIM)
     time_delta: torch.Tensor  # (T,), seconds since previous included event
     sequence_mask: torch.Tensor  # (T,), true for graph timesteps
     receiver_label: torch.Tensor  # scalar
@@ -318,6 +414,7 @@ class _FrameRecord:
     roles: torch.Tensor
     order: int
     timestamp_seconds: float
+    team_id: Optional[int]
 
 
 class TemporalReceiverDataset(Dataset):
@@ -332,6 +429,10 @@ class TemporalReceiverDataset(Dataset):
             half; ``"match"`` retains all previous available snapshots.
         max_samples: Applies to valid target passes in frame-file order, matching
             the existing :class:`ReceiverDataset` semantics.
+        grid_m, grid_n: Pass target grid, used when no ``parser`` is supplied.
+        include_target_pass_attributes: Keep the target pass's height and body
+            part in its graph features.  Off by default: they describe the
+            action being predicted, not the situation.
     """
 
     def __init__(
@@ -342,6 +443,9 @@ class TemporalReceiverDataset(Dataset):
         context_scope: Literal["possession", "period", "match"] = "possession",
         max_samples: Optional[int] = None,
         parser: Optional[ReceiverParser] = None,
+        grid_m: int = DEFAULT_GRID_M,
+        grid_n: int = DEFAULT_GRID_N,
+        include_target_pass_attributes: bool = False,
     ):
         if context_length < 0:
             raise ValueError("context_length must be non-negative.")
@@ -353,7 +457,8 @@ class TemporalReceiverDataset(Dataset):
         self.context_length = context_length
         self.sequence_length = context_length + 1
         self.context_scope = context_scope
-        self.receiver_parser = parser or ReceiverParser()
+        self.include_target_pass_attributes = include_target_pass_attributes
+        self.receiver_parser = parser or ReceiverParser(grid_m=grid_m, grid_n=grid_n)
         self.frame_parser = StatsBomb360Parser(
             pitch_length=self.receiver_parser.pitch_length,
             pitch_width=self.receiver_parser.pitch_width,
@@ -392,6 +497,7 @@ class TemporalReceiverDataset(Dataset):
                         roles=_historical_roles(frame, event, self.receiver_parser.max_players),
                         order=int(event.get("index", len(records))),
                         timestamp_seconds=_timestamp_seconds(event),
+                        team_id=(event.get("team") or {}).get("id"),
                     )
                 )
             target = self.receiver_parser.parse_pass_frame(frame, event)
@@ -455,23 +561,27 @@ class TemporalReceiverDataset(Dataset):
         sequence_mask = torch.zeros(sequence_length, dtype=torch.bool)
 
         history_records = [records[index] for index in history_indices]
-        entries: List[tuple[_FrameRecord, SoccerSample, bool]] = [
-            (record, record.graph, True) for record in history_records
-        ]
+        entries: List[tuple[_FrameRecord, SoccerSample, torch.Tensor, bool, bool]] = []
+        for record in history_records:
+            same_team = record.team_id == target_record.team_id
+            graph, roles = record.graph, record.roles
+            if not same_team:
+                graph, roles = _rotate_to_target_frame(graph, roles)
+            entries.append((record, graph, roles, True, same_team))
         # Current pass graph comes from ReceiverParser to guarantee exact parity
         # with the single-frame receiver task.  Its event labels remain unknown.
-        entries.append((target_record, target_graph, False))
+        entries.append((target_record, target_graph, target_record.roles, False, True))
         start = sequence_length - len(entries)
 
         previous_timestamp: Optional[float] = None
-        for local_idx, (record, graph, labels_are_visible) in enumerate(entries):
+        for local_idx, (record, graph, roles, labels_are_visible, same_team) in enumerate(entries):
             idx = start + local_idx
             node_features[idx] = graph.node_features
             edge_features[idx] = graph.edge_features
             graph_features[idx] = graph.graph_features
             adj_mat[idx] = graph.adj_mat
             player_mask[idx] = graph.player_mask
-            role_features[idx] = record.roles
+            role_features[idx] = roles
             # The target-pass recipient proxy is explicitly removed.  The actor
             # and teammate flags remain part of the observed current graph.
             if not labels_are_visible:
@@ -489,7 +599,16 @@ class TemporalReceiverDataset(Dataset):
                 event_type[idx] = type_id
                 event_outcome[idx] = outcome_id
                 event_body_part[idx] = body_part_id
-                event_numeric[idx] = _event_numeric_features(record.event, delta)
+                event_numeric[idx] = _event_numeric_features(
+                    record.event,
+                    delta,
+                    same_team,
+                    self.receiver_parser.pitch_length,
+                    self.receiver_parser.pitch_width,
+                )
+
+        if not self.include_target_pass_attributes:
+            graph_features[-1, list(TARGET_PASS_ATTRIBUTE_INDICES)] = 0.0
 
         return TemporalReceiverSample(
             node_features=node_features,
@@ -511,6 +630,7 @@ class TemporalReceiverDataset(Dataset):
                 "event_uuid": target_record.event.get("id"),
                 "event_index": target_record.order,
                 "history_events": len(history_records),
+                "history_opponent_events": sum(not entry[4] for entry in entries),
                 "context_scope": self.context_scope,
             },
         )

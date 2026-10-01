@@ -366,6 +366,7 @@ def main():
         num_layers=num_layers,
         nb_heads=config.model.nb_heads,
         enable_receiver_head=True,
+        enable_target_location_head=False,
         enable_shot_head=False,
         enable_creativity_head=False,
         enable_vae_head=False,
@@ -374,6 +375,7 @@ def main():
     # Create custom loss (receiver only)
     loss_fn = SoccerMultiTaskLoss(
         receiver_weight=1.0,
+        target_location_weight=0.0,
         shot_weight=0.0,
         creativity_weight=0.0,
         vae_weight=0.0,

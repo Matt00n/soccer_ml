@@ -1,6 +1,6 @@
 """D2 Group symmetries, pitch transformations, and view generators for soccer graphs."""
 
-from typing import List, Tuple
+from typing import List, Sequence, Tuple
 import torch
 
 
@@ -14,6 +14,37 @@ D2_MULTIPLY: List[List[int]] = [
     [2, 3, 0, 1],
     [3, 2, 1, 0],
 ]
+
+
+# Subgroups of D2 that can be used for frame averaging.  StatsBomb always
+# orients the team in possession left-to-right, so a flip of the x axis (the
+# pitch length) reverses the attacking direction and is not a symmetry of
+# pass destinations.  The y flip (swapping the wings) approximately is.
+SYMMETRY_GROUPS = {
+    "none": (0,),
+    "y_flip": (0, 2),
+    "d2": (0, 1, 2, 3),
+}
+
+
+def resolve_symmetry_group(symmetry: str) -> Tuple[int, ...]:
+    """Return the D2 actions of a named symmetry group."""
+    try:
+        return SYMMETRY_GROUPS[symmetry]
+    except KeyError as exc:
+        supported = ", ".join(SYMMETRY_GROUPS)
+        raise ValueError(f"Unknown symmetry '{symmetry}'. Choose one of: {supported}.") from exc
+
+
+def flip_grid(grid: torch.Tensor, action: int) -> torch.Tensor:
+    """Apply a D2 action to a spatial grid tensor of shape (..., M, N).
+
+    Dimension -2 indexes bins along the pitch length (x), dimension -1 along
+    the pitch width (y).  Every D2 action is self-inverse, so the same call
+    maps a grid from a transformed view back to the canonical frame.
+    """
+    dims = {0: [], 1: [-2], 2: [-1], 3: [-2, -1]}[action]
+    return grid.flip(dims) if dims else grid
 
 
 class D2GroupTransform:
@@ -70,25 +101,27 @@ class D2GroupTransform:
         node_fts: torch.Tensor,
         edge_fts: torch.Tensor,
         graph_fts: torch.Tensor,
+        actions: Sequence[int] = (0, 1, 2, 3),
     ) -> Tuple[List[torch.Tensor], List[torch.Tensor], List[torch.Tensor]]:
-        """Generate the 4 D2-transformed views for node, edge, and graph features.
+        """Generate the D2-transformed views for node, edge, and graph features.
 
         Args:
             node_fts: (B, N, D_v)
             edge_fts: (B, N, N, D_e)
             graph_fts: (B, D_g)
+            actions: D2 actions (a subgroup) to generate views for; all 4 by default.
 
         Returns:
             Tuple of:
-                - List of 4 node feature tensors [(B, N, D_v), ...]
-                - List of 4 edge feature tensors [(B, N, N, D_e), ...]
-                - List of 4 graph feature tensors [(B, D_g), ...]
+                - List of len(actions) node feature tensors [(B, N, D_v), ...]
+                - List of len(actions) edge feature tensors [(B, N, N, D_e), ...]
+                - List of len(actions) graph feature tensors [(B, D_g), ...]
         """
         node_views: List[torch.Tensor] = []
         edge_views: List[torch.Tensor] = []
         graph_views: List[torch.Tensor] = []
 
-        for g in range(4):
+        for g in actions:
             node_views.append(self.transform_node_features(node_fts, g))
             # Edge features and graph features in TacticAI are team/task indicators
             # and invariant under spatial reflections. Clone to preserve separate view references.

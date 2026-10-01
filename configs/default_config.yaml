@@ -8,8 +8,8 @@ data:
   graph_dim: 7      # is_pass, is_shot, period, minute/90, under_pressure, pass_height, pass_body_part
   pitch_length: 120.0
   pitch_width: 80.0
-  grid_m: 12
-  grid_n: 8
+  grid_m: 26        # pass target grid: bins along the pitch length
+  grid_n: 17        # pass target grid: bins along the pitch width
 
 model:
   hidden_dim: 64
@@ -17,6 +17,7 @@ model:
   nb_heads: 8       # 8 attention heads
   dropout: 0.0
   use_mlp: false    # Linear head by default (TacticAI paper consistency)
+  symmetry: d2      # d2 | y_flip | none; train_temporal_receiver.py defaults to y_flip
   enable_receiver_head: true
   enable_target_location_head: true
   enable_shot_head: true

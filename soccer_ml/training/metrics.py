@@ -109,3 +109,76 @@ class MetricTracker:
     def reset(self):
         self.totals.clear()
         self.counts.clear()
+
+
+class ZoneMetricAccumulator:
+    """Accumulates pass-target-zone metrics over an epoch.
+
+    Works for any (B, M * N) score tensor, so learned models and ranking
+    baselines are evaluated identically:
+
+    * ``top_k_acc``: true zone among the k highest scores.
+    * ``within_1_zone_acc``: top-1 zone is the true zone or one of its 8 neighbours.
+    * ``mean/median_dist_yd``: distance from the top-1 zone center to the
+      true pass end location in StatsBomb pitch units (yards).
+    * ``mean/median_dist_m``: the same distance after rescaling the pitch to
+      105 x 68 m.
+    * ``nll``: mean negative log-likelihood of the true zone, only when the
+      scores are log-probabilities (``scores_are_log_probs=True``).
+    """
+
+    def __init__(self, pitch_grid, k_list=(1, 3, 5)):
+        self.pitch_grid = pitch_grid
+        self.k_list = tuple(k_list)
+        self.reset()
+
+    def reset(self) -> None:
+        self.count = 0
+        self.topk_correct = {k: 0 for k in self.k_list}
+        self.neighbour_correct = 0
+        self.nll_sum = 0.0
+        self.nll_count = 0
+        self.distances_yd: List[torch.Tensor] = []
+        self.distances_m: List[torch.Tensor] = []
+
+    @torch.no_grad()
+    def update(
+        self,
+        scores: torch.Tensor,
+        target_zone: torch.Tensor,
+        end_location: torch.Tensor,
+        scores_are_log_probs: bool = False,
+    ) -> None:
+        scores = scores.detach().float()
+        target_zone = target_zone.to(scores.device)
+        end_location = end_location.to(scores.device).float()
+        max_k = min(max(self.k_list), scores.shape[-1])
+        top_indices = scores.topk(max_k, dim=-1).indices
+        hits = top_indices == target_zone.unsqueeze(-1)
+        for k in self.k_list:
+            self.topk_correct[k] += int(hits[:, :k].any(dim=-1).sum().item())
+
+        prediction = top_indices[:, 0]
+        pred_x, pred_y = self.pitch_grid.zone_bins(prediction)
+        true_x, true_y = self.pitch_grid.zone_bins(target_zone)
+        neighbour = ((pred_x - true_x).abs() <= 1) & ((pred_y - true_y).abs() <= 1)
+        self.neighbour_correct += int(neighbour.sum().item())
+
+        self.distances_yd.append(self.pitch_grid.compute_distance(prediction, end_location).cpu())
+        self.distances_m.append(self.pitch_grid.compute_distance(prediction, end_location, metric=True).cpu())
+        if scores_are_log_probs:
+            self.nll_sum += float(-scores.gather(1, target_zone.unsqueeze(-1)).sum().item())
+            self.nll_count += len(target_zone)
+        self.count += len(target_zone)
+
+    def compute(self) -> Dict[str, float]:
+        total = max(self.count, 1)
+        metrics = {f"top_{k}_acc": correct / total for k, correct in self.topk_correct.items()}
+        metrics["within_1_zone_acc"] = self.neighbour_correct / total
+        for unit, values in (("yd", self.distances_yd), ("m", self.distances_m)):
+            distances = torch.cat(values) if values else torch.zeros(1)
+            metrics[f"mean_dist_{unit}"] = float(distances.mean().item())
+            metrics[f"median_dist_{unit}"] = float(distances.median().item())
+        if self.nll_count:
+            metrics["nll"] = self.nll_sum / self.nll_count
+        return metrics

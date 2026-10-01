@@ -1,6 +1,6 @@
 """D2 Dihedral Group Convolution Layer matching TacticAI Eq. 8 and CLRS GATv2FullD2."""
 
-from typing import List, Optional
+from typing import List, Optional, Sequence
 import torch
 import torch.nn as nn
 
@@ -22,6 +22,10 @@ class D2GroupConvLayer(nn.Module):
         - g=2: vertical flip
         - g=3: horizontal + vertical flip
     All elements of D2 are self-inverses (g^{-1} = g).
+
+    ``group_actions`` may restrict the layer to a subgroup of D2, e.g. ``(0, 2)``
+    for wing (y) reflections only.  The subgroup must be closed under D2
+    multiplication; view ``i`` then corresponds to action ``group_actions[i]``.
     """
 
     def __init__(
@@ -35,9 +39,16 @@ class D2GroupConvLayer(nn.Module):
         dropout: float = 0.0,
         residual: bool = True,
         use_ln: bool = True,
+        group_actions: Sequence[int] = (0, 1, 2, 3),
     ):
         super().__init__()
-        self.num_d2_actions = 4
+        self.group_actions = tuple(group_actions)
+        self.num_d2_actions = len(self.group_actions)
+        self._view_index = {action: index for index, action in enumerate(self.group_actions)}
+        for g in self.group_actions:
+            for h in self.group_actions:
+                if D2_MULTIPLY[g][h] not in self._view_index:
+                    raise ValueError(f"group_actions {self.group_actions} is not closed under D2.")
         self.in_node_dim = in_node_dim
         self.out_node_dim = out_node_dim
 
@@ -66,26 +77,29 @@ class D2GroupConvLayer(nn.Module):
         """Perform D2 group convolution forward step.
 
         Args:
-            node_views: List of 4 tensors, each of shape (B, N, in_node_dim)
-            edge_views: List of 4 tensors, each of shape (B, N, N, in_edge_dim)
-            graph_views: List of 4 tensors, each of shape (B, in_graph_dim)
+            node_views: List of V tensors, each of shape (B, N, in_node_dim)
+            edge_views: List of V tensors, each of shape (B, N, N, in_edge_dim)
+            graph_views: List of V tensors, each of shape (B, in_graph_dim)
             adj_mat: Optional (B, N, N) adjacency matrix
             hidden: Optional (B, N, D_h) hidden state
 
         Returns:
-            List of 4 updated view tensors, each of shape (B, N, out_node_dim)
+            List of V updated view tensors, each of shape (B, N, out_node_dim),
+            where V = len(group_actions).
         """
-        assert len(node_views) == self.num_d2_actions, f"Expected 4 node views, got {len(node_views)}"
-        assert len(edge_views) == self.num_d2_actions, f"Expected 4 edge views, got {len(edge_views)}"
-        assert len(graph_views) == self.num_d2_actions, f"Expected 4 graph views, got {len(graph_views)}"
+        v = self.num_d2_actions
+        assert len(node_views) == v, f"Expected {v} node views, got {len(node_views)}"
+        assert len(edge_views) == v, f"Expected {v} edge views, got {len(edge_views)}"
+        assert len(graph_views) == v, f"Expected {v} graph views, got {len(graph_views)}"
 
         ret_nodes: List[torch.Tensor] = []
 
-        for g in range(self.num_d2_actions):
+        for g_action in self.group_actions:
+            g = self._view_index[g_action]
             emb_values = []
-            for h in range(self.num_d2_actions):
+            for h_action in self.group_actions:
                 # Cayley multiplication: g^{-1}h. In D2, g^{-1} = g.
-                gh = D2_MULTIPLY[D2_INVERSES[g]][h]
+                gh = self._view_index[D2_MULTIPLY[D2_INVERSES[g_action]][h_action]]
 
                 # Concatenate view g with view gh
                 node_fts = torch.cat([node_views[g], node_views[gh]], dim=-1)

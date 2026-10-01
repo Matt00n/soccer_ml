@@ -1,9 +1,11 @@
-"""Train temporal receiver models on the same pass samples and baselines as GATv2.
+"""Benchmark single-frame and temporal GATv2 models on pass target prediction.
 
-This is intentionally parallel to ``train_receiver.py``: it does not alter the
-pure single-freeze-frame GATv2 benchmark.  One invocation trains an adapter to
-that original GATv2 plus both temporal architectures on exactly the same
-sampled train/validation examples.
+By default every model predicts the pitch-grid zone (26 x 17) of the end
+location of completed passes (``--task target_zone``); ``--task receiver``
+reproduces the earlier receiver benchmark.  This is intentionally parallel to
+``train_receiver.py``, which stays unchanged.  One invocation trains every
+selected model and evaluates the naive baselines on exactly the same sampled
+train/validation examples.
 """
 
 from __future__ import annotations
@@ -21,6 +23,7 @@ from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from soccer_ml.data.pitch_grid import PitchGrid
 from soccer_ml.data.receiver_dataset import (
     closest_teammate_baseline,
     most_frequent_receiver_baseline,
@@ -30,8 +33,13 @@ from soccer_ml.data.temporal_receiver_dataset import (
     TemporalReceiverDataset,
     collate_temporal_receiver_graphs,
 )
-from soccer_ml.models.temporal_receiver import build_temporal_receiver_model
-from soccer_ml.training.temporal_receiver_trainer import TemporalReceiverTrainer
+from soccer_ml.data.transforms import SYMMETRY_GROUPS
+from soccer_ml.models.temporal_receiver import SEQUENCE_ENCODERS, TASKS, TEMPORAL_MODELS, build_temporal_receiver_model
+from soccer_ml.training.temporal_receiver_trainer import (
+    TemporalReceiverTrainer,
+    evaluate_zone_baselines,
+    fit_zone_prior,
+)
 from soccer_ml.training.trainer import get_default_device
 from soccer_ml.utils.config import load_config
 
@@ -126,21 +134,28 @@ def sample_disjoint_train_val_pairs(
 
 def _build_multimatch_dataset(
     pairs: Sequence[tuple[str, str]],
-    context_length: int,
-    context_scope: str,
     max_samples: int | None,
-) -> Dataset:
-    datasets = [
-        TemporalReceiverDataset(
-            freeze_frame_path,
-            event_path,
-            context_length=context_length,
-            context_scope=context_scope,  # type: ignore[arg-type]
-            max_samples=max_samples,
-        )
-        for freeze_frame_path, event_path in pairs
-    ]
-    return ConcatDataset(datasets)
+    **dataset_kwargs,
+) -> tuple[Dataset, list[tuple[str, str]]]:
+    """Load every match, skipping (and returning) pairs with unreadable JSON.
+
+    StatsBomb open-data contains at least one corrupt file upstream
+    (three-sixty/3845506.json has a block of null bytes), so one bad match
+    must not abort a multi-hour run.
+    """
+    datasets = []
+    skipped: list[tuple[str, str]] = []
+    for freeze_frame_path, event_path in pairs:
+        try:
+            datasets.append(
+                TemporalReceiverDataset(freeze_frame_path, event_path, max_samples=max_samples, **dataset_kwargs)
+            )
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            print(f"WARNING: skipping unreadable match ({freeze_frame_path}, {event_path}): {error}")
+            skipped.append((freeze_frame_path, event_path))
+    if not datasets:
+        raise ValueError("No readable matches were loaded.")
+    return ConcatDataset(datasets), skipped
 
 
 def _sample_fingerprint(dataset: Dataset) -> str:
@@ -153,7 +168,7 @@ def _sample_fingerprint(dataset: Dataset) -> str:
     return hashlib.sha256("\n".join(identifiers).encode("utf-8")).hexdigest()[:16]
 
 
-def _baseline_scores(loader: DataLoader, seed: int) -> dict[str, float]:
+def _receiver_baseline_scores(loader: DataLoader, seed: int) -> dict[str, float]:
     """Evaluate existing naive receivers on the target graph of every sequence."""
     torch.manual_seed(seed)
     correct = {"closest_teammate_top_1": 0, "random_top_1": 0, "most_frequent_top_1": 0}
@@ -172,6 +187,18 @@ def _baseline_scores(loader: DataLoader, seed: int) -> dict[str, float]:
     return {name: value / max(total, 1) for name, value in correct.items()}
 
 
+def _format_zone_metrics(metrics: dict[str, float]) -> str:
+    text = (
+        f"top-1={metrics['top_1_acc']:.2%} top-3={metrics['top_3_acc']:.2%} "
+        f"top-5={metrics['top_5_acc']:.2%} within-1={metrics['within_1_zone_acc']:.2%} "
+        f"dist mean/median={metrics['mean_dist_yd']:.1f}/{metrics['median_dist_yd']:.1f}yd "
+        f"({metrics['mean_dist_m']:.1f}/{metrics['median_dist_m']:.1f}m)"
+    )
+    if "nll" in metrics:
+        text += f" nll={metrics['nll']:.3f}"
+    return text
+
+
 def _set_seed(seed: int) -> None:
     random.seed(seed)
     torch.manual_seed(seed)
@@ -180,7 +207,7 @@ def _set_seed(seed: int) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Benchmark temporal GATv2 receiver models.")
+    parser = argparse.ArgumentParser(description="Benchmark temporal GATv2 pass target models.")
     parser.add_argument("--config", default="configs/default_config.yaml")
     parser.add_argument("--train-dir")
     parser.add_argument("--val-dir")
@@ -201,8 +228,31 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--models",
         nargs="+",
-        choices=("spatial_gatv2", "graph_transformer", "graph_gru", "transport_memory"),
-        default=("spatial_gatv2", "graph_transformer", "graph_gru", "transport_memory"),
+        choices=tuple(TEMPORAL_MODELS),
+        default=tuple(TEMPORAL_MODELS),
+    )
+    parser.add_argument("--task", choices=TASKS, default="target_zone")
+    parser.add_argument("--grid-m", type=int, default=26, help="Target grid bins along the pitch length.")
+    parser.add_argument("--grid-n", type=int, default=17, help="Target grid bins along the pitch width.")
+    parser.add_argument(
+        "--symmetry",
+        choices=tuple(SYMMETRY_GROUPS),
+        default="y_flip",
+        help="Reflection views for frame averaging (default y_flip: attacking direction is fixed).",
+    )
+    parser.add_argument("--use-mlp", action="store_true", help="Two-layer MLP heads instead of linear heads.")
+    parser.add_argument("--sequence-encoder", choices=SEQUENCE_ENCODERS, default="gru", help="seq2spatial only.")
+    parser.add_argument("--num-fourier-bands", type=int, default=0, help="Pitch Fourier features (0 = off).")
+    parser.add_argument(
+        "--zone-label-sigma",
+        type=float,
+        default=0.0,
+        help="Gaussian zone label smoothing in pitch units (yards); 0 = hard cross-entropy.",
+    )
+    parser.add_argument(
+        "--include-target-pass-attributes",
+        action="store_true",
+        help="Keep the target pass's height/body part in its graph features (leaks the decision).",
     )
     parser.add_argument("--epochs", type=int)
     parser.add_argument("--batch-size", type=int)
@@ -229,6 +279,14 @@ def main() -> None:
 
     if hidden_dim % temporal_heads:
         raise ValueError("--hidden-dim must be divisible by --temporal-heads.")
+    pitch_grid = PitchGrid(grid_m=args.grid_m, grid_n=args.grid_n)
+    dataset_kwargs = {
+        "context_length": args.context_length,
+        "context_scope": args.context_scope,
+        "grid_m": args.grid_m,
+        "grid_n": args.grid_n,
+        "include_target_pass_attributes": args.include_target_pass_attributes,
+    }
 
     if args.train_dir or args.val_dir:
         if not (args.train_dir and args.val_dir):
@@ -240,24 +298,17 @@ def main() -> None:
             args.val_file_count,
             args.sample_seed,
         )
-        train_dataset = _build_multimatch_dataset(
-            train_pairs, args.context_length, args.context_scope, args.max_samples
-        )
-        val_dataset = _build_multimatch_dataset(
-            val_pairs, args.context_length, args.context_scope, None
-        )
+        train_dataset, skipped_train = _build_multimatch_dataset(train_pairs, args.max_samples, **dataset_kwargs)
+        val_dataset, skipped_val = _build_multimatch_dataset(val_pairs, None, **dataset_kwargs)
         split_description = {
             "mode": "separate_match_sets",
-            "train_pairs": train_pairs,
-            "val_pairs": val_pairs,
+            "train_pairs": [pair for pair in train_pairs if pair not in skipped_train],
+            "val_pairs": [pair for pair in val_pairs if pair not in skipped_val],
+            "skipped_unreadable_pairs": skipped_train + skipped_val,
         }
     elif args.three_sixty and args.events:
         full_dataset = TemporalReceiverDataset(
-            args.three_sixty,
-            args.events,
-            context_length=args.context_length,
-            context_scope=args.context_scope,
-            max_samples=args.max_samples,
+            args.three_sixty, args.events, max_samples=args.max_samples, **dataset_kwargs
         )
         n_validation = int(args.val_split * len(full_dataset))
         n_training = len(full_dataset) - n_validation
@@ -274,8 +325,13 @@ def main() -> None:
         raise ValueError("Training and validation sets must both contain at least one valid pass.")
 
     print("=" * 72)
-    print("Temporal Receiver Benchmark (single-frame GATv2 remains unchanged)")
+    print(f"Temporal pass target benchmark | task={args.task}")
     print(f"Device: {get_default_device()} | Context: {args.context_length} prior events, {args.context_scope} scope")
+    if args.task == "target_zone":
+        print(
+            f"Grid: {args.grid_m} x {args.grid_n} = {pitch_grid.num_zones} zones "
+            f"({pitch_grid.cell_length:.2f} x {pitch_grid.cell_width:.2f} yd) | symmetry={args.symmetry}"
+        )
     print(f"Train targets: {len(train_dataset)} ({_sample_fingerprint(train_dataset)})")
     print(f"Validation targets: {len(val_dataset)} ({_sample_fingerprint(val_dataset)})")
     print(f"Models: {', '.join(args.models)}")
@@ -285,13 +341,26 @@ def main() -> None:
     # current-target graph sequence subsequently used by every temporal model.
     baseline_train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_temporal_receiver_graphs)
     baseline_val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_temporal_receiver_graphs)
-    baselines = {
-        "train": _baseline_scores(baseline_train_loader, args.sample_seed),
-        "validation": _baseline_scores(baseline_val_loader, args.sample_seed + 1),
-    }
     print("Naive baselines on this exact split:")
-    for split_name, scores in baselines.items():
-        print(f"  {split_name}: " + ", ".join(f"{name}={score:.2%}" for name, score in scores.items()))
+    if args.task == "target_zone":
+        print("  (zone priors are fitted on the training split, so their train scores are in-sample)")
+        # Zone priors are fitted on the training split only.
+        zone_prior = fit_zone_prior(baseline_train_loader, pitch_grid)
+        baselines = {
+            "train": evaluate_zone_baselines(baseline_train_loader, pitch_grid, zone_prior, args.sample_seed),
+            "validation": evaluate_zone_baselines(baseline_val_loader, pitch_grid, zone_prior, args.sample_seed + 1),
+        }
+        for split_name, split_scores in baselines.items():
+            print(f"  {split_name}:")
+            for name, metrics in split_scores.items():
+                print(f"    {name:>22}: {_format_zone_metrics(metrics)}")
+    else:
+        baselines = {
+            "train": _receiver_baseline_scores(baseline_train_loader, args.sample_seed),
+            "validation": _receiver_baseline_scores(baseline_val_loader, args.sample_seed + 1),
+        }
+        for split_name, scores in baselines.items():
+            print(f"  {split_name}: " + ", ".join(f"{name}={score:.2%}" for name, score in scores.items()))
 
     base_model_kwargs = {
         "in_node_dim": config.data.node_dim,
@@ -303,13 +372,25 @@ def main() -> None:
         "temporal_layers": args.temporal_layers,
         "temporal_heads": temporal_heads,
         "max_sequence_length": args.context_length + 1,
+        "num_fourier_bands": args.num_fourier_bands,
         "dropout": args.dropout,
+        "task": args.task,
+        "grid_m": args.grid_m,
+        "grid_n": args.grid_n,
+        "symmetry": args.symmetry,
+        "use_mlp": args.use_mlp,
+        "sequence_encoder": args.sequence_encoder,
     }
     run_summary: dict[str, object] = {
         "split": split_description,
         "sample_seed": args.sample_seed,
         "context_length": args.context_length,
         "context_scope": args.context_scope,
+        "task": args.task,
+        "grid": [args.grid_m, args.grid_n],
+        "symmetry": args.symmetry,
+        "zone_label_sigma": args.zone_label_sigma,
+        "include_target_pass_attributes": args.include_target_pass_attributes,
         "train_size": len(train_dataset),
         "val_size": len(val_dataset),
         "train_fingerprint": _sample_fingerprint(train_dataset),
@@ -347,17 +428,27 @@ def main() -> None:
             lr=learning_rate,
             weight_decay=config.training.weight_decay,
             checkpoint_dir=checkpoint_dir,
+            epochs=epochs,
+            task=args.task,
+            pitch_grid=pitch_grid,
+            zone_label_sigma=args.zone_label_sigma,
         )
         history = trainer.fit(epochs)
         final_train = trainer.evaluate(baseline_train_loader)
         final_val = trainer.evaluate(baseline_val_loader)
-        print(f"{model_name} final train top-1: {final_train.get('top_1_acc', 0.0):.2%}")
-        print(f"{model_name} final val top-1:   {final_val.get('top_1_acc', 0.0):.2%}")
+        if args.task == "target_zone":
+            print(f"{model_name} final train: {_format_zone_metrics(final_train)}")
+            print(f"{model_name} final val:   {_format_zone_metrics(final_val)}")
+        else:
+            print(f"{model_name} final train top-1: {final_train.get('top_1_acc', 0.0):.2%}")
+            print(f"{model_name} final val top-1:   {final_val.get('top_1_acc', 0.0):.2%}")
         with (checkpoint_dir / "history.json").open("w", encoding="utf-8") as file:
             json.dump(history, file, indent=2)
         run_summary["models"][model_name] = {
             "checkpoint": str(checkpoint_dir / "best_model.pt"),
             "best_val_loss": trainer.best_val_loss,
+            "selection_metric": trainer.selection_metric,
+            "num_parameters": sum(parameter.numel() for parameter in model.parameters()),
             "final_train": final_train,
             "final_validation": final_val,
         }

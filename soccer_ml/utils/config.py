@@ -14,8 +14,8 @@ class DataConfig:
     graph_dim: int = 7
     pitch_length: float = 120.0
     pitch_width: float = 80.0
-    grid_m: int = 12
-    grid_n: int = 8
+    grid_m: int = 26  # bins along the pitch length
+    grid_n: int = 17  # bins along the pitch width
 
 
 @dataclass
@@ -25,6 +25,7 @@ class ModelConfig:
     nb_heads: int = 8
     dropout: float = 0.0
     use_mlp: bool = False
+    symmetry: str = "d2"  # d2 | y_flip | none (reflection views used by the backbone)
     enable_receiver_head: bool = True
     enable_target_location_head: bool = True
     enable_shot_head: bool = True
@@ -82,7 +83,7 @@ def load_config(config_path: Optional[str] = None) -> SoccerConfig:
         if float_key in train_dict:
             train_dict[float_key] = float(train_dict[float_key])
 
-    for float_key in ["receiver_weight", "shot_weight", "creativity_weight", "vae_weight", "vae_kl_weight"]:
+    for float_key in ["receiver_weight", "target_location_weight", "shot_weight", "creativity_weight", "vae_weight", "vae_kl_weight"]:
         if float_key in loss_dict:
             loss_dict[float_key] = float(loss_dict[float_key])
 

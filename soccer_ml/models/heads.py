@@ -1,8 +1,10 @@
 """Decoder heads for soccer tasks: Invariant Node/Graph heads and Equivariant VAE head."""
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Sequence
 import torch
 import torch.nn as nn
+
+from soccer_ml.data.transforms import flip_grid
 
 
 def frame_average_views(views: List[torch.Tensor]) -> torch.Tensor:
@@ -208,70 +210,97 @@ class EquivariantVAEHead(nn.Module):
         return reconstruction, mu, logvar
 
 
-class PitchTargetGridHead(nn.Module):
-    """Predicts pass target destination as a probability distribution over an M x N pitch grid.
+def pool_graph_readout(
+    node_embeddings: torch.Tensor,
+    mask: Optional[torch.Tensor] = None,
+    actor_mask: Optional[torch.Tensor] = None,
+) -> torch.Tensor:
+    """Concatenate a masked mean pool with the passer's node embedding.
 
-    Combines pooled graph embedding and the ball carrier/passer representation.
+    Args:
+        node_embeddings: (..., N, D)
+        mask: Optional (..., N) valid-player mask.
+        actor_mask: Optional (..., N) passer mask; frames without an actor fall
+            back to the pooled embedding.
+
+    Returns:
+        (..., 2 * D) readout.
+    """
+    if mask is not None:
+        w = mask.unsqueeze(-1).to(node_embeddings.dtype)
+        pooled = (node_embeddings * w).sum(dim=-2) / w.sum(dim=-2).clamp_min(1.0)
+    else:
+        pooled = node_embeddings.mean(dim=-2)
+
+    if actor_mask is not None:
+        w_actor = actor_mask.unsqueeze(-1).to(node_embeddings.dtype)
+        if mask is not None:
+            w_actor = w_actor * mask.unsqueeze(-1).to(node_embeddings.dtype)
+        actor_count = w_actor.sum(dim=-2)
+        actor_emb = (node_embeddings * w_actor).sum(dim=-2) / actor_count.clamp_min(1.0)
+        actor_emb = torch.where(actor_count > 0, actor_emb, pooled)
+    else:
+        actor_emb = pooled
+    return torch.cat([pooled, actor_emb], dim=-1)
+
+
+class PitchTargetGridHead(nn.Module):
+    """Predicts pass destination logits over an M x N pitch grid, equivariantly.
+
+    A location target moves with the pitch: reflecting the input must reflect
+    the predicted distribution.  Averaging the views *before* decoding (as the
+    invariant heads do) would make left- and right-wing situations
+    indistinguishable.  Instead, every view is decoded in its own frame, its
+    logit grid is mapped back to the canonical frame, and the aligned grids are
+    averaged (frame averaging for an equivariant output):
+
+        f(X) = 1/|G| sum_g  rho(g)^{-1} decode(H_g(X))
+
     Has configurable use_mlp (default False: single linear projection consistent with TacticAI).
     """
 
     def __init__(
         self,
-        hidden_dim: int,
-        num_zones: int = 96,
+        in_dim: int,
+        grid_m: int,
+        grid_n: int,
+        group_actions: Sequence[int] = (0, 1, 2, 3),
         use_mlp: bool = False,
         mlp_hidden_dim: Optional[int] = None,
         dropout: float = 0.0,
     ):
         super().__init__()
-        self.hidden_dim = hidden_dim
-        self.num_zones = num_zones
+        self.in_dim = in_dim
+        self.grid_m = grid_m
+        self.grid_n = grid_n
+        self.num_zones = grid_m * grid_n
+        self.group_actions = tuple(group_actions)
         self.use_mlp = use_mlp
 
-        in_dim = hidden_dim * 2
         if use_mlp:
-            mlp_dim = mlp_hidden_dim or hidden_dim
+            mlp_dim = mlp_hidden_dim or in_dim
             self.decoder = nn.Sequential(
                 nn.Linear(in_dim, mlp_dim),
                 nn.GELU(),
                 nn.Dropout(dropout) if dropout > 0.0 else nn.Identity(),
-                nn.Linear(mlp_dim, num_zones),
+                nn.Linear(mlp_dim, self.num_zones),
             )
         else:
-            self.decoder = nn.Linear(in_dim, num_zones)
+            self.decoder = nn.Linear(in_dim, self.num_zones)
 
-    def forward(
-        self,
-        views: List[torch.Tensor],
-        mask: Optional[torch.Tensor] = None,
-        actor_mask: Optional[torch.Tensor] = None,
-    ) -> torch.Tensor:
-        """Decode pitch target zone logits from D2 views.
+    def forward(self, view_features: torch.Tensor) -> torch.Tensor:
+        """Decode pitch target zone logits.
 
         Args:
-            views: List of 4 view tensors (B, N, hidden_dim).
-            mask: Optional (B, N) player mask.
-            actor_mask: Optional (B, N) boolean or float mask for actor/passer.
+            view_features: (V, B, in_dim) per-view readouts, where view ``v`` was
+                computed in the frame of ``group_actions[v]``.
 
         Returns:
-            Logits of shape (B, num_zones).
+            Logits of shape (B, grid_m * grid_n) in the canonical frame.
         """
-        h_node = frame_average_views(views)  # (B, N, hidden_dim)
-
-        if mask is not None:
-            w = mask.unsqueeze(-1).float()
-            h_graph = (h_node * w).sum(dim=1) / w.sum(dim=1).clamp_min(1.0)
-        else:
-            h_graph = h_node.mean(dim=1)
-
-        if actor_mask is not None:
-            w_actor = actor_mask.unsqueeze(-1).float()
-            has_actor = w_actor.sum(dim=1, keepdim=True) > 0
-            actor_emb = (h_node * w_actor).sum(dim=1) / w_actor.sum(dim=1).clamp_min(1.0)
-            actor_emb = torch.where(has_actor, actor_emb, h_graph)
-        else:
-            actor_emb = h_graph
-
-        combined = torch.cat([h_graph, actor_emb], dim=-1)  # (B, 2 * hidden_dim)
-        return self.decoder(combined)
-
+        num_views, batch_size, _ = view_features.shape
+        if num_views != len(self.group_actions):
+            raise ValueError(f"Expected {len(self.group_actions)} views, got {num_views}.")
+        logits = self.decoder(view_features).view(num_views, batch_size, self.grid_m, self.grid_n)
+        aligned = [flip_grid(logits[index], action) for index, action in enumerate(self.group_actions)]
+        return torch.stack(aligned, dim=0).mean(dim=0).flatten(1)

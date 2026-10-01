@@ -62,11 +62,12 @@ class VAELoss(nn.Module):
 
 
 class SoccerMultiTaskLoss(nn.Module):
-    """Combines receiver prediction loss, shot prediction loss, creativity loss, and VAE loss."""
+    """Combines receiver, target location, shot, creativity, and VAE losses."""
 
     def __init__(
         self,
         receiver_weight: float = 1.0,
+        target_location_weight: float = 1.0,
         shot_weight: float = 1.0,
         creativity_weight: float = 1.0,
         vae_weight: float = 1.0,
@@ -74,6 +75,7 @@ class SoccerMultiTaskLoss(nn.Module):
     ):
         super().__init__()
         self.receiver_weight = receiver_weight
+        self.target_location_weight = target_location_weight
         self.shot_weight = shot_weight
         self.creativity_weight = creativity_weight
         self.vae_weight = vae_weight
@@ -100,13 +102,22 @@ class SoccerMultiTaskLoss(nn.Module):
             total_loss = total_loss + self.receiver_weight * receiver_loss
             losses["receiver_loss"] = receiver_loss
 
-        # 2. Shot prediction (Graph binary classification)
+        # 2. Pass target location (pitch grid classification)
+        target_zone_label = getattr(batch, "target_zone_label", None)
+        if "target_zone_logits" in model_outputs and target_zone_label is not None:
+            target_location_loss = self.receiver_criterion(
+                model_outputs["target_zone_logits"], target_zone_label
+            )
+            total_loss = total_loss + self.target_location_weight * target_location_loss
+            losses["target_location_loss"] = target_location_loss
+
+        # 3. Shot prediction (Graph binary classification)
         if "shot_logits" in model_outputs and batch.shot_label is not None:
             shot_loss = self.shot_criterion(model_outputs["shot_logits"], batch.shot_label)
             total_loss = total_loss + self.shot_weight * shot_loss
             losses["shot_loss"] = shot_loss
 
-        # 3. Player Creativity score (Node regression)
+        # 4. Player Creativity score (Node regression)
         if "creativity_scores" in model_outputs and batch.creativity_label is not None:
             creativity_loss = self.creativity_criterion(
                 model_outputs["creativity_scores"], batch.creativity_label
@@ -114,7 +125,7 @@ class SoccerMultiTaskLoss(nn.Module):
             total_loss = total_loss + self.creativity_weight * creativity_loss
             losses["creativity_loss"] = creativity_loss
 
-        # 4. Generative VAE adjustment loss
+        # 5. Generative VAE adjustment loss
         if "vae_recon" in model_outputs:
             target_xy_v = batch.node_features[..., :4]  # ground-truth coordinates & velocities
             vae_losses = self.vae_criterion(

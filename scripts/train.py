@@ -100,6 +100,11 @@ def main():
         nb_heads=config.model.nb_heads,
         dropout=config.model.dropout,
         enable_receiver_head=config.model.enable_receiver_head,
+        enable_target_location_head=config.model.enable_target_location_head,
+        grid_m=config.data.grid_m,
+        grid_n=config.data.grid_n,
+        use_mlp=config.model.use_mlp,
+        symmetry=config.model.symmetry,
         enable_shot_head=config.model.enable_shot_head,
         enable_creativity_head=config.model.enable_creativity_head,
         enable_vae_head=config.model.enable_vae_head,
@@ -108,6 +113,7 @@ def main():
 
     loss_fn = SoccerMultiTaskLoss(
         receiver_weight=config.loss_weights.receiver_weight,
+        target_location_weight=config.loss_weights.target_location_weight,
         shot_weight=config.loss_weights.shot_weight,
         creativity_weight=config.loss_weights.creativity_weight,
         vae_weight=config.loss_weights.vae_weight,

@@ -283,6 +283,7 @@ def main():
             num_layers=config.model.num_layers,
             nb_heads=config.model.nb_heads,
             enable_receiver_head=True,
+            enable_target_location_head=False,
             enable_shot_head=False,
             enable_creativity_head=False,
             enable_vae_head=False,

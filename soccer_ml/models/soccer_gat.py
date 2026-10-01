@@ -4,6 +4,7 @@ from typing import Optional, Dict, Any, Union
 import torch
 import torch.nn as nn
 
+from soccer_ml.data.pitch_grid import DEFAULT_GRID_M, DEFAULT_GRID_N
 from soccer_ml.data.schema import SoccerGraphBatch
 from soccer_ml.models.backbone import D2GATv2Backbone
 from soccer_ml.models.heads import (
@@ -12,6 +13,7 @@ from soccer_ml.models.heads import (
     PitchTargetGridHead,
     EquivariantVAEHead,
     frame_average_views,
+    pool_graph_readout,
 )
 
 
@@ -20,7 +22,8 @@ class SoccerGATv2Model(nn.Module):
 
     Supports:
         1. Node classification (e.g., Receiver prediction, ball target player)
-        2. Pitch target grid prediction (e.g., Target location discretized into M x N zones)
+        2. Pitch target grid prediction (e.g., Target location discretized into M x N zones),
+           decoded equivariantly so that reflecting the pitch reflects the prediction
         3. Node regression (e.g., Player creativity index, expected threat per player)
         4. Graph classification / regression (e.g., Threatening shot likelihood, expected goals)
         5. Generative VAE refinement (e.g., Adjusting player positions and velocities conditioned on outcome)
@@ -34,8 +37,10 @@ class SoccerGATv2Model(nn.Module):
         hidden_dim: int = 64,
         num_layers: int = 4,
         nb_heads: int = 8,
-        num_zones: int = 96,
+        grid_m: int = DEFAULT_GRID_M,
+        grid_n: int = DEFAULT_GRID_N,
         use_mlp: bool = False,
+        symmetry: str = "d2",
         dropout: float = 0.0,
         enable_receiver_head: bool = True,
         enable_target_location_head: bool = True,
@@ -49,7 +54,9 @@ class SoccerGATv2Model(nn.Module):
         self.in_edge_dim = in_edge_dim
         self.in_graph_dim = in_graph_dim
         self.hidden_dim = hidden_dim
-        self.num_zones = num_zones
+        self.grid_m = grid_m
+        self.grid_n = grid_n
+        self.num_zones = grid_m * grid_n
 
         # Core D2 GATv2 Backbone
         self.backbone = D2GATv2Backbone(
@@ -60,6 +67,7 @@ class SoccerGATv2Model(nn.Module):
             in_edge_dim=in_edge_dim,
             in_graph_dim=in_graph_dim,
             dropout=dropout,
+            symmetry=symmetry,
         )
 
         # Invariant Node Head for Receiver Prediction (outputs 1 logit per player)
@@ -69,11 +77,13 @@ class SoccerGATv2Model(nn.Module):
             else None
         )
 
-        # Invariant Head for Pitch Target Grid Location (outputs num_zones logits)
+        # Equivariant Head for Pitch Target Grid Location (outputs grid_m * grid_n logits)
         self.target_location_head = (
             PitchTargetGridHead(
-                hidden_dim=hidden_dim,
-                num_zones=num_zones,
+                in_dim=2 * hidden_dim,
+                grid_m=grid_m,
+                grid_n=grid_n,
+                group_actions=self.backbone.group_actions,
                 use_mlp=use_mlp,
                 dropout=dropout,
             )
@@ -132,7 +142,7 @@ class SoccerGATv2Model(nn.Module):
         else:
             node_fts = batch_or_node_fts
 
-        # Backbone generates 4 D2 view representations
+        # Backbone generates one representation per reflection view
         views = self.backbone(
             node_fts=node_fts,
             edge_fts=edge_fts,
@@ -152,9 +162,10 @@ class SoccerGATv2Model(nn.Module):
         # Target Location Grid Prediction Head
         if self.target_location_head is not None:
             actor_mask = (node_fts[..., 6] > 0.5) if node_fts.shape[-1] > 6 else None
-            outputs["target_zone_logits"] = self.target_location_head(
-                views, mask=player_mask, actor_mask=actor_mask
-            )
+            view_readouts = pool_graph_readout(
+                torch.stack(views, dim=0), mask=player_mask, actor_mask=actor_mask
+            )  # (V, B, 2 * hidden_dim)
+            outputs["target_zone_logits"] = self.target_location_head(view_readouts)
 
         # Shot Prediction Head
         if self.shot_head is not None:
