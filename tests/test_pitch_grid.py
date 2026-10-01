@@ -11,7 +11,7 @@ from soccer_ml.data.pitch_grid import (
     closest_teammate_zone_scores,
     passer_zones,
 )
-from soccer_ml.data.schema import SoccerGraphBatch
+from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT, SoccerGraphBatch
 from soccer_ml.data.transforms import normalize_pitch_coordinates
 from soccer_ml.training.metrics import ZoneMetricAccumulator
 
@@ -70,12 +70,13 @@ def test_gaussian_soft_targets_peak_at_true_zone(grid):
 
 def _graph_batch(positions, teammate, actor_index=0):
     n = len(positions)
-    node_features = torch.zeros(1, n, 9)
+    layout = STATSBOMB_NODE_LAYOUT
+    node_features = torch.zeros(1, n, layout.dim)
     for index, (x, y) in enumerate(positions):
         nx, ny = normalize_pitch_coordinates(torch.tensor(x), torch.tensor(y), 120.0, 80.0, 10.0)
         node_features[0, index, :2] = torch.stack([nx, ny])
-        node_features[0, index, 7] = float(teammate[index])
-    node_features[0, actor_index, 6] = 1.0
+        node_features[0, index, layout.teammate] = float(teammate[index])
+    node_features[0, actor_index, layout.actor] = 1.0
     return SoccerGraphBatch(
         node_features=node_features,
         edge_features=torch.zeros(1, n, n, 1),
@@ -127,10 +128,39 @@ def test_zone_metric_accumulator(grid):
     scores[0, target[0]] = 0.0  # exact hit
     scores[1, target[1] + 1] = 0.0  # neighbouring zone (one bin along y)
     scores[1, target[1]] = -1.0  # second choice
-    accumulator.update(torch.log_softmax(scores, dim=-1), target, end, scores_are_log_probs=True)
+    log_probs = torch.log_softmax(scores, dim=-1)
+    accumulator.update(log_probs, target, end, log_probs=log_probs)
     metrics = accumulator.compute()
     assert metrics["top_1_acc"] == pytest.approx(0.5)
     assert metrics["top_3_acc"] == pytest.approx(1.0)
     assert metrics["within_1_zone_acc"] == pytest.approx(1.0)
     assert metrics["nll"] > 0
     assert metrics["median_dist_yd"] < math.hypot(grid.cell_length, grid.cell_width)
+
+
+def test_teammate_kernel_baseline_is_normalized_and_prefers_close_teammates(grid):
+    from soccer_ml.data.pitch_grid import TeammateKernelBaseline
+
+    positions = [(50.0, 40.0), (56.0, 40.0), (90.0, 70.0), (52.0, 41.0)]
+    batch = _graph_batch(positions, [True, True, True, False])
+    batch.target_zone_label = torch.tensor([grid.coords_to_zone(56.0, 40.0)])
+    kernel = TeammateKernelBaseline(grid)
+    kernel.update(batch)
+    tau, sigma, eps = kernel.finalize()
+    log_probs = kernel.log_probs(batch)
+    assert torch.allclose(log_probs.exp().sum(dim=-1), torch.ones(1), atol=1e-5)
+    assert log_probs.argmax().item() == grid.coords_to_zone(56.0, 40.0)  # nearest teammate, not the opponent
+
+
+def test_receiver_accuracy_metric(grid):
+    from soccer_ml.data.pitch_grid import receiver_candidates
+
+    positions = [(50.0, 40.0), (70.0, 40.0), (55.0, 60.0), (52.0, 41.0)]
+    batch = _graph_batch(positions, [True, True, True, False])
+    batch.receiver_label = torch.tensor([2])
+    receivers = receiver_candidates(batch, grid)
+    scores = torch.zeros(1, grid.num_zones)
+    scores[0, grid.coords_to_zone(57.0, 63.0)] = 1.0  # near teammate 2
+    accumulator = ZoneMetricAccumulator(grid)
+    accumulator.update(scores, torch.tensor([0]), torch.tensor([[55.0, 60.0]]), receivers=receivers)
+    assert accumulator.compute()["receiver_acc"] == 1.0

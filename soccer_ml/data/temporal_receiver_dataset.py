@@ -33,7 +33,7 @@ from torch.utils.data import Dataset
 
 from soccer_ml.data.pitch_grid import DEFAULT_GRID_M, DEFAULT_GRID_N
 from soccer_ml.data.receiver_dataset import ReceiverParser
-from soccer_ml.data.schema import SoccerGraphBatch, SoccerSample
+from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT, SoccerGraphBatch, SoccerSample
 from soccer_ml.data.statsbomb import StatsBomb360Parser
 
 
@@ -225,15 +225,15 @@ def transform_event_numeric(event_numeric: torch.Tensor, action: int) -> torch.T
 def _rotate_to_target_frame(graph: SoccerSample, roles: torch.Tensor) -> tuple[SoccerSample, torch.Tensor]:
     """Rotate an opposing-team frame by 180 degrees and invert team flags.
 
-    Normalized coordinates are zero-centered, so the rotation negates x, y and
-    the velocities.  Teammate flags become relative to the target passer's
-    team; the opposing-team edge feature is symmetric and unchanged.
+    Normalized coordinates are zero-centered, so the rotation negates x and y.
+    Teammate flags become relative to the target passer's team; the
+    opposing-team edge feature is symmetric and unchanged.
     """
+    layout = STATSBOMB_NODE_LAYOUT
     valid = graph.player_mask.to(graph.node_features.dtype)
     node_features = graph.node_features.clone()
-    node_features[:, 0:4] = -node_features[:, 0:4]
-    if node_features.shape[-1] > 7:
-        node_features[:, 7] = (1.0 - node_features[:, 7]) * valid
+    node_features[:, [layout.x, layout.y]] = -node_features[:, [layout.x, layout.y]]
+    node_features[:, layout.teammate] = (1.0 - node_features[:, layout.teammate]) * valid
     rotated_roles = roles.clone()
     rotated_roles[:, 2] = (1.0 - rotated_roles[:, 2]) * valid
     rotated = SoccerSample(

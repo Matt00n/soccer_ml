@@ -19,17 +19,28 @@ the earlier receiver benchmark.
 
 Reported metrics, for models and baselines alike:
 
+- **NLL** of the true zone, the headline metric. It is a proper scoring rule,
+  and per pass it is exactly the "surprise" used for creativity analysis.
+  Every baseline except the hard closest-teammate ranking has one; its
+  probabilistic counterpart is `teammate_kernel`.
 - top-1 / top-3 / top-5 zone accuracy
 - within-1-zone accuracy: the top-1 zone is the true zone or one of its 8 neighbours
 - mean and median distance from the top-1 zone center to the true end
   location, in StatsBomb yards and in meters after rescaling to 105 × 68 m
-- NLL of the true zone, for models and the fitted prior baselines
+- receiver accuracy, following the un-xPass protocol (Robberechts et al., KDD
+  2023). The predicted receiver is the visible teammate closest to the top-1
+  zone; the true receiver is the visible teammate closest to the actual end
+  location.
 
 The best checkpoint is selected by validation NLL.
 
 ## Inputs and leakage rules
 
-- Node features (9): `x, y, v_x, v_y, height, weight, is_actor, is_teammate, is_keeper`.
+- Node features (5, `STATSBOMB_NODE_LAYOUT`): `x, y, is_actor, is_teammate,
+  is_keeper`. 360 frames have no velocities or player attributes, so no
+  constant placeholder channels are used. (Checkpoints from before this change
+  expect 9 channels; `scripts/analyze_surprise.py` can still score
+  `seq2spatial` and the history models from those.)
 - Graph features (7): `is_pass, is_shot, period, minute/90, under_pressure,
   pass_height, pass_body_part`. The target pass's `pass_height` and
   `pass_body_part` describe the decision being predicted, and a "High Pass"
@@ -97,6 +108,9 @@ off unless `--num-fourier-bands > 0`.
 
 All baselines output a full ranking over zones:
 
+- `teammate_kernel`: a probabilistic closest-teammate baseline. It is a
+  mixture of Gaussians on visible teammates, weighted by their distance to the
+  passer, with (τ, σ, ε) fitted on train.
 - `passer_zone_prior`: a zone-transition table P(target zone | passer zone),
   fitted on the training split and smoothed towards `pass_vector_prior`.
 - `pass_vector_prior`: the empirical distribution of pass displacements,
@@ -152,6 +166,31 @@ conda run -n soccer_ml python scripts/evaluate_temporal_receiver.py \
   --prior-three-sixty data_toy_receiver/three_sixty_3764440.json \
   --prior-events data_toy_receiver/events_3764440.json \
   --checkpoint checkpoints/temporal_receiver/seq2spatial/best_model.pt
+```
+
+## Surprise analysis
+
+`scripts/analyze_surprise.py` scores every validation pass of a run with its
+checkpoint and joins it with the StatsBomb event. It reports:
+
+- agreement with the closest-teammate baseline;
+- results inside and outside the visible area;
+- an un-xPass-comparable subset;
+- calibration;
+- surprise by pass flag (through ball, switch, cross, …) and by position;
+- player rankings with 95% CIs, based on **rarity**. Rarity is the probability
+  mass on zones the model rated more likely than the chosen one, plus half the
+  chosen zone's probability. Under a calibrated model it averages 0.5 for any
+  role, so it normalizes for the situation.
+
+It writes `passes.csv` and `report.json`. You can pass several `--run-dir`
+values whose validation folds partition the matches; scoring each fold with
+its own run's checkpoint gives out-of-fold (cross-fitted) surprise for every
+match. `--from-csv` rebuilds the report without rescoring.
+
+```bash
+conda run -n soccer_ml python scripts/analyze_surprise.py \
+  --run-dir checkpoints/temporal_receiver --model seq2spatial
 ```
 
 `--context-length` must match the checkpoint. The parser only links events

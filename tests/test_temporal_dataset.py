@@ -6,6 +6,7 @@ import pytest
 import torch
 
 from soccer_ml.data.pitch_grid import PitchGrid
+from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT
 from soccer_ml.data.temporal_receiver_dataset import (
     EVENT_END_X_IDX,
     EVENT_END_Y_IDX,
@@ -64,7 +65,7 @@ def test_history_is_in_target_team_frame(dataset):
                 continue
             actor = sample.role_features[step, :, 0].argmax()
             assert sample.role_features[step, actor, 2] == 0
-            assert sample.node_features[step, actor, 7] == 0
+            assert sample.node_features[step, actor, STATSBOMB_NODE_LAYOUT.teammate] == 0
             actor_xy = sample.node_features[step, actor, :2] / 10.0 + 0.5
             event_xy = sample.event_numeric[step, [EVENT_X_IDX, EVENT_Y_IDX]]
             actor_offsets.append(torch.norm(actor_xy - event_xy).item())
@@ -75,3 +76,10 @@ def test_history_is_in_target_team_frame(dataset):
     assert torch.tensor(actor_offsets).median() < 0.02
     # Unrotated, an opponent pressure sits on the mirrored side of the pitch.
     assert torch.tensor(continuity_gaps).median() < 0.1
+
+
+def test_node_features_carry_no_constant_channels(dataset):
+    """Every StatsBomb node channel must vary across real players."""
+    nodes = torch.cat([sample.node_features[-1][sample.player_mask[-1]] for sample in dataset.samples])
+    assert nodes.shape[-1] == STATSBOMB_NODE_LAYOUT.dim
+    assert torch.all(nodes.std(dim=0) > 0)

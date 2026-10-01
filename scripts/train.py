@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader, random_split
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from soccer_ml.data.dataset import SyntheticSoccerDataset, collate_soccer_graphs
+from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT, TRACKING_NODE_LAYOUT
 from soccer_ml.models.soccer_gat import SoccerGATv2Model
 from soccer_ml.training.losses import SoccerMultiTaskLoss
 from soccer_ml.training.trainer import SoccerTrainer, get_default_device
@@ -91,8 +92,11 @@ def main():
     )
 
     # Initialize model
+    # StatsBomb 360 graphs have their own fixed layout; synthetic data follows the config.
+    node_layout = STATSBOMB_NODE_LAYOUT if args.three_sixty else TRACKING_NODE_LAYOUT
     model = SoccerGATv2Model(
-        in_node_dim=config.data.node_dim,
+        in_node_dim=STATSBOMB_NODE_LAYOUT.dim if args.three_sixty else config.data.node_dim,
+        node_layout=node_layout.name,
         in_edge_dim=config.data.edge_dim,
         in_graph_dim=config.data.graph_dim,
         hidden_dim=config.model.hidden_dim,

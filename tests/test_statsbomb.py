@@ -25,7 +25,7 @@ def test_statsbomb_parser_and_dataset():
     sample = dataset[0]
 
     # Verify tensor shapes
-    assert sample.node_features.shape == (22, 9)
+    assert sample.node_features.shape == (22, 5)
     assert sample.edge_features.shape == (22, 22, 1)
     assert sample.graph_features.shape == (7,)
     assert sample.adj_mat.shape == (22, 22)
@@ -36,7 +36,7 @@ def test_statsbomb_parser_and_dataset():
     loader = DataLoader(dataset, batch_size=8, shuffle=False, collate_fn=collate_soccer_graphs)
     batch = next(iter(loader))
 
-    assert batch.node_features.shape == (8, 22, 9)
+    assert batch.node_features.shape == (8, 22, 5)
     assert batch.edge_features.shape == (8, 22, 22, 1)
     assert batch.adj_mat.shape == (8, 22, 22)
     assert batch.player_mask.shape == (8, 22)
@@ -53,9 +53,10 @@ def test_soccer_gat_on_statsbomb_data():
     batch = next(iter(loader))
 
     model = SoccerGATv2Model(
-        in_node_dim=9,
+        in_node_dim=5,
         in_edge_dim=1,
         in_graph_dim=7,
+        node_layout="statsbomb",
         hidden_dim=32,
         num_layers=2,
         nb_heads=4,

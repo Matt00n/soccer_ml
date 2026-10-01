@@ -3,7 +3,8 @@
 
 data:
   num_players: 22
-  node_dim: 9       # x, y, vx, vy, height, weight, ball_possession, is_teammate, is_keeper
+  node_dim: 7       # synthetic tracking data: x, y, vx, vy, height, weight, ball_possession
+                    # (StatsBomb 360 graphs always use their 5-channel layout: x, y, is_actor, is_teammate, is_keeper)
   edge_dim: 1       # opposing team indicator
   graph_dim: 7      # is_pass, is_shot, period, minute/90, under_pressure, pass_height, pass_body_part
   pitch_length: 120.0

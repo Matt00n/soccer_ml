@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 from typing import Optional, Tuple
 
 import torch
 
-from soccer_ml.data.schema import SoccerGraphBatch
+from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT, SoccerGraphBatch
 
 # Default grid: 26 x 17 zones, consistent with prior pass-destination work
 # (~4 m cells on a 105 x 68 m pitch; 4.6 x 4.7 yd on the 120 x 80 StatsBomb pitch).
@@ -152,8 +153,8 @@ class PitchGrid:
 
 
 def _actor_indices(batch: SoccerGraphBatch) -> torch.Tensor:
-    """Index of the passer (actor flag, node feature 6) in every graph."""
-    return batch.node_features[..., 6].argmax(dim=-1)
+    """Index of the passer (actor flag) in every graph."""
+    return batch.node_features[..., STATSBOMB_NODE_LAYOUT.actor].argmax(dim=-1)
 
 
 def passer_zones(batch: SoccerGraphBatch, pitch_grid: PitchGrid, target_scale: float = 10.0) -> torch.Tensor:
@@ -161,6 +162,49 @@ def passer_zones(batch: SoccerGraphBatch, pitch_grid: PitchGrid, target_scale: f
     rows = torch.arange(batch.batch_size, device=batch.node_features.device)
     passer_xy = batch.node_features[rows, _actor_indices(batch), :2]
     return pitch_grid.batch_coords_to_zones(pitch_grid.normalized_to_pitch(passer_xy, target_scale))
+
+
+def _teammate_candidates(
+    batch: SoccerGraphBatch, pitch_grid: PitchGrid, target_scale: float = 10.0
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Player positions in pitch units (B, N, 2), visible non-passer teammates (B, N), passer index (B,)."""
+    B, N, _ = batch.node_features.shape
+    device = batch.node_features.device
+    xy = pitch_grid.normalized_to_pitch(batch.node_features[..., :2], target_scale)
+    actor = _actor_indices(batch)
+    mask = batch.player_mask if batch.player_mask is not None else torch.ones(B, N, dtype=torch.bool, device=device)
+    valid = mask & (batch.node_features[..., STATSBOMB_NODE_LAYOUT.teammate] > 0.5)
+    valid[torch.arange(B, device=device), actor] = False
+    return xy, valid, actor
+
+
+@dataclass
+class ReceiverCandidates:
+    """Visible teammates of the passer, for un-xPass-style receiver accuracy.
+
+    ``receiver`` is the visible teammate closest to the true end location
+    (the dataset's receiver label); ``nearest`` maps a predicted location to
+    the visible teammate closest to it.
+    """
+
+    xy: torch.Tensor  # (B, N, 2) pitch units
+    candidates: torch.Tensor  # (B, N) bool
+    receiver: torch.Tensor  # (B,)
+
+    @property
+    def has_candidate(self) -> torch.Tensor:
+        return self.candidates.any(dim=-1)
+
+    def nearest(self, locations: torch.Tensor) -> torch.Tensor:
+        distances = torch.norm(self.xy - locations.to(self.xy.device).unsqueeze(1), dim=-1)
+        return distances.masked_fill(~self.candidates, float("inf")).argmin(dim=-1)
+
+
+def receiver_candidates(
+    batch: SoccerGraphBatch, pitch_grid: PitchGrid, target_scale: float = 10.0
+) -> ReceiverCandidates:
+    xy, valid, _ = _teammate_candidates(batch, pitch_grid, target_scale)
+    return ReceiverCandidates(xy=xy, candidates=valid, receiver=batch.receiver_label.to(xy.device))
 
 
 def closest_teammate_zone_scores(
@@ -172,27 +216,18 @@ def closest_teammate_zone_scores(
 
     The top-1 prediction is the zone of the closest visible teammate, top-2 the
     zone of the second closest teammate, and so on.  Without any visible
-    teammate the passer's own zone is predicted.
+    teammate the passer's own zone is predicted.  Distances are measured in
+    pitch units (the normalized coordinates scale x and y differently).
     """
-    B, N, D_v = batch.node_features.shape
-    device = batch.node_features.device
-    xy = batch.node_features[..., :2]
-    actor = _actor_indices(batch)
-    rows = torch.arange(B, device=device)
-
+    B = batch.batch_size
+    xy, valid, actor = _teammate_candidates(batch, pitch_grid, target_scale)
+    rows = torch.arange(B, device=xy.device)
     distances = torch.norm(xy - xy[rows, actor].unsqueeze(1), dim=-1)
-    mask = batch.player_mask if batch.player_mask is not None else torch.ones(B, N, dtype=torch.bool, device=device)
-    if D_v > 7:
-        is_teammate = batch.node_features[..., 7] > 0.5
-    else:
-        is_teammate = batch.edge_features[rows, actor, :, 0] < 0.5
-    valid = mask & is_teammate
-    valid[rows, actor] = False
 
-    player_zones = pitch_grid.batch_coords_to_zones(pitch_grid.normalized_to_pitch(xy, target_scale))
+    player_zones = pitch_grid.batch_coords_to_zones(xy)
     # Closer teammates get higher scores; invalid players contribute nothing.
     player_scores = torch.where(valid, -distances, torch.full_like(distances, -1e9))
-    scores = torch.full((B, pitch_grid.num_zones), -1e9, device=device)
+    scores = torch.full((B, pitch_grid.num_zones), -1e9, device=xy.device)
     scores.scatter_reduce_(1, player_zones, player_scores, reduce="amax")
 
     fallback = ~valid.any(dim=-1)
@@ -202,12 +237,78 @@ def closest_teammate_zone_scores(
     return scores
 
 
+class TeammateKernelBaseline:
+    """Probabilistic closest-teammate baseline, so it has an NLL.
+
+    p(z) = (1 - eps) * sum_i w_i K_sigma(z | teammate_i) + eps / Z, with
+    w = softmax(-distance_to_passer / tau) over visible teammates (the passer
+    itself when none is visible) and K_sigma a Gaussian over zone centers,
+    normalized over the grid.  (tau, sigma, eps) are chosen by grid search on
+    the training NLL; with three parameters this is not prone to overfitting.
+    """
+
+    TAUS = (2.0, 5.0, 10.0, 20.0, 50.0)
+    SIGMAS = (2.0, 4.0, 8.0)
+    EPSILONS = (0.05, 0.2, 0.5)
+
+    def __init__(self, pitch_grid: PitchGrid, target_scale: float = 10.0):
+        self.pitch_grid = pitch_grid
+        self.target_scale = target_scale
+        self.nll_sums = torch.zeros(len(self.TAUS), len(self.SIGMAS), len(self.EPSILONS), dtype=torch.float64)
+        self.count = 0
+        self.params: Optional[Tuple[float, float, float]] = None
+
+    def _components(self, batch: SoccerGraphBatch, taus, sigmas) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Mixture weights (T, B, N) and per-player zone kernels (S, B, N, Z)."""
+        xy, valid, actor = _teammate_candidates(batch, self.pitch_grid, self.target_scale)
+        rows = torch.arange(batch.batch_size, device=xy.device)
+        no_teammate = ~valid.any(dim=-1)
+        valid[no_teammate, actor[no_teammate]] = True
+        distances = torch.norm(xy - xy[rows, actor].unsqueeze(1), dim=-1)
+        weights = torch.stack(
+            [torch.softmax((-distances / tau).masked_fill(~valid, float("-inf")), dim=-1) for tau in taus]
+        )
+        centers = self.pitch_grid.zone_centers(device=xy.device)
+        squared = (xy.unsqueeze(2) - centers.view(1, 1, -1, 2)).pow(2).sum(dim=-1)  # (B, N, Z)
+        kernels = torch.stack([torch.softmax(-squared / (2.0 * sigma**2), dim=-1) for sigma in sigmas])
+        return weights, kernels
+
+    @torch.no_grad()
+    def update(self, batch: SoccerGraphBatch) -> None:
+        """Accumulate the training NLL of every (tau, sigma, eps) combination."""
+        weights, kernels = self._components(batch, self.TAUS, self.SIGMAS)
+        target = batch.target_zone_label.to(kernels.device)
+        index = target.view(1, -1, 1, 1).expand(kernels.shape[0], -1, kernels.shape[2], 1)
+        kernel_at_target = kernels.gather(-1, index).squeeze(-1)  # (S, B, N)
+        mixture = torch.einsum("tbn,sbn->tsb", weights, kernel_at_target)  # (T, S, B)
+        z = self.pitch_grid.num_zones
+        for e, eps in enumerate(self.EPSILONS):
+            nll = -torch.log((1.0 - eps) * mixture + eps / z)
+            self.nll_sums[:, :, e] += nll.sum(dim=-1).double().cpu()
+        self.count += batch.batch_size
+
+    def finalize(self) -> Tuple[float, float, float]:
+        t, rest = divmod(int(self.nll_sums.argmin()), len(self.SIGMAS) * len(self.EPSILONS))
+        s, e = divmod(rest, len(self.EPSILONS))
+        self.params = (self.TAUS[t], self.SIGMAS[s], self.EPSILONS[e])
+        return self.params
+
+    @torch.no_grad()
+    def log_probs(self, batch: SoccerGraphBatch) -> torch.Tensor:
+        if self.params is None:
+            self.finalize()
+        tau, sigma, eps = self.params
+        weights, kernels = self._components(batch, (tau,), (sigma,))
+        mixture = torch.einsum("bn,bnz->bz", weights[0], kernels[0])
+        return torch.log((1.0 - eps) * mixture + eps / self.pitch_grid.num_zones)
+
+
 def random_zone_scores(
     batch: SoccerGraphBatch,
     pitch_grid: PitchGrid,
     generator: Optional[torch.Generator] = None,
 ) -> torch.Tensor:
-    """Baseline: a uniformly random ranking of all zones."""
+    """Baseline: a uniformly random ranking of all zones (its NLL is log(M * N))."""
     scores = torch.rand(batch.batch_size, pitch_grid.num_zones, generator=generator)
     return scores.to(batch.node_features.device)
 

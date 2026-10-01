@@ -11,6 +11,7 @@ from torch.utils.data import ConcatDataset, DataLoader, random_split
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from soccer_ml.data.receiver_dataset import ReceiverDataset, collate_receiver_graphs
+from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT
 from soccer_ml.models.soccer_gat import SoccerGATv2Model
 from soccer_ml.training.losses import SoccerMultiTaskLoss
 from soccer_ml.training.trainer import SoccerTrainer, get_default_device
@@ -359,12 +360,13 @@ def main():
 
     # Initialize model (receiver head only)
     model = SoccerGATv2Model(
-        in_node_dim=config.data.node_dim,
+        in_node_dim=STATSBOMB_NODE_LAYOUT.dim,
         in_edge_dim=config.data.edge_dim,
         in_graph_dim=config.data.graph_dim,
         hidden_dim=hidden_dim,
         num_layers=num_layers,
         nb_heads=config.model.nb_heads,
+        node_layout=STATSBOMB_NODE_LAYOUT.name,
         enable_receiver_head=True,
         enable_target_location_head=False,
         enable_shot_head=False,

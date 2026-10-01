@@ -5,22 +5,63 @@ from typing import Optional, Dict, Any
 import torch
 
 
+@dataclass(frozen=True)
+class NodeLayout:
+    """Channel positions of the node feature tensor.
+
+    ``vx``/``vy`` are ``None`` when the data has no velocities; reflections
+    then only negate the coordinates.  ``teammate``/``keeper`` are ``None``
+    when the layout lacks those flags.
+    """
+
+    name: str
+    dim: int
+    x: int
+    y: int
+    vx: Optional[int]
+    vy: Optional[int]
+    actor: int
+    teammate: Optional[int]
+    keeper: Optional[int]
+
+
+# StatsBomb 360 freeze frames carry only positions and three flags.  They have
+# no velocities or player attributes, so no constant placeholder channels.
+STATSBOMB_NODE_LAYOUT = NodeLayout(
+    name="statsbomb", dim=5, x=0, y=1, vx=None, vy=None, actor=2, teammate=3, keeper=4
+)
+# TacticAI-style tracking layout used by the synthetic dataset:
+# x, y, vx, vy, height, weight, ball possession (+ optional extra channels).
+TRACKING_NODE_LAYOUT = NodeLayout(
+    name="tracking", dim=7, x=0, y=1, vx=2, vy=3, actor=6, teammate=None, keeper=None
+)
+NODE_LAYOUTS = {layout.name: layout for layout in (STATSBOMB_NODE_LAYOUT, TRACKING_NODE_LAYOUT)}
+
+
+def get_node_layout(layout: "str | NodeLayout") -> NodeLayout:
+    if isinstance(layout, NodeLayout):
+        return layout
+    try:
+        return NODE_LAYOUTS[layout]
+    except KeyError as exc:
+        raise ValueError(f"Unknown node layout '{layout}'. Choose one of: {', '.join(NODE_LAYOUTS)}.") from exc
+
+
 @dataclass
 class SoccerSample:
     """Represents a single soccer situation / frame graph.
 
     Attributes:
-        node_features: (N, D_v) tensor representing on-pitch players.
-            Standard features include:
+        node_features: (N, D_v) tensor representing on-pitch players, laid out
+            as described by a :class:`NodeLayout`.  StatsBomb 360 data uses
+            ``STATSBOMB_NODE_LAYOUT``:
                 - index 0: x coordinate (normalized/zero-centered)
                 - index 1: y coordinate (normalized/zero-centered)
-                - index 2: v_x velocity
-                - index 3: v_y velocity
-                - index 4: height (normalized, e.g. / 100)
-                - index 5: weight (normalized, e.g. / 100)
-                - index 6: ball_possession / actor flag (1.0 if has ball, 0.0 otherwise)
-                - index 7: is_teammate flag (1.0 if teammate of actor, 0.0 if opponent)
-                - index 8: is_keeper flag (1.0 if goalkeeper, 0.0 otherwise)
+                - index 2: actor flag (1.0 for the player performing the event)
+                - index 3: is_teammate flag (1.0 if teammate of actor, 0.0 if opponent)
+                - index 4: is_keeper flag (1.0 if goalkeeper, 0.0 otherwise)
+            Synthetic tracking data uses ``TRACKING_NODE_LAYOUT``
+            (x, y, v_x, v_y, height, weight, ball possession).
         edge_features: (N, N, D_e) tensor.
             Standard features include:
                 - index 0: opposing team indicator (1.0 if opposing, 0.0 if same team)

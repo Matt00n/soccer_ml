@@ -9,7 +9,7 @@ import yaml
 @dataclass
 class DataConfig:
     num_players: int = 22
-    node_dim: int = 9
+    node_dim: int = 7  # synthetic tracking layout; StatsBomb data uses STATSBOMB_NODE_LAYOUT
     edge_dim: int = 1
     graph_dim: int = 7
     pitch_length: float = 120.0

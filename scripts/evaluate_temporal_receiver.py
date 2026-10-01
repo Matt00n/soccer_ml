@@ -22,7 +22,7 @@ from torch.utils.data import DataLoader
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from soccer_ml.data.pitch_grid import PitchGrid
+from soccer_ml.data.pitch_grid import PitchGrid, receiver_candidates
 from soccer_ml.data.receiver_dataset import (
     closest_teammate_baseline,
     most_frequent_receiver_baseline,
@@ -37,7 +37,7 @@ from soccer_ml.training.metrics import ZoneMetricAccumulator
 from soccer_ml.training.temporal_receiver_trainer import (
     FITTED_ZONE_BASELINES,
     evaluate_zone_baselines,
-    fit_zone_prior,
+    fit_zone_baselines,
 )
 from soccer_ml.training.trainer import get_default_device
 
@@ -60,20 +60,20 @@ def evaluate_target_zone(
     prior_suffix: str = "",
 ) -> dict[str, dict[str, float]]:
     """Evaluate a zone model and the zone baselines on one target set."""
-    prior = fit_zone_prior(prior_loader, pitch_grid)
-    baselines = evaluate_zone_baselines(loader, pitch_grid, prior, seed)
+    baselines = evaluate_zone_baselines(loader, pitch_grid, fit_zone_baselines(prior_loader, pitch_grid), seed)
     results: dict[str, dict[str, float]] = {}
     if model is not None:
         model.eval()
         accumulator = ZoneMetricAccumulator(pitch_grid)
         for temporal_batch in loader:
             temporal_batch = temporal_batch.to(device)
-            logits = model(temporal_batch)["target_zone_logits"]
+            log_probs = F.log_softmax(model(temporal_batch)["target_zone_logits"], dim=-1)
             accumulator.update(
-                F.log_softmax(logits, dim=-1),
+                log_probs,
                 temporal_batch.target_zone_label,
                 temporal_batch.pass_end_location,
-                scores_are_log_probs=True,
+                log_probs=log_probs,
+                receivers=receiver_candidates(temporal_batch.current_graph_batch(), pitch_grid),
             )
         results["model"] = accumulator.compute()
     for name, metrics in baselines.items():
@@ -139,13 +139,14 @@ def evaluate_receiver(
 
 def _format(metrics: dict[str, Any]) -> str:
     if "within_1_zone_acc" in metrics:
+        nll = f"nll={metrics['nll']:.3f}" if "nll" in metrics else "nll=  -  "
         text = (
-            f"top-1={metrics['top_1_acc']:.2%} top-3={metrics['top_3_acc']:.2%} "
+            f"{nll} | top-1={metrics['top_1_acc']:.2%} top-3={metrics['top_3_acc']:.2%} "
             f"top-5={metrics['top_5_acc']:.2%} within-1={metrics['within_1_zone_acc']:.2%} "
             f"| dist mean/median={metrics['mean_dist_yd']:.1f}/{metrics['median_dist_yd']:.1f}yd "
             f"({metrics['mean_dist_m']:.1f}/{metrics['median_dist_m']:.1f}m)"
         )
-        return text + (f" | nll={metrics['nll']:.3f}" if "nll" in metrics else "")
+        return text + (f" | receiver-acc={metrics['receiver_acc']:.2%}" if "receiver_acc" in metrics else "")
     suffix = f" | top-3={metrics['top_3_acc']:.2%}" if "top_3_acc" in metrics else ""
     return (
         f"top-1={metrics['top_1_acc']:.2%}{suffix} "

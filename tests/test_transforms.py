@@ -58,3 +58,18 @@ def test_pitch_normalization():
     assert abs(norm_x[2].item() - 5.0) < 1e-5
     assert abs(norm_y[0].item() - (-5.0)) < 1e-5
     assert abs(norm_y[2].item() - 5.0) < 1e-5
+
+
+def test_statsbomb_layout_reflections_only_touch_coordinates():
+    """StatsBomb nodes have no velocities: flags must survive every reflection."""
+    from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT
+
+    transform = D2GroupTransform.from_layout(STATSBOMB_NODE_LAYOUT)
+    nodes = torch.tensor([[[1.0, 2.0, 1.0, 1.0, 0.0], [-3.0, 0.5, 0.0, 0.0, 1.0]]])
+    expected = {
+        1: torch.tensor([[[-1.0, 2.0, 1.0, 1.0, 0.0], [3.0, 0.5, 0.0, 0.0, 1.0]]]),
+        2: torch.tensor([[[1.0, -2.0, 1.0, 1.0, 0.0], [-3.0, -0.5, 0.0, 0.0, 1.0]]]),
+        3: torch.tensor([[[-1.0, -2.0, 1.0, 1.0, 0.0], [3.0, -0.5, 0.0, 0.0, 1.0]]]),
+    }
+    for action, target in expected.items():
+        torch.testing.assert_close(transform.transform_node_features(nodes, action), target)

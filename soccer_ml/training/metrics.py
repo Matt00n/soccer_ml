@@ -1,6 +1,6 @@
 """Evaluation metrics for soccer tasks: Top-k accuracy, F1, precision, recall, and MSE."""
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import torch
 
 
@@ -117,14 +117,20 @@ class ZoneMetricAccumulator:
     Works for any (B, M * N) score tensor, so learned models and ranking
     baselines are evaluated identically:
 
+    * ``nll``: mean negative log-likelihood of the true zone (the headline
+      metric: a proper scoring rule, and per pass exactly the "surprise").
+      Only reported when ``log_probs`` are passed.
     * ``top_k_acc``: true zone among the k highest scores.
     * ``within_1_zone_acc``: top-1 zone is the true zone or one of its 8 neighbours.
     * ``mean/median_dist_yd``: distance from the top-1 zone center to the
       true pass end location in StatsBomb pitch units (yards).
     * ``mean/median_dist_m``: the same distance after rescaling the pitch to
       105 x 68 m.
-    * ``nll``: mean negative log-likelihood of the true zone, only when the
-      scores are log-probabilities (``scores_are_log_probs=True``).
+    * ``receiver_acc``: un-xPass-style receiver accuracy.  The predicted
+      receiver is the visible teammate closest to the top-1 zone center, the
+      true receiver the visible teammate closest to the true end location.
+      Only reported when ``receivers`` are passed; passes without a visible
+      candidate teammate are skipped.
     """
 
     def __init__(self, pitch_grid, k_list=(1, 3, 5)):
@@ -138,6 +144,8 @@ class ZoneMetricAccumulator:
         self.neighbour_correct = 0
         self.nll_sum = 0.0
         self.nll_count = 0
+        self.receiver_correct = 0
+        self.receiver_count = 0
         self.distances_yd: List[torch.Tensor] = []
         self.distances_m: List[torch.Tensor] = []
 
@@ -147,8 +155,18 @@ class ZoneMetricAccumulator:
         scores: torch.Tensor,
         target_zone: torch.Tensor,
         end_location: torch.Tensor,
-        scores_are_log_probs: bool = False,
+        log_probs: Optional[torch.Tensor] = None,
+        receivers: Optional[Any] = None,
     ) -> None:
+        """Add a batch.
+
+        Args:
+            scores: (B, Z) ranking scores (log-probabilities for models).
+            target_zone: (B,) true zones.
+            end_location: (B, 2) true end locations in pitch units.
+            log_probs: Optional (B, Z) normalized log-probabilities for NLL.
+            receivers: Optional :class:`~soccer_ml.data.pitch_grid.ReceiverCandidates`.
+        """
         scores = scores.detach().float()
         target_zone = target_zone.to(scores.device)
         end_location = end_location.to(scores.device).float()
@@ -166,19 +184,28 @@ class ZoneMetricAccumulator:
 
         self.distances_yd.append(self.pitch_grid.compute_distance(prediction, end_location).cpu())
         self.distances_m.append(self.pitch_grid.compute_distance(prediction, end_location, metric=True).cpu())
-        if scores_are_log_probs:
-            self.nll_sum += float(-scores.gather(1, target_zone.unsqueeze(-1)).sum().item())
+        if log_probs is not None:
+            log_probs = log_probs.detach().float().to(scores.device)
+            self.nll_sum += float(-log_probs.gather(1, target_zone.unsqueeze(-1)).sum().item())
             self.nll_count += len(target_zone)
+        if receivers is not None:
+            predicted_receiver = receivers.nearest(self.pitch_grid.batch_zones_to_coords(prediction))
+            valid = receivers.has_candidate
+            self.receiver_correct += int(((predicted_receiver == receivers.receiver) & valid).sum().item())
+            self.receiver_count += int(valid.sum().item())
         self.count += len(target_zone)
 
     def compute(self) -> Dict[str, float]:
         total = max(self.count, 1)
-        metrics = {f"top_{k}_acc": correct / total for k, correct in self.topk_correct.items()}
+        metrics: Dict[str, float] = {}
+        if self.nll_count:
+            metrics["nll"] = self.nll_sum / self.nll_count
+        metrics.update({f"top_{k}_acc": correct / total for k, correct in self.topk_correct.items()})
         metrics["within_1_zone_acc"] = self.neighbour_correct / total
         for unit, values in (("yd", self.distances_yd), ("m", self.distances_m)):
             distances = torch.cat(values) if values else torch.zeros(1)
             metrics[f"mean_dist_{unit}"] = float(distances.mean().item())
             metrics[f"median_dist_{unit}"] = float(distances.median().item())
-        if self.nll_count:
-            metrics["nll"] = self.nll_sum / self.nll_count
+        if self.receiver_count:
+            metrics["receiver_acc"] = self.receiver_correct / self.receiver_count
         return metrics

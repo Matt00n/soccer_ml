@@ -42,6 +42,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from soccer_ml.data.pitch_grid import DEFAULT_GRID_M, DEFAULT_GRID_N
+from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT
 from soccer_ml.data.temporal_receiver_dataset import (
     EVENT_NUMERIC_DIM,
     NUM_BODY_PARTS,
@@ -57,6 +58,8 @@ from soccer_ml.models.heads import PitchTargetGridHead, pool_graph_readout
 from soccer_ml.models.soccer_gat import SoccerGATv2Model
 
 TASKS = ("target_zone", "receiver")
+# Every temporal model consumes StatsBomb 360 graphs.
+NODE_LAYOUT = STATSBOMB_NODE_LAYOUT
 SEQUENCE_ENCODERS = ("gru", "transformer")
 
 
@@ -252,10 +255,11 @@ class TemporalSpatialEncoder(nn.Module):
             in_graph_dim=in_graph_dim,
             dropout=dropout,
             symmetry=symmetry,
+            node_layout=NODE_LAYOUT.name,
         )
         self.group_actions = self.backbone.group_actions
         self.num_views = len(self.group_actions)
-        self.group_transform = D2GroupTransform()
+        self.group_transform = D2GroupTransform.from_layout(NODE_LAYOUT)
         self.num_fourier_bands = num_fourier_bands
         if num_fourier_bands > 0:
             frequencies = (2.0 ** torch.arange(num_fourier_bands, dtype=torch.float32)) * torch.pi / 5.0
@@ -362,7 +366,7 @@ class TemporalModelBase(nn.Module):
 
     def __init__(
         self,
-        in_node_dim: int = 9,
+        in_node_dim: int = NODE_LAYOUT.dim,
         in_edge_dim: int = 1,
         in_graph_dim: int = 7,
         hidden_dim: int = 64,
@@ -467,6 +471,7 @@ class StaticGATv2Receiver(TemporalModelBase):
             grid_n=config["grid_n"],
             use_mlp=config["use_mlp"],
             symmetry=config["symmetry"],
+            node_layout=NODE_LAYOUT.name,
             dropout=config["dropout"],
             enable_receiver_head=self.task == "receiver",
             enable_target_location_head=self.task == "target_zone",
@@ -783,6 +788,7 @@ class EventSeqToSpatialGATv2(TemporalModelBase):
             in_graph_dim=config["in_graph_dim"] + hidden_dim,
             dropout=config["dropout"],
             symmetry=config["symmetry"],
+            node_layout=NODE_LAYOUT.name,
         )
         self.readout = self._task_readout(context_dim=hidden_dim)
 

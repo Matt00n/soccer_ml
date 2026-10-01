@@ -65,15 +65,9 @@ class StatsBomb360Parser:
                 target_scale=self.target_scale,
             )
 
-            # Velocities: default 0.0 for single static snapshot
-            v_x = 0.0
-            v_y = 0.0
-
-            # Default normalized height & weight (matching TacticAI 180cm / 75kg downscaled)
-            height = 1.80
-            weight = 0.75
-
-            # Ball possession / actor, teammate, keeper
+            # Actor, teammate, keeper.  360 snapshots carry no velocities or
+            # player attributes, so no constant placeholder channels are added
+            # (STATSBOMB_NODE_LAYOUT).
             is_actor = 1.0 if p.get("actor", False) else 0.0
             is_teammate = 1.0 if p.get("teammate", False) else 0.0
             is_keeper = 1.0 if p.get("keeper", False) else 0.0
@@ -81,10 +75,6 @@ class StatsBomb360Parser:
             node_features_list.append([
                 norm_x.item(),
                 norm_y.item(),
-                v_x,
-                v_y,
-                height,
-                weight,
                 is_actor,
                 is_teammate,
                 is_keeper,

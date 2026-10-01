@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -13,10 +15,12 @@ from tqdm import tqdm
 
 from soccer_ml.data.pitch_grid import (
     PitchGrid,
+    TeammateKernelBaseline,
     ZonePriorBaseline,
     closest_teammate_zone_scores,
     passer_zones,
     random_zone_scores,
+    receiver_candidates,
 )
 from soccer_ml.training.metrics import MetricTracker, ZoneMetricAccumulator, compute_topk_accuracy
 from soccer_ml.training.trainer import get_default_device
@@ -106,11 +110,13 @@ class TemporalReceiverTrainer:
                 if self.task == "receiver":
                     metrics.update(compute_topk_accuracy(outputs["receiver_logits"], batch.receiver_label))
                 else:
+                    log_probs = F.log_softmax(outputs["target_zone_logits"].detach(), dim=-1)
                     zone_metrics.update(
-                        F.log_softmax(outputs["target_zone_logits"].detach(), dim=-1),
+                        log_probs,
                         batch.target_zone_label,
                         batch.pass_end_location,
-                        scores_are_log_probs=True,
+                        log_probs=log_probs,
+                        receivers=receiver_candidates(batch.current_graph_batch(), self.pitch_grid),
                     )
                 tracker.update(metrics, batch_size=batch.batch_size)
                 progress.set_postfix({"loss": f"{loss.item():.4f}"})
@@ -162,7 +168,8 @@ class TemporalReceiverTrainer:
                 f"Epoch {self.current_epoch:03d} | "
                 f"train_loss={train_metrics['loss']:.4f} | "
                 f"val_loss={val_metrics.get('loss', float('nan')):.4f} | "
-                f"val_top1={val_metrics.get('top_1_acc', 0.0):.2%} | "
+                + (f"val_nll={val_metrics['nll']:.4f} | " if "nll" in val_metrics else "")
+                + f"val_top1={val_metrics.get('top_1_acc', 0.0):.2%} | "
                 f"val_top3={val_metrics.get('top_3_acc', 0.0):.2%}"
             )
             if self.task == "target_zone":
@@ -172,6 +179,7 @@ class TemporalReceiverTrainer:
 
 
 ZONE_BASELINES = (
+    "teammate_kernel",
     "passer_zone_prior",
     "pass_vector_prior",
     "most_frequent_zone",
@@ -179,41 +187,61 @@ ZONE_BASELINES = (
     "random_zone",
 )
 # Baselines fitted on the training split (their training-split scores are in-sample).
-FITTED_ZONE_BASELINES = ("passer_zone_prior", "pass_vector_prior", "most_frequent_zone")
+FITTED_ZONE_BASELINES = ("teammate_kernel", "passer_zone_prior", "pass_vector_prior", "most_frequent_zone")
 
 
-def fit_zone_prior(loader: DataLoader, pitch_grid: PitchGrid, target_scale: float = 10.0) -> ZonePriorBaseline:
-    """Fit marginal and passer-zone-conditional target priors on a training loader."""
+@dataclass
+class ZoneBaselines:
+    prior: ZonePriorBaseline
+    teammate_kernel: TeammateKernelBaseline
+
+
+def fit_zone_baselines(loader: DataLoader, pitch_grid: PitchGrid, target_scale: float = 10.0) -> ZoneBaselines:
+    """Fit the zone priors and the teammate-kernel parameters on a training loader."""
     prior = ZonePriorBaseline(pitch_grid)
+    teammate_kernel = TeammateKernelBaseline(pitch_grid, target_scale)
     for temporal_batch in loader:
         current = temporal_batch.current_graph_batch()
         prior.update(passer_zones(current, pitch_grid, target_scale), current.target_zone_label)
-    return prior
+        teammate_kernel.update(current)
+    teammate_kernel.finalize()
+    return ZoneBaselines(prior=prior, teammate_kernel=teammate_kernel)
 
 
 @torch.no_grad()
 def evaluate_zone_baselines(
     loader: DataLoader,
     pitch_grid: PitchGrid,
-    prior: ZonePriorBaseline,
+    baselines: ZoneBaselines,
     seed: int,
     target_scale: float = 10.0,
 ) -> Dict[str, Dict[str, float]]:
     """Evaluate every naive zone baseline on the target frames of a loader."""
     generator = torch.Generator().manual_seed(seed)
     accumulators = {name: ZoneMetricAccumulator(pitch_grid) for name in ZONE_BASELINES}
+    uniform = torch.full((pitch_grid.num_zones,), -math.log(pitch_grid.num_zones))
     for temporal_batch in loader:
         current = temporal_batch.current_graph_batch()
         passer = passer_zones(current, pitch_grid, target_scale)
-        scores = {
-            "passer_zone_prior": (prior.conditional_scores(passer), True),
-            "pass_vector_prior": (prior.pass_vector_scores(passer), True),
-            "most_frequent_zone": (prior.marginal_scores(current.batch_size, current.node_features.device), True),
-            "closest_teammate_zone": (closest_teammate_zone_scores(current, pitch_grid, target_scale), False),
-            "random_zone": (random_zone_scores(current, pitch_grid, generator), False),
+        receivers = receiver_candidates(current, pitch_grid, target_scale)
+        kernel_log_probs = baselines.teammate_kernel.log_probs(current)
+        prior_log_probs = {
+            "passer_zone_prior": baselines.prior.conditional_scores(passer),
+            "pass_vector_prior": baselines.prior.pass_vector_scores(passer),
+            "most_frequent_zone": baselines.prior.marginal_scores(current.batch_size, current.node_features.device),
         }
-        for name, (values, are_log_probs) in scores.items():
+        # (ranking scores, log-probabilities or None)
+        scores = {
+            "teammate_kernel": (kernel_log_probs, kernel_log_probs),
+            **{name: (values, values) for name, values in prior_log_probs.items()},
+            "closest_teammate_zone": (closest_teammate_zone_scores(current, pitch_grid, target_scale), None),
+            "random_zone": (
+                random_zone_scores(current, pitch_grid, generator),
+                uniform.expand(current.batch_size, -1),
+            ),
+        }
+        for name, (ranking, log_probs) in scores.items():
             accumulators[name].update(
-                values, current.target_zone_label, current.pass_end_location, scores_are_log_probs=are_log_probs
+                ranking, current.target_zone_label, current.pass_end_location, log_probs=log_probs, receivers=receivers
             )
     return {name: accumulator.compute() for name, accumulator in accumulators.items()}

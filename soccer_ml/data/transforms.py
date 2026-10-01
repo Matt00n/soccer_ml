@@ -1,7 +1,9 @@
 """D2 Group symmetries, pitch transformations, and view generators for soccer graphs."""
 
-from typing import List, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple
 import torch
+
+from soccer_ml.data.schema import NodeLayout, get_node_layout
 
 
 # Dihedral group D2 multiplication (Cayley) table
@@ -50,25 +52,32 @@ def flip_grid(grid: torch.Tensor, action: int) -> torch.Tensor:
 class D2GroupTransform:
     """Implements D2 dihedral reflection transformations on soccer graph features.
 
-    Node features assume the following layout for spatial channels:
+    By default node features follow the tracking layout for spatial channels:
         - index 0: x coordinate
         - index 1: y coordinate
         - index 2: v_x velocity
         - index 3: v_y velocity
-    Other channels (height, weight, possession, role) are scalar invariants.
+    Use :meth:`from_layout` for other layouts (StatsBomb 360 has no
+    velocities).  All other channels are scalar invariants.
     """
 
     def __init__(
         self,
         x_idx: int = 0,
         y_idx: int = 1,
-        vx_idx: int = 2,
-        vy_idx: int = 3,
+        vx_idx: Optional[int] = 2,
+        vy_idx: Optional[int] = 3,
     ):
         self.x_idx = x_idx
         self.y_idx = y_idx
         self.vx_idx = vx_idx
         self.vy_idx = vy_idx
+
+    @classmethod
+    def from_layout(cls, layout: "str | NodeLayout") -> "D2GroupTransform":
+        """Build the transform for a node layout (velocities may be absent)."""
+        layout = get_node_layout(layout)
+        return cls(x_idx=layout.x, y_idx=layout.y, vx_idx=layout.vx, vy_idx=layout.vy)
 
     def transform_node_features(self, node_fts: torch.Tensor, action: int) -> torch.Tensor:
         """Apply a D2 reflection action g in {0, 1, 2, 3} to node features.
@@ -81,18 +90,13 @@ class D2GroupTransform:
             Transformed node features (B, N, D_v)
         """
         out = node_fts.clone()
+        x_channels = [self.x_idx] + ([self.vx_idx] if self.vx_idx is not None else [])
+        y_channels = [self.y_idx] + ([self.vy_idx] if self.vy_idx is not None else [])
 
-        if action == 1:  # Horizontal flip: negate x and v_x
-            out[..., self.x_idx] = -out[..., self.x_idx]
-            out[..., self.vx_idx] = -out[..., self.vx_idx]
-        elif action == 2:  # Vertical flip: negate y and v_y
-            out[..., self.y_idx] = -out[..., self.y_idx]
-            out[..., self.vy_idx] = -out[..., self.vy_idx]
-        elif action == 3:  # Both flips: negate x, y, v_x, v_y
-            out[..., self.x_idx] = -out[..., self.x_idx]
-            out[..., self.y_idx] = -out[..., self.y_idx]
-            out[..., self.vx_idx] = -out[..., self.vx_idx]
-            out[..., self.vy_idx] = -out[..., self.vy_idx]
+        if action in (1, 3):  # Horizontal flip: negate x (and v_x)
+            out[..., x_channels] = -out[..., x_channels]
+        if action in (2, 3):  # Vertical flip: negate y (and v_y)
+            out[..., y_channels] = -out[..., y_channels]
 
         return out
 

@@ -17,6 +17,8 @@ class D2GATv2Backbone(nn.Module):
         - Each layer has 8 attention heads.
         - Produces latent node representations H in R^{4 x B x N x D_hidden}.
 
+    ``node_layout`` names the node feature layout (``"tracking"`` or
+    ``"statsbomb"``) so reflections negate the right channels.
     ``symmetry`` selects the reflection group used for the views: ``"d2"``
     (TacticAI, 4 views), ``"y_flip"`` (wing reflection only, 2 views), or
     ``"none"`` (identity view only).  ``self.group_actions[i]`` is the D2 action
@@ -35,6 +37,7 @@ class D2GATv2Backbone(nn.Module):
         residual: bool = True,
         use_ln: bool = True,
         symmetry: str = "d2",
+        node_layout: str = "tracking",
     ):
         super().__init__()
         self.in_node_dim = in_node_dim
@@ -43,7 +46,8 @@ class D2GATv2Backbone(nn.Module):
         self.nb_heads = nb_heads
         self.symmetry = symmetry
         self.group_actions = resolve_symmetry_group(symmetry)
-        self.group_transform = D2GroupTransform()
+        self.node_layout = node_layout
+        self.group_transform = D2GroupTransform.from_layout(node_layout)
 
         self.layers = nn.ModuleList()
         for layer_idx in range(num_layers):

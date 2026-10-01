@@ -19,6 +19,7 @@ from soccer_ml.data.receiver_dataset import (
     most_frequent_receiver_baseline,
     random_teammate_baseline,
 )
+from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT
 from soccer_ml.models.soccer_gat import SoccerGATv2Model
 from soccer_ml.training.trainer import get_default_device
 from soccer_ml.utils.config import load_config
@@ -276,12 +277,13 @@ def main():
     model = None
     if not args.skip_model:
         model = SoccerGATv2Model(
-            in_node_dim=config.data.node_dim,
+            in_node_dim=STATSBOMB_NODE_LAYOUT.dim,
             in_edge_dim=config.data.edge_dim,
             in_graph_dim=config.data.graph_dim,
             hidden_dim=config.model.hidden_dim,
             num_layers=config.model.num_layers,
             nb_heads=config.model.nb_heads,
+            node_layout=STATSBOMB_NODE_LAYOUT.name,
             enable_receiver_head=True,
             enable_target_location_head=False,
             enable_shot_head=False,

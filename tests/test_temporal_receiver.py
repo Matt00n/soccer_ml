@@ -10,6 +10,7 @@ from soccer_ml.data.temporal_receiver_dataset import (
     TemporalReceiverBatch,
     transform_event_numeric,
 )
+from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT
 from soccer_ml.data.transforms import D2GroupTransform, flip_grid
 from soccer_ml.models.temporal_receiver import TEMPORAL_MODELS, build_temporal_receiver_model
 
@@ -17,7 +18,7 @@ MODEL_NAMES = tuple(TEMPORAL_MODELS)
 GRID_M, GRID_N = 26, 17
 
 
-def _temporal_batch(node_dim: int = 9, graph_dim: int = 7) -> TemporalReceiverBatch:
+def _temporal_batch(node_dim: int = STATSBOMB_NODE_LAYOUT.dim, graph_dim: int = 7) -> TemporalReceiverBatch:
     torch.manual_seed(0)
     batch_size, steps, players = 2, 3, 22
     player_mask = torch.zeros(batch_size, steps, players, dtype=torch.bool)
@@ -29,7 +30,8 @@ def _temporal_batch(node_dim: int = 9, graph_dim: int = 7) -> TemporalReceiverBa
     role_features[:, :, :8, 2] = 1.0  # teammates of the target passer
     role_features[:, :-1, 1, 1] = 1.0  # known prior recipient only
     node_features = torch.randn(batch_size, steps, players, node_dim)
-    node_features[..., 6] = role_features[..., 0]
+    node_features[..., STATSBOMB_NODE_LAYOUT.actor] = role_features[..., 0]
+    node_features[..., STATSBOMB_NODE_LAYOUT.teammate] = role_features[..., 2]
     node_features = node_features * player_mask.unsqueeze(-1)
     return TemporalReceiverBatch(
         node_features=node_features,
@@ -68,7 +70,7 @@ def _build(model_name: str, **overrides):
 
 def _reflect(batch: TemporalReceiverBatch, action: int) -> TemporalReceiverBatch:
     """Reflect the whole input: node coordinates/velocities and event locations."""
-    transform = D2GroupTransform()
+    transform = D2GroupTransform.from_layout(STATSBOMB_NODE_LAYOUT)
     return dataclasses.replace(
         batch,
         node_features=transform.transform_node_features(batch.node_features, action),

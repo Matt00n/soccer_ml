@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import Dataset
 
 from soccer_ml.data.pitch_grid import DEFAULT_GRID_M, DEFAULT_GRID_N, PitchGrid
-from soccer_ml.data.schema import SoccerGraphBatch, SoccerSample
+from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT, SoccerGraphBatch, SoccerSample
 from soccer_ml.data.statsbomb import StatsBomb360Parser
 from soccer_ml.data.transforms import normalize_pitch_coordinates
 
@@ -96,27 +96,12 @@ class ReceiverParser(StatsBomb360Parser):
                 target_scale=self.target_scale,
             )
 
-            v_x = 0.0
-            v_y = 0.0
-            height = 1.80
-            weight = 0.75
             is_actor = 1.0 if p.get("actor", False) else 0.0
             is_teammate = 1.0 if p.get("teammate", False) else 0.0
             is_keeper = 1.0 if p.get("keeper", False) else 0.0
 
-            node_features_list.append(
-                [
-                    norm_x.item(),
-                    norm_y.item(),
-                    v_x,
-                    v_y,
-                    height,
-                    weight,
-                    is_actor,
-                    is_teammate,
-                    is_keeper,
-                ]
-            )
+            # STATSBOMB_NODE_LAYOUT: no velocities or player attributes exist.
+            node_features_list.append([norm_x.item(), norm_y.item(), is_actor, is_teammate, is_keeper])
 
             is_opponent = not p.get("teammate", False)
             is_opposing_list.append(is_opponent)
@@ -275,7 +260,7 @@ def closest_teammate_baseline(batch: SoccerGraphBatch) -> torch.Tensor:
 
     Args:
         batch: SoccerGraphBatch with node_features shape (B, N, D_v)
-               index 0-1: x, y coordinates; index 6: ball_possession flag
+               laid out as STATSBOMB_NODE_LAYOUT (x, y, actor, teammate, keeper)
 
     Returns:
         predictions: (B,) long tensor with predicted receiver index for each sample
@@ -292,7 +277,7 @@ def closest_teammate_baseline(batch: SoccerGraphBatch) -> torch.Tensor:
         )
 
         # Find ball carrier (highest possession value)
-        poss_values = node_fts[:, 6]  # ball_possession channel
+        poss_values = node_fts[:, STATSBOMB_NODE_LAYOUT.actor]
         ball_carrier_idx = torch.argmax(poss_values)
 
         # Find closest teammate (same team as carrier, excluding carrier)
@@ -334,7 +319,7 @@ def random_teammate_baseline(batch: SoccerGraphBatch) -> torch.Tensor:
         )
 
         # Find ball carrier
-        poss_values = node_fts[:, 6]
+        poss_values = node_fts[:, STATSBOMB_NODE_LAYOUT.actor]
         ball_carrier_idx = torch.argmax(poss_values)
 
         # Find teammates

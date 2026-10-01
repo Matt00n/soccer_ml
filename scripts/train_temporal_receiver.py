@@ -24,6 +24,7 @@ from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from soccer_ml.data.pitch_grid import PitchGrid
+from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT
 from soccer_ml.data.receiver_dataset import (
     closest_teammate_baseline,
     most_frequent_receiver_baseline,
@@ -38,7 +39,7 @@ from soccer_ml.models.temporal_receiver import SEQUENCE_ENCODERS, TASKS, TEMPORA
 from soccer_ml.training.temporal_receiver_trainer import (
     TemporalReceiverTrainer,
     evaluate_zone_baselines,
-    fit_zone_prior,
+    fit_zone_baselines,
 )
 from soccer_ml.training.trainer import get_default_device
 from soccer_ml.utils.config import load_config
@@ -137,22 +138,27 @@ def _build_multimatch_dataset(
     max_samples: int | None,
     **dataset_kwargs,
 ) -> tuple[Dataset, list[tuple[str, str]]]:
-    """Load every match, skipping (and returning) pairs with unreadable JSON.
+    """Load every match, skipping (and returning) pairs that yield no passes.
 
-    StatsBomb open-data contains at least one corrupt file upstream
-    (three-sixty/3845506.json has a block of null bytes), so one bad match
-    must not abort a multi-hour run.
+    StatsBomb open-data has broken matches upstream: one corrupt 360 file
+    (3845506 contains a block of null bytes), seven whose 360 frames link to
+    none of the events, and one with a single frame.  None of them may abort a
+    multi-hour run or silently inflate the match count.
     """
     datasets = []
     skipped: list[tuple[str, str]] = []
     for freeze_frame_path, event_path in pairs:
         try:
-            datasets.append(
-                TemporalReceiverDataset(freeze_frame_path, event_path, max_samples=max_samples, **dataset_kwargs)
-            )
+            dataset = TemporalReceiverDataset(freeze_frame_path, event_path, max_samples=max_samples, **dataset_kwargs)
         except (json.JSONDecodeError, UnicodeDecodeError) as error:
             print(f"WARNING: skipping unreadable match ({freeze_frame_path}, {event_path}): {error}")
             skipped.append((freeze_frame_path, event_path))
+            continue
+        if len(dataset) == 0:
+            print(f"WARNING: skipping match without linkable pass frames ({freeze_frame_path}, {event_path})")
+            skipped.append((freeze_frame_path, event_path))
+            continue
+        datasets.append(dataset)
     if not datasets:
         raise ValueError("No readable matches were loaded.")
     return ConcatDataset(datasets), skipped
@@ -188,14 +194,15 @@ def _receiver_baseline_scores(loader: DataLoader, seed: int) -> dict[str, float]
 
 
 def _format_zone_metrics(metrics: dict[str, float]) -> str:
+    nll = f"nll={metrics['nll']:.3f}" if "nll" in metrics else "nll=  -  "
     text = (
-        f"top-1={metrics['top_1_acc']:.2%} top-3={metrics['top_3_acc']:.2%} "
+        f"{nll} top-1={metrics['top_1_acc']:.2%} top-3={metrics['top_3_acc']:.2%} "
         f"top-5={metrics['top_5_acc']:.2%} within-1={metrics['within_1_zone_acc']:.2%} "
         f"dist mean/median={metrics['mean_dist_yd']:.1f}/{metrics['median_dist_yd']:.1f}yd "
         f"({metrics['mean_dist_m']:.1f}/{metrics['median_dist_m']:.1f}m)"
     )
-    if "nll" in metrics:
-        text += f" nll={metrics['nll']:.3f}"
+    if "receiver_acc" in metrics:
+        text += f" receiver-acc={metrics['receiver_acc']:.2%}"
     return text
 
 
@@ -304,7 +311,7 @@ def main() -> None:
             "mode": "separate_match_sets",
             "train_pairs": [pair for pair in train_pairs if pair not in skipped_train],
             "val_pairs": [pair for pair in val_pairs if pair not in skipped_val],
-            "skipped_unreadable_pairs": skipped_train + skipped_val,
+            "skipped_pairs": skipped_train + skipped_val,
         }
     elif args.three_sixty and args.events:
         full_dataset = TemporalReceiverDataset(
@@ -345,10 +352,14 @@ def main() -> None:
     if args.task == "target_zone":
         print("  (zone priors are fitted on the training split, so their train scores are in-sample)")
         # Zone priors are fitted on the training split only.
-        zone_prior = fit_zone_prior(baseline_train_loader, pitch_grid)
+        zone_baselines = fit_zone_baselines(baseline_train_loader, pitch_grid)
+        tau, sigma, eps = zone_baselines.teammate_kernel.params
+        print(f"  (teammate_kernel fitted: tau={tau:g}yd sigma={sigma:g}yd eps={eps:g})")
         baselines = {
-            "train": evaluate_zone_baselines(baseline_train_loader, pitch_grid, zone_prior, args.sample_seed),
-            "validation": evaluate_zone_baselines(baseline_val_loader, pitch_grid, zone_prior, args.sample_seed + 1),
+            "train": evaluate_zone_baselines(baseline_train_loader, pitch_grid, zone_baselines, args.sample_seed),
+            "validation": evaluate_zone_baselines(
+                baseline_val_loader, pitch_grid, zone_baselines, args.sample_seed + 1
+            ),
         }
         for split_name, split_scores in baselines.items():
             print(f"  {split_name}:")
@@ -363,7 +374,7 @@ def main() -> None:
             print(f"  {split_name}: " + ", ".join(f"{name}={score:.2%}" for name, score in scores.items()))
 
     base_model_kwargs = {
-        "in_node_dim": config.data.node_dim,
+        "in_node_dim": STATSBOMB_NODE_LAYOUT.dim,
         "in_edge_dim": config.data.edge_dim,
         "in_graph_dim": config.data.graph_dim,
         "hidden_dim": hidden_dim,

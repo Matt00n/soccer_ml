@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 
 from soccer_ml.data.pitch_grid import DEFAULT_GRID_M, DEFAULT_GRID_N
-from soccer_ml.data.schema import SoccerGraphBatch
+from soccer_ml.data.schema import SoccerGraphBatch, get_node_layout
 from soccer_ml.models.backbone import D2GATv2Backbone
 from soccer_ml.models.heads import (
     NodeInvariantHead,
@@ -41,6 +41,7 @@ class SoccerGATv2Model(nn.Module):
         grid_n: int = DEFAULT_GRID_N,
         use_mlp: bool = False,
         symmetry: str = "d2",
+        node_layout: str = "tracking",
         dropout: float = 0.0,
         enable_receiver_head: bool = True,
         enable_target_location_head: bool = True,
@@ -51,6 +52,7 @@ class SoccerGATv2Model(nn.Module):
     ):
         super().__init__()
         self.in_node_dim = in_node_dim
+        self.node_layout = get_node_layout(node_layout)
         self.in_edge_dim = in_edge_dim
         self.in_graph_dim = in_graph_dim
         self.hidden_dim = hidden_dim
@@ -68,6 +70,7 @@ class SoccerGATv2Model(nn.Module):
             in_graph_dim=in_graph_dim,
             dropout=dropout,
             symmetry=symmetry,
+            node_layout=node_layout,
         )
 
         # Invariant Node Head for Receiver Prediction (outputs 1 logit per player)
@@ -161,7 +164,8 @@ class SoccerGATv2Model(nn.Module):
 
         # Target Location Grid Prediction Head
         if self.target_location_head is not None:
-            actor_mask = (node_fts[..., 6] > 0.5) if node_fts.shape[-1] > 6 else None
+            actor_channel = self.node_layout.actor
+            actor_mask = (node_fts[..., actor_channel] > 0.5) if node_fts.shape[-1] > actor_channel else None
             view_readouts = pool_graph_readout(
                 torch.stack(views, dim=0), mask=player_mask, actor_mask=actor_mask
             )  # (V, B, 2 * hidden_dim)
