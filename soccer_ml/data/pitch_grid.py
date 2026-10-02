@@ -284,7 +284,7 @@ class TeammateKernelBaseline:
         z = self.pitch_grid.num_zones
         for e, eps in enumerate(self.EPSILONS):
             nll = -torch.log((1.0 - eps) * mixture + eps / z)
-            self.nll_sums[:, :, e] += nll.sum(dim=-1).double().cpu()
+            self.nll_sums[:, :, e] += nll.sum(dim=-1).cpu().double()
         self.count += batch.batch_size
 
     def finalize(self) -> Tuple[float, float, float]:
