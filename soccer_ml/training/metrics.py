@@ -209,3 +209,38 @@ class ZoneMetricAccumulator:
         if self.receiver_count:
             metrics["receiver_acc"] = self.receiver_correct / self.receiver_count
         return metrics
+
+
+def probabilistic_binary_metrics(
+    probabilities: torch.Tensor,
+    labels: torch.Tensor,
+    soft_labels: Optional[torch.Tensor] = None,
+    eps: float = 1e-6,
+) -> Dict[str, float]:
+    """AUC (ties get average ranks), Brier score and log-loss of probabilities.
+
+    With ``soft_labels`` (e.g. xG-sequence targets) also reports the
+    cross-entropy against them, a lower-variance comparison than goals.
+    """
+    p = probabilities.double().clamp(eps, 1 - eps)
+    y = labels.double()
+    order = torch.argsort(p)
+    sorted_p = p[order]
+    ranks = torch.empty_like(p)
+    _, inverse, counts = torch.unique_consecutive(sorted_p, return_inverse=True, return_counts=True)
+    ends = torch.cumsum(counts, dim=0).double()
+    average_rank = ends - (counts.double() - 1) / 2  # 1-based average rank of each tie group
+    ranks[order] = average_rank[inverse]
+    positives, negatives = y.sum(), (1 - y).sum()
+    auc = (ranks[y == 1].sum() - positives * (positives + 1) / 2) / (positives * negatives)
+    metrics = {
+        "n": float(len(y)),
+        "positives": float(positives),
+        "auc": float(auc),
+        "brier": float(((p - y) ** 2).mean()),
+        "logloss": float(-(y * p.log() + (1 - y) * (1 - p).log()).mean()),
+    }
+    if soft_labels is not None:
+        s = soft_labels.double()
+        metrics["soft_logloss"] = float(-(s * p.log() + (1 - s) * (1 - p).log()).mean())
+    return metrics

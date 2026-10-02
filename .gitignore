@@ -220,3 +220,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Derived benchmark outputs (value baselines, analyses)
+/outputs/

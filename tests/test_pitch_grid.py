@@ -164,3 +164,16 @@ def test_receiver_accuracy_metric(grid):
     accumulator = ZoneMetricAccumulator(grid)
     accumulator.update(scores, torch.tensor([0]), torch.tensor([[55.0, 60.0]]), receivers=receivers)
     assert accumulator.compute()["receiver_acc"] == 1.0
+
+
+def test_probabilistic_binary_metrics_match_hand_computation():
+    from soccer_ml.training.metrics import probabilistic_binary_metrics
+
+    p = torch.tensor([0.1, 0.4, 0.35, 0.8, 0.4])
+    y = torch.tensor([0, 0, 1, 1, 1])
+    metrics = probabilistic_binary_metrics(p, y)
+    # Positive/negative pairs: (0.35 vs 0.1) win, (0.35 vs 0.4) loss, (0.8 vs both) wins,
+    # (0.4 vs 0.1) win, (0.4 vs 0.4) tie -> (1 + 0 + 2 + 1 + 0.5) / 6.
+    assert metrics["auc"] == pytest.approx(4.5 / 6)
+    assert metrics["brier"] == pytest.approx(float(((p - y) ** 2).mean()))
+    assert metrics["logloss"] == pytest.approx(float(torch.nn.functional.binary_cross_entropy(p, y.float())))

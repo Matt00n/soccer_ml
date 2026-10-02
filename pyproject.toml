@@ -5,7 +5,7 @@ description = "Soccer analytics using Graph Attention Networks (GATv2) with D2 g
 authors = [
     {name = "Matthias Lehmann", email = "matthiaslehmann@MacBook-Pro.com"}
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "torch>=2.2.0",
     "numpy>=1.26.0",
