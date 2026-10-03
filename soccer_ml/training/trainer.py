@@ -76,7 +76,7 @@ class SoccerTrainer:
         self.model.train()
         tracker = MetricTracker()
 
-        pbar = tqdm(self.train_loader, desc=f"Epoch {self.current_epoch} [Train]")
+        pbar = tqdm(self.train_loader, desc=f"Epoch {self.current_epoch} [Train]", disable=None)
         for batch in pbar:
             batch = batch.to(self.device)
             self.optimizer.zero_grad()
@@ -99,7 +99,7 @@ class SoccerTrainer:
             b_size = batch.batch_size
             tracker.update(batch_metrics, batch_size=b_size)
 
-            pbar.set_postfix({"loss": f"{total_loss.item():.4f}"})
+            pbar.set_postfix({"loss": f"{total_loss.item():.4f}"}, refresh=False)
 
         self.scheduler.step()
         return tracker.compute()
@@ -114,7 +114,7 @@ class SoccerTrainer:
         self.model.eval()
         tracker = MetricTracker()
 
-        pbar = tqdm(loader, desc=f"Epoch {self.current_epoch} [Eval]")
+        pbar = tqdm(loader, desc=f"Epoch {self.current_epoch} [Eval]", disable=None)
         for batch in pbar:
             batch = batch.to(self.device)
             outputs = self.model(batch)

@@ -1,6 +1,7 @@
 """Loss functions for soccer predictive and generative tasks."""
 
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -41,7 +42,9 @@ class VAELoss(nn.Module):
         recon_per_node = diff.sum(dim=-1)  # (B, N)
 
         # KL divergence: -0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
-        kl_per_node = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=-1)  # (B, N)
+        kl_per_node = -0.5 * torch.sum(
+            1 + logvar - mu.pow(2) - logvar.exp(), dim=-1
+        )  # (B, N)
 
         if mask is not None:
             mask_float = mask.float()
@@ -113,7 +116,9 @@ class SoccerMultiTaskLoss(nn.Module):
 
         # 3. Shot prediction (Graph binary classification)
         if "shot_logits" in model_outputs and batch.shot_label is not None:
-            shot_loss = self.shot_criterion(model_outputs["shot_logits"], batch.shot_label)
+            shot_loss = self.shot_criterion(
+                model_outputs["shot_logits"], batch.shot_label
+            )
             total_loss = total_loss + self.shot_weight * shot_loss
             losses["shot_loss"] = shot_loss
 
@@ -127,7 +132,9 @@ class SoccerMultiTaskLoss(nn.Module):
 
         # 5. Generative VAE adjustment loss
         if "vae_recon" in model_outputs:
-            target_xy_v = batch.node_features[..., :4]  # ground-truth coordinates & velocities
+            target_xy_v = batch.node_features[
+                ..., :4
+            ]  # ground-truth coordinates & velocities
             vae_losses = self.vae_criterion(
                 recon_x=model_outputs["vae_recon"],
                 target_x=target_xy_v,

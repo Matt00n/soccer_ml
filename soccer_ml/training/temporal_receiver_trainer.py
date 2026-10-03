@@ -91,7 +91,7 @@ class TemporalReceiverTrainer:
         self.model.train(training)
         tracker = MetricTracker()
         zone_metrics = ZoneMetricAccumulator(self.pitch_grid)
-        progress = tqdm(loader, desc=f"Epoch {self.current_epoch} [{label}]", leave=False)
+        progress = tqdm(loader, desc=f"Epoch {self.current_epoch} [{label}]", leave=False, disable=None)
         context = torch.enable_grad() if training else torch.no_grad()
         with context:
             for batch in progress:
@@ -119,7 +119,7 @@ class TemporalReceiverTrainer:
                         receivers=receiver_candidates(batch.current_graph_batch(), self.pitch_grid),
                     )
                 tracker.update(metrics, batch_size=batch.batch_size)
-                progress.set_postfix({"loss": f"{loss.item():.4f}"})
+                progress.set_postfix({"loss": f"{loss.item():.4f}"}, refresh=False)
         results = tracker.compute()
         if self.task == "target_zone":
             results.update(zone_metrics.compute())

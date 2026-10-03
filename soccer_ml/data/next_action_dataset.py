@@ -43,16 +43,17 @@ Leakage rules:
 
 from __future__ import annotations
 
+import csv
 import json
 import math
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Sequence, Union
+from typing import Any, Dict, List, Literal, Mapping, Optional, Sequence, Union
 
 import numpy as np
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import ConcatDataset, Dataset
 
 from soccer_ml.data.pitch_grid import DEFAULT_GRID_M, DEFAULT_GRID_N, PitchGrid
 from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT, SoccerGraphBatch
@@ -100,6 +101,13 @@ GRAPH_FEATURES = (
 )
 GRAPH_DIM = len(GRAPH_FEATURES)
 EDGE_DIM = 1
+
+# Value targets (see ``scripts/value/vaep_baseline.py``): goal and xG-sequence
+# labels of the acting team scoring / conceding within the next 10 SPADL actions.
+VALUE_LABELS = ("scores", "concedes", "xg_scores", "xg_concedes")
+# Rewards between a decision and the next one: xG and goals of shots by the
+# acting team ("our") and by the other team ("their").
+REWARDS = ("our_xg", "their_xg", "our_goals", "their_goals")
 
 # Freeze frames with fewer visible players are skipped.
 _MIN_PLAYERS = 4
@@ -170,6 +178,14 @@ class NextActionSample:
     pass_height: torch.Tensor  # scalar long, IGNORE_INDEX unless a pass
     end_location: torch.Tensor  # (2,) pitch units, zeros if no end zone
     receiver_label: torch.Tensor  # scalar long, closest visible teammate to a pass's end; IGNORE_INDEX otherwise
+    # -- value targets ---------------------------------------------------------
+    value_label: torch.Tensor  # (len(VALUE_LABELS),) Monte Carlo labels, NaN if unavailable
+    has_value_label: torch.Tensor  # scalar bool
+    success: torch.Tensor  # scalar long: pass completed / shot scored / dribble won / own team acts next; IGNORE_INDEX if unknown
+    reward: torch.Tensor  # (len(REWARDS),) shots between this action and the next decision
+    next_index: torch.Tensor  # scalar long, index of the next decision in this match (-1 at the end of a period)
+    next_flip: torch.Tensor  # scalar bool, the next decision is the other team's
+    done: torch.Tensor  # scalar bool, no further decision in this period
     metadata: Optional[Dict[str, Any]] = None
 
 
@@ -195,6 +211,13 @@ class NextActionBatch:
     pass_height: torch.Tensor
     end_location: torch.Tensor
     receiver_label: torch.Tensor
+    value_label: torch.Tensor
+    has_value_label: torch.Tensor
+    success: torch.Tensor
+    reward: torch.Tensor
+    next_index: torch.Tensor
+    next_flip: torch.Tensor
+    done: torch.Tensor
 
     def to(self, device: torch.device) -> "NextActionBatch":
         return NextActionBatch(**{name: value.to(device) for name, value in self.__dict__.items()})
@@ -248,6 +271,8 @@ class NextActionDataset(Dataset):
             decisions; they stay in the history.  Defaults to one grid cell.
         womens_competition: Override the women's-competition flag; by default
             it is looked up in StatsBomb's ``matches`` folder next to ``events``.
+        value_labels: Optional event id -> :data:`VALUE_LABELS` mapping
+            (:func:`load_value_labels`) for Monte Carlo value targets.
     """
 
     def __init__(
@@ -265,6 +290,7 @@ class NextActionDataset(Dataset):
         pitch_width: float = 80.0,
         target_scale: float = 10.0,
         max_players: int = 22,
+        value_labels: Optional[Mapping[str, Sequence[float]]] = None,
     ):
         if context_scope not in {"possession", "period"}:
             raise ValueError("context_scope must be 'possession' or 'period'.")
@@ -282,6 +308,7 @@ class NextActionDataset(Dataset):
             _is_womens_match(self.events_path) if womens_competition is None else womens_competition
         )
         self._zone_centers = self.grid.zone_centers().numpy()
+        self.value_labels = value_labels
         self._load(max_samples)
 
     # -- parsing --------------------------------------------------------------
@@ -313,6 +340,7 @@ class NextActionDataset(Dataset):
             samples.append(sample)
             if max_samples is not None and len(samples) >= max_samples:
                 break
+        self._add_value_targets(events, samples)
         # Store one stacked tensor per field: per-sample tensor objects would
         # cost several KB of Python overhead each at ~650k samples.
         fields = [name for name in NextActionSample.__dataclass_fields__ if name != "metadata"]
@@ -320,6 +348,49 @@ class NextActionDataset(Dataset):
             {name: torch.stack([getattr(sample, name) for sample in samples]) for name in fields} if samples else {}
         )
         self._metadata: List[Dict[str, Any]] = [sample.metadata or {} for sample in samples]
+
+    def _add_value_targets(self, events: Sequence[Dict[str, Any]], samples: List[NextActionSample]) -> None:
+        """Monte Carlo labels, success, rewards and links to the next decision of every sample."""
+        by_anchor = sorted(range(len(samples)), key=lambda i: samples[i].metadata["anchor_position"])
+        for rank, i in enumerate(by_anchor):
+            sample, meta = samples[i], samples[i].metadata
+            event = events[meta["target_position"]]
+            following = by_anchor[rank + 1] if rank + 1 < len(by_anchor) else None
+            if following is not None and samples[following].metadata["period"] != meta["period"]:
+                following = None
+            # Rewards: shots from this action up to the next decision (or the end of the period).
+            end = samples[following].metadata["anchor_position"] if following is not None else len(events)
+            reward = [0.0] * len(REWARDS)
+            for position in range(meta["target_position"], end):
+                shot = events[position]
+                if shot.get("period") != meta["period"]:
+                    break
+                if (shot.get("type") or {}).get("name") != "Shot":
+                    continue
+                ours = (shot.get("team") or {}).get("id") == meta["team_id"]
+                details = shot.get("shot") or {}
+                reward[0 if ours else 1] += float(details.get("statsbomb_xg", 0.0) or 0.0)
+                reward[2 if ours else 3] += float((details.get("outcome") or {}).get("name") == "Goal")
+            sample.reward = torch.tensor(reward)
+            sample.next_index = torch.tensor(following if following is not None else -1)
+            sample.done = torch.tensor(following is None)
+            flip = following is not None and samples[following].metadata["team_id"] != meta["team_id"]
+            sample.next_flip = torch.tensor(flip)
+
+            action = ACTION_TYPES[int(sample.action_type)]
+            if action == "pass":
+                success = int("outcome" not in (event.get("pass") or {}))
+            elif action == "shot":
+                success = int(((event.get("shot") or {}).get("outcome") or {}).get("name") == "Goal")
+            elif action == "dribble":
+                success = int(((event.get("dribble") or {}).get("outcome") or {}).get("name") == "Complete")
+            else:  # carries and clearances succeed if the own team makes the next decision
+                success = IGNORE_INDEX if following is None else int(not flip)
+            sample.success = torch.tensor(success)
+
+            label = self.value_labels.get(event["id"]) if self.value_labels is not None else None
+            sample.value_label = torch.tensor(label if label is not None else [float("nan")] * len(VALUE_LABELS))
+            sample.has_value_label = torch.tensor(label is not None)
 
     def _frame_tensors(self, frame: Dict[str, Any]) -> Optional[tuple]:
         players = frame.get("freeze_frame", [])[: self.max_players]
@@ -499,9 +570,21 @@ class NextActionDataset(Dataset):
             pass_height=torch.tensor(height),
             end_location=end_location,
             receiver_label=torch.tensor(receiver),
+            # Value targets are filled in by _add_value_targets once all decisions are known.
+            value_label=torch.zeros(len(VALUE_LABELS)),
+            has_value_label=torch.tensor(False),
+            success=torch.tensor(IGNORE_INDEX),
+            reward=torch.zeros(len(REWARDS)),
+            next_index=torch.tensor(-1),
+            next_flip=torch.tensor(False),
+            done=torch.tensor(True),
             metadata={
                 "event_uuid": event["id"],
                 "anchor_uuid": anchor["id"],
+                "anchor_position": anchor_position,
+                "target_position": position,
+                "period": event.get("period"),
+                "team_id": (event.get("team") or {}).get("id"),
                 "match_id": self.events_path.stem,
                 "history_events": len(history),
             },
@@ -518,3 +601,44 @@ class NextActionDataset(Dataset):
         return NextActionSample(
             **{name: tensor[index] for name, tensor in self._tensors.items()}, metadata=self._metadata[index]
         )
+
+
+@lru_cache(maxsize=2)
+def load_value_labels(path: Union[str, Path]) -> Dict[str, tuple]:
+    """Event id -> :data:`VALUE_LABELS` from ``value_labels_360.csv`` (SPADL ``original_event_id``)."""
+    labels: Dict[str, tuple] = {}
+    with Path(path).open(newline="", encoding="utf-8") as file:
+        for row in csv.DictReader(file):
+            labels[row["original_event_id"]] = tuple(float(row[name]) for name in VALUE_LABELS)
+    return labels
+
+
+class TransitionDataset(Dataset):
+    """Pairs every decision with the next one of the same match (for temporal-difference targets).
+
+    At the end of a period the sample itself stands in as the next state; its
+    ``done`` flag makes the bootstrap term vanish.
+    """
+
+    def __init__(self, dataset: Dataset):
+        self.dataset = dataset
+        if isinstance(dataset, ConcatDataset):
+            self._offsets = [0, *dataset.cumulative_sizes[:-1]]
+            self._parts = dataset.datasets
+        else:
+            self._offsets, self._parts = [0], [dataset]
+        self._starts = torch.tensor([*self._offsets, len(dataset)])
+
+    def __len__(self) -> int:
+        return len(self.dataset)
+
+    def __getitem__(self, index: int) -> tuple[NextActionSample, NextActionSample]:
+        sample = self.dataset[index]
+        part = int(torch.searchsorted(self._starts, torch.tensor(index), right=True)) - 1
+        following = int(sample.next_index)
+        next_sample = self._parts[part][following] if following >= 0 else sample
+        return sample, next_sample
+
+
+def collate_transitions(pairs: Sequence[tuple[NextActionSample, NextActionSample]]) -> tuple[NextActionBatch, NextActionBatch]:
+    return collate_next_action([pair[0] for pair in pairs]), collate_next_action([pair[1] for pair in pairs])

@@ -169,12 +169,26 @@ class NextActionModel(nn.Module):
         tokens = tokens * sequence_mask.unsqueeze(-1).to(tokens.dtype)
         return self.temporal_norm(_run_masked_gru(self.sequence_cells, tokens, sequence_mask))
 
-    def _decode_grid(self, logits: torch.Tensor) -> torch.Tensor:
-        """``(V, B, C, M, N)`` per-view grids -> canonical ``(B, C, M * N)``."""
+    @property
+    def readout_dim(self) -> int:
+        return 2 * self.hidden_dim + (self.hidden_dim if self.use_history else 0)
+
+    def decode_grid(self, logits: torch.Tensor) -> torch.Tensor:
+        """``(V, B, C, M, N)`` per-view grids -> canonical ``(B, C, M * N)``.
+
+        Each view's grid is reflected back to the canonical frame before
+        averaging, so a reflected input yields a reflected output.
+        """
         aligned = [flip_grid(logits[view], action) for view, action in enumerate(self.group_actions)]
         return torch.stack(aligned).mean(dim=0).flatten(2)
 
-    def forward(self, batch: NextActionBatch) -> Dict[str, torch.Tensor]:
+    def visibility_views(self, batch: NextActionBatch) -> torch.Tensor:
+        """The visible-zone mask in every view's frame, ``(V, B, M, N)``."""
+        visible = batch.visible_zones.view(batch.batch_size, self.grid_m, self.grid_n)
+        return torch.stack([flip_grid(visible, action) for action in self.group_actions])
+
+    def encode(self, batch: NextActionBatch) -> torch.Tensor:
+        """Per-view decision readouts ``(V, B, readout_dim)``: [pooled nodes, actor node, history]."""
         views, batch_size = self.num_views, batch.batch_size
         static_graph = batch.graph_features
         if self.use_history:
@@ -190,7 +204,10 @@ class NextActionModel(nn.Module):
         readout = pool_graph_readout(torch.stack(node_views), batch.player_mask, actor_mask)  # (V, B, 2H)
         if temporal is not None:
             readout = torch.cat([readout, temporal], dim=-1)
+        return readout
 
+    def decode_policy(self, readout: torch.Tensor, batch: NextActionBatch) -> Dict[str, torch.Tensor]:
+        views, batch_size = readout.shape[:2]
         # Actions that are structurally impossible at this decision (a carry right
         # after the player's own carry) get no probability mass.
         type_logits = self.type_head(readout).mean(dim=0).masked_fill(~batch.type_mask, -1e9)
@@ -198,16 +215,17 @@ class NextActionModel(nn.Module):
         grid = (self.grid_m, self.grid_n)
         zone = self.zone_head(readout).view(views, batch_size, -1, len(LOCATED_ACTIONS), *grid)
         if self.use_visibility:
-            visible = batch.visible_zones.view(batch_size, *grid)
-            visible_views = torch.stack([flip_grid(visible, action) for action in self.group_actions])
-            zone = torch.where(visible_views[:, :, None], zone[:, :, 0], zone[:, :, 1])
+            zone = torch.where(self.visibility_views(batch)[:, :, None], zone[:, :, 0], zone[:, :, 1])
         else:
             zone = zone[:, :, 0]
-        zone_logits = self._decode_grid(zone)  # (B, len(LOCATED_ACTIONS), Z)
+        zone_logits = self.decode_grid(zone)  # (B, len(LOCATED_ACTIONS), Z)
 
         height = self.height_head(readout).view(views, batch_size, len(PASS_HEIGHTS), *grid)
-        height_logits = self._decode_grid(height)  # (B, len(PASS_HEIGHTS), Z)
+        height_logits = self.decode_grid(height)  # (B, len(PASS_HEIGHTS), Z)
         return {"type_logits": type_logits, "zone_logits": zone_logits, "height_logits": height_logits}
+
+    def forward(self, batch: NextActionBatch) -> Dict[str, torch.Tensor]:
+        return self.decode_policy(self.encode(batch), batch)
 
 
 def action_log_likelihood(outputs: Dict[str, torch.Tensor], batch: NextActionBatch) -> Dict[str, torch.Tensor]:

@@ -256,7 +256,7 @@ class NextActionTrainer:
     def _run_epoch(self, loader: DataLoader, training: bool, label: str) -> Dict[str, float]:
         self.model.train(training)
         metrics = NextActionMetrics(self.pitch_grid)
-        progress = tqdm(loader, desc=f"Epoch {self.current_epoch} [{label}]", leave=False)
+        progress = tqdm(loader, desc=f"Epoch {self.current_epoch} [{label}]", leave=False, disable=None)
         with torch.enable_grad() if training else torch.no_grad():
             for batch in progress:
                 batch = batch.to(self.device)
@@ -270,7 +270,7 @@ class NextActionTrainer:
                         torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_grad_norm)
                     self.optimizer.step()
                 metrics.update({key: value.detach() for key, value in outputs.items()}, batch, nll)
-                progress.set_postfix({"nll": f"{loss.item():.3f}"})
+                progress.set_postfix({"nll": f"{loss.item():.3f}"}, refresh=False)
         return metrics.compute()
 
     def evaluate(self, loader: Optional[DataLoader] = None) -> Dict[str, float]:
