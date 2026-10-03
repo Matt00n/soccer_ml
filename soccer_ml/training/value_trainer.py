@@ -12,6 +12,15 @@ Targets (``target``), all from the acting team's perspective with components
   expectile regression to Q_target(s, a): an upper expectile (τ > 0.5) of the
   score component (lower of the concede component) approaches the value of
   the best *in-distribution* action without querying unseen actions.
+* ``lambda_return``: TD(λ) / GAE-style targets
+  G_t = r_t + γ · [(1 - λ) · Q_target(s', a') + λ · G_{t+1}], recomputed over
+  the whole training set at the start of every epoch.  λ = 1 is the
+  discounted Monte Carlo return to the end of the period (computed once);
+  dead balls are not episode ends, restarts carry their own learned value.
+
+With ``distribution="categorical"`` a C51 head additionally learns the
+distribution of the net return (score - concede) by distributional TD on the
+observed next action (projected onto a fixed, symmetric support).
 
 r is the xG (or goals) of shots between the action and the next decision;
 components swap where the other team makes the next decision and the
@@ -49,12 +58,16 @@ from soccer_ml.data.next_action_dataset import (
     REWARDS,
     VALUE_LABELS,
     NextActionBatch,
+    collate_next_action,
+    lambda_returns,
 )
 from soccer_ml.data.pitch_grid import PitchGrid
 from soccer_ml.models.next_action import NextActionModel, action_log_likelihood
 from soccer_ml.models.value import (
     ValueModel,
+    distribution_logits,
     gather_action,
+    project_categorical,
     is_located_known,
     observed_action_index,
     policy_action_log_probs,
@@ -64,7 +77,7 @@ from soccer_ml.models.value import (
 from soccer_ml.training.metrics import probabilistic_binary_metrics
 from soccer_ml.training.trainer import get_default_device
 
-TARGETS = ("mc", "sarsa", "expected_sarsa", "iql")
+TARGETS = ("mc", "sarsa", "expected_sarsa", "iql", "lambda_return")
 TRAININGS = ("warm", "joint")
 
 
@@ -81,6 +94,8 @@ class ValueConfig:
     expectile: float = 0.7
     target_tau: float = 0.005  # Polyak rate of the target network
     huber_kappa: float = 0.01
+    lam: float = 0.8  # lambda_return only
+    distribution_weight: float = 0.1  # categorical only: the C51 head is auxiliary
     policy_weight: float = 1.0  # joint training only
     value_weight: float = 1.0
     freeze_encoder: bool = False
@@ -102,11 +117,19 @@ def validate_configuration(config: ValueConfig) -> None:
             )
         if config.target == "iql":
             raise ValueError("IQL fits expectiles of an expected Q; combine it with expectation values.")
+        if config.target == "lambda_return":
+            raise ValueError("λ-returns are implemented for expectation values (use categorical for distributions).")
+    if not 0.0 <= config.lam <= 1.0:
+        raise ValueError("lam must lie in [0, 1].")
     if config.freeze_encoder and config.training == "joint":
         raise ValueError("A frozen encoder cannot be trained jointly with the policy.")
 
 
-def needs_transitions(config: ValueConfig) -> bool:
+def needs_target_network(config: ValueConfig) -> bool:
+    if config.distribution == "categorical":
+        return True
+    if config.target == "lambda_return":
+        return config.lam < 1.0
     return config.target != "mc"
 
 
@@ -159,7 +182,8 @@ class ValueLearner:
         self.config = config
         self.policy = policy  # frozen π for expected SARSA with warm training
         self.target_model: Optional[ValueModel] = None
-        if needs_transitions(config):
+        self.lambda_targets: Optional[torch.Tensor] = None  # (N, 2) for the training set
+        if needs_target_network(config):
             self.target_model = copy.deepcopy(model).eval()
             for parameter in self.target_model.parameters():
                 parameter.requires_grad_(False)
@@ -172,6 +196,39 @@ class ValueLearner:
             target.mul_(1.0 - self.config.target_tau).add_(online.detach(), alpha=self.config.target_tau)
 
     @torch.no_grad()
+    def refresh_lambda_targets(self, dataset, device: torch.device) -> None:
+        """Recompute λ-return targets of the whole training set (λ = 1 only once)."""
+        config = self.config
+        if config.lam >= 1.0 and self.lambda_targets is not None:
+            return
+        bootstrap = None
+        if config.lam < 1.0:
+            values = []
+            loader = DataLoader(dataset, batch_size=512, shuffle=False, collate_fn=collate_next_action)
+            for batch in tqdm(loader, desc="λ-return refresh", leave=False, disable=None):
+                batch = batch.to(device)
+                outputs = self.target_model(batch)
+                values.append(gather_action(outputs["q"], observed_action_index(batch, self.model.num_zones)).cpu())
+            bootstrap = torch.cat(values)
+        returns = lambda_returns(dataset, config.gamma, config.lam, bootstrap, config.reward)
+        self.lambda_targets = returns.clamp(0.0, 1.0).to(device)
+
+    def _distribution_target(
+        self, batch: NextActionBatch, next_batch: NextActionBatch, next_outputs: Dict[str, Any]
+    ) -> torch.Tensor:
+        """Projected distributional TD target of the net return, ``(B, K)``."""
+        atoms = self.model.atoms
+        next_action = observed_action_index(next_batch, self.model.num_zones)
+        probabilities = torch.softmax(distribution_logits(self.target_model, next_outputs, next_action), dim=-1)
+        # Symmetric support: the other team's net return is ours mirrored.
+        probabilities = torch.where(batch.next_flip.unsqueeze(-1), probabilities.flip(-1), probabilities)
+        rewards = td_rewards(batch, self.config.reward)
+        net_reward = (rewards[:, 0] - rewards[:, 1]).unsqueeze(-1)
+        continuing = (~batch.done).unsqueeze(-1).to(atoms.dtype)
+        shifted = net_reward + self.config.gamma * continuing * atoms.unsqueeze(0)
+        return project_categorical(probabilities, shifted, atoms)
+
+    @torch.no_grad()
     def _next_policy_probs(self, next_batch: NextActionBatch, next_outputs: Dict[str, Any]) -> torch.Tensor:
         if self.config.training == "joint":
             policy_outputs = next_outputs["policy"]
@@ -182,14 +239,23 @@ class ValueLearner:
         return policy_action_log_probs(policy_outputs).exp()
 
     @torch.no_grad()
-    def targets(self, batch: NextActionBatch, next_batch: Optional[NextActionBatch]) -> Dict[str, torch.Tensor]:
+    def targets(
+        self, batch: NextActionBatch, next_batch: Optional[NextActionBatch], indices: Optional[torch.Tensor] = None
+    ) -> Dict[str, torch.Tensor]:
         config = self.config
+        next_outputs = self.target_model(next_batch) if self.target_model is not None else None
+        extra: Dict[str, torch.Tensor] = {}
+        if config.distribution == "categorical":
+            extra["distribution_target"] = self._distribution_target(batch, next_batch, next_outputs)
         if config.target == "mc":
             y = monte_carlo_targets(batch, config.mc_label)
-            return {"y": y.unsqueeze(-1) if config.distribution == "quantile" else y}
-        assert next_batch is not None and self.target_model is not None
+            return {"y": y.unsqueeze(-1) if config.distribution == "quantile" else y, **extra}
+        if config.target == "lambda_return":
+            if self.lambda_targets is None or indices is None:
+                raise RuntimeError("λ-return targets need refresh_lambda_targets() and sample indices.")
+            return {"y": self.lambda_targets[indices.to(self.lambda_targets.device)], **extra}
+        assert next_batch is not None and next_outputs is not None
         rewards = td_rewards(batch, config.reward)
-        next_outputs = self.target_model(next_batch)
         next_action = observed_action_index(next_batch, self.model.num_zones)
         if config.target == "sarsa":
             if config.distribution == "quantile":
@@ -202,7 +268,7 @@ class ValueLearner:
         else:  # iql
             next_values = next_outputs["state_value"]
         y = (rewards + config.gamma * bootstrap(next_values, batch)).clamp(0.0, 1.0)
-        result = {"y": y}
+        result = {"y": y, **extra}
         if config.target == "iql":
             current = self.target_model(batch)
             result["q_target_sa"] = gather_action(current["q"], observed_action_index(batch, self.model.num_zones))
@@ -243,6 +309,10 @@ class ValueLearner:
         if config.target == "iql":
             diff = targets["q_target_sa"] - outputs["state_value"]
             terms["state_value"] = _masked_mean(expectile_loss(diff, config.expectile), valid)
+        if config.distribution == "categorical":
+            log_probabilities = F.log_softmax(distribution_logits(self.model, outputs, action), dim=-1)
+            per_sample = -(targets["distribution_target"] * log_probabilities).sum(dim=-1)
+            terms["distribution"] = config.distribution_weight * _masked_mean(per_sample, is_located_known(batch))
         total = config.value_weight * sum(terms.values())
         if config.training == "joint":
             terms["policy"] = action_log_likelihood(outputs["policy"], batch)["joint_nll"].mean()
@@ -266,20 +336,44 @@ class ValueEvaluation:
       using V(s, a | success) for the decomposed head and Q(s, a) otherwise.
     * ``success_auc_<type>``: decomposed head, P(success) per action type.
     * ``quantile_coverage_<i>``: share of xG-sequence labels below quantile i.
+    * ``return_*``: with ``returns`` (the realized discounted return of every
+      validation decision, :func:`lambda_returns` with λ = 1), Q(s, a) is also
+      scored against it: the estimand of the TD, λ-return and C51 models.
+    * ``distribution_*`` (categorical): CRPS and PIT calibration of the C51
+      distribution against the realized net return (PIT shares below 0.1 ...
+      0.9 should equal those levels), and the correlation of its mean with
+      the expectation heads' net value.
     """
 
-    def __init__(self, model: ValueModel):
+    def __init__(self, model: ValueModel, returns: Optional[torch.Tensor] = None):
         self.model = model
+        self.returns = returns
         self.rows: Dict[str, List[torch.Tensor]] = {}
 
     def _add(self, name: str, values: torch.Tensor) -> None:
         self.rows.setdefault(name, []).append(values.detach().float().cpu())
 
     @torch.no_grad()
-    def update(self, outputs: Dict[str, Any], batch: NextActionBatch) -> None:
+    def update(self, outputs: Dict[str, Any], batch: NextActionBatch, indices: Optional[torch.Tensor] = None) -> None:
         action = observed_action_index(batch, self.model.num_zones)
         q = gather_action(outputs["q"], action)
         self._add("q", q)
+        if self.returns is not None and indices is not None:
+            returns = self.returns[indices.cpu()]
+            self._add("returns", returns)
+            if "distribution_features" in outputs:
+                probabilities = torch.softmax(distribution_logits(self.model, outputs, action), dim=-1).float().cpu()
+                atoms = self.model.atoms.float().cpu()
+                net = returns[:, 0] - returns[:, 1]
+                cdf = probabilities.cumsum(dim=-1)
+                below = (atoms.unsqueeze(0) <= net.unsqueeze(-1)).float()
+                self._add("distribution_pit", (probabilities * below).sum(-1) - 0.5 * (probabilities * below * (
+                    atoms.unsqueeze(0) == net.unsqueeze(-1)).float()).sum(-1))
+                widths = atoms[1:] - atoms[:-1]
+                step = (atoms[:-1].unsqueeze(0) >= net.unsqueeze(-1)).float()
+                self._add("distribution_crps", ((cdf[:, :-1] - step) ** 2 * widths).sum(-1))
+                self._add("distribution_mean", (probabilities * atoms).sum(-1))
+                self._add("distribution_upside", (probabilities * (atoms > 0.1).float()).sum(-1))
         self._add("valid", (is_located_known(batch) & batch.has_value_label).float())
         self._add("labels", batch.value_label)
         self._add("action_type", batch.action_type.float())
@@ -338,6 +432,27 @@ class ValueEvaluation:
                     result = probabilistic_binary_metrics(data["p_success"][rows], outcomes)
                     metrics[f"success_auc_{name}"] = result["auc"]
                     metrics[f"success_brier_{name}"] = result["brier"]
+        if "returns" in data:
+            returns = data["returns"][valid].clamp(0.0, 1.0)
+            total = 0.0
+            for component, name in enumerate(("score", "concede")):
+                target = returns[:, component]
+                prediction = q[:, component]
+                loss = -(target * prediction.log() + (1 - target) * (1 - prediction).log()).mean()
+                metrics[f"return_{name}_soft_logloss"] = float(loss)
+                total += float(loss)
+            metrics["return_selection"] = total
+        if "distribution_pit" in data:
+            pit = data["distribution_pit"][valid]
+            for level in (0.1, 0.3, 0.5, 0.7, 0.9):
+                metrics[f"distribution_pit_below_{level}"] = float((pit <= level).float().mean())
+            metrics["distribution_crps"] = float(data["distribution_crps"][valid].mean())
+            net_expectation = q[:, 0] - q[:, 1]
+            mean = data["distribution_mean"][valid]
+            metrics["distribution_mean_corr"] = float(torch.corrcoef(torch.stack([mean, net_expectation]))[0, 1])
+            metrics["distribution_mean_score_auc"] = probabilistic_binary_metrics(
+                torch.sigmoid(mean * 20), labels[:, VALUE_LABELS.index("scores")]
+            )["auc"]
         if "quantiles" in data:
             quantiles = data["quantiles"][valid][:, 0]  # score component (N, K)
             soft = labels[:, VALUE_LABELS.index("xg_scores")].unsqueeze(-1)
@@ -362,8 +477,12 @@ class ValueTrainer:
         policy: Optional[NextActionModel] = None,
         device: Optional[torch.device] = None,
         clip_grad_norm: Optional[float] = 1.0,
+        train_dataset=None,
+        val_returns: Optional[torch.Tensor] = None,
     ):
         self.device = device or get_default_device()
+        self.train_dataset = train_dataset
+        self.val_returns = val_returns
         self.model = model.to(self.device)
         if policy is not None:
             policy = policy.to(self.device).eval()
@@ -390,10 +509,17 @@ class ValueTrainer:
         self.best_selection = math.inf
 
     @staticmethod
-    def _split(batch) -> tuple[NextActionBatch, Optional[NextActionBatch]]:
-        return batch if isinstance(batch, tuple) else (batch, None)
+    def _split(batch) -> tuple[NextActionBatch, Optional[NextActionBatch], Optional[torch.Tensor]]:
+        """Loaders yield (batch, next batch, indices) triples or plain batches."""
+        if isinstance(batch, tuple):
+            return batch if len(batch) == 3 else (*batch, None)
+        return batch, None, None
 
     def train_epoch(self) -> Dict[str, float]:
+        if self.config.target == "lambda_return":
+            if self.train_dataset is None:
+                raise ValueError("λ-return training needs the training dataset.")
+            self.learner.refresh_lambda_targets(self.train_dataset, self.device)
         self.model.train()
         if self.config.freeze_encoder:
             self.model.policy.eval()
@@ -401,10 +527,10 @@ class ValueTrainer:
         count = 0
         progress = tqdm(self.train_loader, desc=f"Epoch {self.current_epoch} [Train]", leave=False, disable=None)
         for raw in progress:
-            batch, next_batch = self._split(raw)
+            batch, next_batch, indices = self._split(raw)
             batch = batch.to(self.device)
             next_batch = next_batch.to(self.device) if next_batch is not None else None
-            targets = self.learner.targets(batch, next_batch)
+            targets = self.learner.targets(batch, next_batch, indices)
             terms = self.learner.loss(self.model(batch), batch, targets)
             self.optimizer.zero_grad()
             terms["total"].backward()
@@ -421,13 +547,13 @@ class ValueTrainer:
     @torch.no_grad()
     def evaluate(self, loader: Optional[DataLoader] = None) -> tuple[Dict[str, float], Dict[str, torch.Tensor]]:
         self.model.eval()
-        evaluation = ValueEvaluation(self.model)
+        evaluation = ValueEvaluation(self.model, self.val_returns)
         policy_nll, count = 0.0, 0
         for raw in tqdm(loader or self.val_loader, desc=f"Epoch {self.current_epoch} [Eval]", leave=False, disable=None):
-            batch, _ = self._split(raw)
+            batch, _, indices = self._split(raw)
             batch = batch.to(self.device)
             outputs = self.model(batch)
-            evaluation.update(outputs, batch)
+            evaluation.update(outputs, batch, indices)
             if "policy" in outputs:
                 policy_nll += float(action_log_likelihood(outputs["policy"], batch)["joint_nll"].sum())
                 count += batch.batch_size
@@ -467,6 +593,10 @@ class ValueTrainer:
                 f"val selection {val_metrics['selection']:.4f} | score AUC {val_metrics['score_auc']:.3f} "
                 f"concede AUC {val_metrics['concede_auc']:.3f} | protocol AUC {val_metrics.get('protocol_auc', float('nan')):.3f}"
             )
+            if "return_selection" in val_metrics:
+                line += f" | return selection {val_metrics['return_selection']:.4f}"
+            if "distribution_crps" in val_metrics:
+                line += f" | C51 CRPS {val_metrics['distribution_crps']:.4f}"
             if "policy_joint_nll" in val_metrics:
                 line += f" | policy nll {val_metrics['policy_joint_nll']:.3f}"
             print(line, flush=True)

@@ -2,9 +2,9 @@
 
 Configurations combine (see ``soccer_ml/training/value_trainer.py``):
 
-    --target        mc | sarsa | expected_sarsa | iql
+    --target        mc | sarsa | expected_sarsa | iql | lambda_return (--lam)
     --head          direct | decomposed
-    --distribution  expectation | quantile
+    --distribution  expectation | quantile | categorical (expectation heads + C51)
     --training      warm  (value heads on a copy of a trained next-action
                            encoder; --freeze-encoder keeps it fixed)
                     joint (policy and value heads trained together; from
@@ -40,8 +40,8 @@ from soccer_ml.data.next_action_dataset import (
     VALUE_LABELS,
     NextActionDataset,
     TransitionDataset,
-    collate_next_action,
     collate_transitions,
+    lambda_returns,
     load_value_labels,
 )
 from soccer_ml.data.splits import load_match_datasets, sample_disjoint_train_val_pairs, set_seed
@@ -54,7 +54,6 @@ from soccer_ml.training.value_trainer import (
     TRAININGS,
     ValueConfig,
     ValueTrainer,
-    needs_transitions,
     validate_configuration,
 )
 from soccer_ml.value.expected_threat import ExpectedThreat
@@ -78,6 +77,10 @@ def parse_args() -> argparse.Namespace:
     value.add_argument("--reward", choices=("xg", "goal"), default="xg")
     value.add_argument("--gamma", type=float, default=0.9, help="Discount per decision (TD and IQL).")
     value.add_argument("--expectile", type=float, default=0.7, help="IQL expectile of the score component.")
+    value.add_argument("--lam", type=float, default=0.8, help="λ of lambda_return (1 = discounted Monte Carlo).")
+    value.add_argument("--num-atoms", type=int, default=51, help="C51 atoms (categorical).")
+    value.add_argument("--v-max", type=float, default=1.5, help="C51 support [-v_max, v_max] of the net return.")
+    value.add_argument("--distribution-weight", type=float, default=0.1, help="Weight of the (auxiliary) C51 loss.")
     value.add_argument("--target-tau", type=float, default=0.005, help="Polyak rate of the target network.")
     value.add_argument("--value-weight", type=float, default=1.0)
     value.add_argument("--policy-weight", type=float, default=1.0, help="Joint training only.")
@@ -153,6 +156,8 @@ def compare_with_baselines(predictions: dict, event_ids: list[str], baseline_dir
 
 
 def main() -> None:
+    # Line-buffered output, so logs written via nohup/redirection update immediately.
+    sys.stdout.reconfigure(line_buffering=True)
     args = parse_args()
     config = ValueConfig(
         target=args.target,
@@ -168,6 +173,8 @@ def main() -> None:
         value_weight=args.value_weight,
         policy_weight=args.policy_weight,
         freeze_encoder=args.freeze_encoder,
+        lam=args.lam,
+        distribution_weight=args.distribution_weight,
         encoder_lr_scale=args.encoder_lr_scale
         if args.encoder_lr_scale is not None
         else (0.1 if args.policy_checkpoint else 1.0),
@@ -195,17 +202,14 @@ def main() -> None:
     print(f"data: {len(train_dataset)} train / {len(val_dataset)} validation decisions "
           f"({time.time() - started:.0f}s) | config: {config}")
 
-    if needs_transitions(config):
-        train_loader = DataLoader(
-            TransitionDataset(train_dataset), batch_size=args.batch_size, shuffle=True,
-            generator=torch.Generator().manual_seed(args.sample_seed), collate_fn=collate_transitions,
-        )
-    else:
-        train_loader = DataLoader(
-            train_dataset, batch_size=args.batch_size, shuffle=True,
-            generator=torch.Generator().manual_seed(args.sample_seed), collate_fn=collate_next_action,
-        )
-    val_loader = DataLoader(val_dataset, batch_size=512, shuffle=False, collate_fn=collate_next_action)
+    # Every loader yields (decisions, next decisions, dataset indices).
+    train_loader = DataLoader(
+        TransitionDataset(train_dataset), batch_size=args.batch_size, shuffle=True,
+        generator=torch.Generator().manual_seed(args.sample_seed), collate_fn=collate_transitions,
+    )
+    val_loader = DataLoader(TransitionDataset(val_dataset), batch_size=512, shuffle=False, collate_fn=collate_transitions)
+    # Realized discounted returns of the validation decisions: the estimand of TD, λ-return and C51 models.
+    val_returns = lambda_returns(val_dataset, config.gamma, 1.0, reward_kind=config.reward)
 
     model = ValueModel(
         policy,
@@ -214,6 +218,8 @@ def main() -> None:
         num_quantiles=config.num_quantiles,
         state_value=config.target == "iql",
         joint=config.training == "joint",
+        num_atoms=args.num_atoms,
+        v_max=args.v_max,
     )
     if config.training == "warm":
         # Policy heads are unused; the encoder is fine-tuned unless frozen.
@@ -240,6 +246,7 @@ def main() -> None:
     trainer = ValueTrainer(
         model, config, train_loader, val_loader, args.lr, args.weight_decay, args.epochs,
         args.checkpoint_dir, payload, policy=frozen_policy, device=device,
+        train_dataset=train_dataset, val_returns=val_returns,
     )
     history = trainer.fit(args.epochs)
 
@@ -259,7 +266,7 @@ def main() -> None:
 
     output = Path(args.checkpoint_dir)
     columns = []  # (prediction name, component index or None)
-    for name in ("q", "p_success", "v_success", "state_value"):
+    for name in ("q", "p_success", "v_success", "state_value", "distribution_mean", "distribution_upside"):
         if name in predictions:
             columns += [(name, 0), (name, 1)] if predictions[name].dim() == 2 else [(name, None)]
     with (output / "val_predictions.csv").open("w", newline="") as file:

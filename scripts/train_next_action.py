@@ -24,7 +24,14 @@ from torch.utils.data import DataLoader, random_split
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from soccer_ml.data.next_action_dataset import ACTION_TYPES, DECISION_CONTEXTS, NextActionDataset, collate_next_action
+from soccer_ml.data.next_action_dataset import (
+    ACTION_TYPES,
+    DECISION_CONTEXTS,
+    NextActionDataset,
+    collate_next_action,
+    graph_feature_names,
+    node_layout_for,
+)
 from soccer_ml.data.pitch_grid import PitchGrid
 from soccer_ml.data.splits import load_match_datasets, sample_disjoint_train_val_pairs, sample_fingerprint, set_seed
 from soccer_ml.data.transforms import SYMMETRY_GROUPS
@@ -78,6 +85,9 @@ def parse_args() -> argparse.Namespace:
     data.add_argument("--carry-min-length", type=float, help="Shorter carries are not targets (default: one grid cell).")
     data.add_argument("--grid-m", type=int, default=26)
     data.add_argument("--grid-n", type=int, default=17)
+    data.add_argument("--actor-role", action="store_true", help="Add the acting player's role (one-hot).")
+    data.add_argument("--game-state", action="store_true", help="Add goal difference and home/away.")
+    data.add_argument("--velocities", action="store_true", help="Estimate velocities from the previous freeze frame.")
     model = parser.add_argument_group("model")
     model.add_argument("--hidden-dim", type=int, default=128)
     model.add_argument("--num-layers", type=int, default=4)
@@ -88,6 +98,7 @@ def parse_args() -> argparse.Namespace:
     model.add_argument("--use-mlp", action="store_true", help="Two-layer MLP heads instead of linear heads.")
     model.add_argument("--no-history", action="store_true", help="Ablation: drop the event-history encoder.")
     model.add_argument("--no-visibility", action="store_true", help="Ablation: one zone map regardless of visibility.")
+    model.add_argument("--edge-distance", action="store_true", help="Add pairwise player distance as an edge feature.")
     training = parser.add_argument_group("training")
     training.add_argument("--epochs", type=int, default=16)
     training.add_argument("--batch-size", type=int, default=128)
@@ -100,6 +111,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    # Line-buffered output, so logs written via nohup/redirection update immediately.
+    sys.stdout.reconfigure(line_buffering=True)
     args = parse_args()
     set_seed(args.sample_seed)
     device = torch.device(args.device) if args.device else get_default_device()
@@ -110,6 +123,9 @@ def main() -> None:
         "grid_m": args.grid_m,
         "grid_n": args.grid_n,
         "carry_min_length": args.carry_min_length,
+        "actor_role": args.actor_role,
+        "game_state": args.game_state,
+        "velocities": args.velocities,
     }
 
     started = time.time()
@@ -165,7 +181,12 @@ def main() -> None:
     for name, metrics in baselines.items():
         print(f"  {name}: {format_metrics(metrics)}")
 
+    layout = node_layout_for(args.velocities)
     model = NextActionModel(
+        in_node_dim=layout.dim,
+        in_graph_dim=len(graph_feature_names(args.actor_role, args.game_state)),
+        node_layout=layout.name,
+        edge_distance=args.edge_distance,
         hidden_dim=args.hidden_dim,
         num_layers=args.num_layers,
         nb_heads=args.nb_heads,

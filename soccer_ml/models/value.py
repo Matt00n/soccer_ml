@@ -23,6 +23,13 @@ Output distribution (``distribution``):
 * ``expectation``: sigmoid probabilities.
 * ``quantile``: ``num_quantiles`` quantiles of each component's return at the
   fractions (2i + 1) / (2K) (quantile regression, distributional RL).
+* ``categorical``: the expectation heads plus a C51 head: a categorical
+  distribution of the *net* discounted return (score - concede) over a fixed,
+  symmetric support that is dense near zero.  Because the support is
+  symmetric, the other team acting next is a reversal of the probability
+  vector.  To stay affordable over 1,771 actions, the grid decoder emits a
+  small feature per zone (and height) and one shared MLP maps it to atom
+  logits, pointwise per action, so distributions stay reflection equivariant.
 
 ``state_value`` adds a V(s) head (used by IQL).  All grids are decoded per
 reflection view and reflected back before averaging, exactly like the policy
@@ -31,6 +38,7 @@ heads, so value surfaces are reflection equivariant.
 
 from __future__ import annotations
 
+import math
 from typing import Any, Dict, Optional
 
 import torch
@@ -43,8 +51,9 @@ from soccer_ml.models.next_action import NextActionModel
 VALUE_COMPONENTS = ("score", "concede")
 SCALAR_ACTIONS = ("shot", "dribble", "clearance")
 HEADS = ("direct", "decomposed")
-DISTRIBUTIONS = ("expectation", "quantile")
+DISTRIBUTIONS = ("expectation", "quantile", "categorical")
 INITIAL_VALUE_LOGIT = -4.0  # sigmoid(-4) ~ 0.018
+INITIAL_DISTRIBUTION_SCALE = 0.02  # initial C51 logits -|z| / scale: Laplace-shaped around 0
 
 
 def action_space_size(num_zones: int) -> int:
@@ -89,6 +98,40 @@ def quantile_fractions(num_quantiles: int, device: Optional[torch.device] = None
     return (2 * torch.arange(num_quantiles, device=device, dtype=torch.float32) + 1) / (2 * num_quantiles)
 
 
+def categorical_support(num_atoms: int = 51, v_max: float = 1.5, density: float = 3.0) -> torch.Tensor:
+    """Symmetric atoms in [-v_max, v_max], denser near 0 (sinh spacing), with an exact 0 atom.
+
+    Built as a positive half mirrored onto the negative axis, so the support is
+    *exactly* symmetric (a team flip is an exact reversal) despite rounding.
+    """
+    if num_atoms % 2 == 0:
+        raise ValueError("num_atoms must be odd (the support includes 0).")
+    half = v_max * torch.sinh(density * torch.linspace(0.0, 1.0, num_atoms // 2 + 1)) / math.sinh(density)
+    half[0] = 0.0
+    return torch.cat([-half[1:].flip(0), half])
+
+
+def project_categorical(
+    probabilities: torch.Tensor, shifted_atoms: torch.Tensor, support: torch.Tensor
+) -> torch.Tensor:
+    """Project a distribution with mass ``probabilities`` (B, K) at ``shifted_atoms`` (B, K) onto ``support`` (K,).
+
+    Generalized C51 projection for a non-uniform support: every shifted atom
+    splits its mass between the two neighbouring support atoms in inverse
+    proportion to the distance, so total mass and (inside the support) the
+    mean are preserved.
+    """
+    values = shifted_atoms.clamp(float(support[0]), float(support[-1]))
+    upper = torch.searchsorted(support, values.contiguous()).clamp(1, len(support) - 1)
+    lower = upper - 1
+    width = support[upper] - support[lower]
+    upper_weight = ((values - support[lower]) / width).clamp(0.0, 1.0)
+    projected = torch.zeros_like(probabilities)
+    projected.scatter_add_(-1, lower, probabilities * (1.0 - upper_weight))
+    projected.scatter_add_(-1, upper, probabilities * upper_weight)
+    return projected
+
+
 class ValueModel(nn.Module):
     """Value heads on a :class:`NextActionModel` encoder.
 
@@ -106,6 +149,9 @@ class ValueModel(nn.Module):
         num_quantiles: int = 5,
         state_value: bool = False,
         joint: bool = False,
+        num_atoms: int = 51,
+        v_max: float = 1.5,
+        distribution_features: int = 16,
     ):
         super().__init__()
         if head not in HEADS or distribution not in DISTRIBUTIONS:
@@ -128,6 +174,9 @@ class ValueModel(nn.Module):
             "num_quantiles": num_quantiles,
             "state_value": state_value,
             "joint": joint,
+            "num_atoms": num_atoms,
+            "v_max": v_max,
+            "distribution_features": distribution_features,
         }
         d, z, c, q = policy.readout_dim, self.num_zones, len(VALUE_COMPONENTS), self.num_quantiles
         heights, scalars = len(PASS_HEIGHTS), len(SCALAR_ACTIONS)
@@ -144,7 +193,20 @@ class ValueModel(nn.Module):
             self.carry_value = nn.Linear(d, 2 * c * z)
             self.scalar_value = nn.Linear(d, 2 * c * scalars)
         self.state_value = nn.Linear(d, c * q) if state_value else None
-        if distribution == "expectation":
+        if distribution == "categorical":
+            f = distribution_features
+            self.register_buffer("atoms", categorical_support(num_atoms, v_max))
+            self.distribution_located = nn.Linear(d, f * (heights + 1) * z)  # pass heights + carry, per zone
+            self.distribution_scalar = nn.Linear(d, f * scalars)
+            self.distribution_state = nn.Linear(d, f)
+            self.distribution_mlp = nn.Sequential(nn.GELU(), nn.Linear(f, 4 * f), nn.GELU(), nn.Linear(4 * f, num_atoms))
+            self.distribution_features = f
+            # Start from a distribution peaked at 0 (most returns are exactly 0), not uniform over the
+            # atoms: a uniform start is badly calibrated and its large early gradients disturb the encoder.
+            with torch.no_grad():
+                self.distribution_mlp[-1].weight.mul_(0.1)
+                self.distribution_mlp[-1].bias.copy_(-self.atoms.abs() / INITIAL_DISTRIBUTION_SCALE)
+        if distribution in ("expectation", "categorical"):
             # Start value probabilities near the goal base rate (~2%), not at 0.5: large early
             # gradients would otherwise disturb a pretrained encoder.
             value_layers = [self.pass_q, self.carry_q, self.scalar_q] if head == "direct" else [
@@ -191,6 +253,13 @@ class ValueModel(nn.Module):
             outputs["v_success_logits"], outputs["v_failure_logits"] = values[:, 0], values[:, 1]  # (B, C, A)
             p = torch.sigmoid(outputs["success_logits"]).unsqueeze(1)
             outputs["q"] = p * torch.sigmoid(values[:, 0]) + (1 - p) * torch.sigmoid(values[:, 1])
+        if self.distribution == "categorical":
+            f, z = self.distribution_features, self.num_zones
+            located = self._grid(self.distribution_located, readout, f * (len(PASS_HEIGHTS) + 1))
+            located = located.view(batch_size, f, len(PASS_HEIGHTS) + 1, z).flatten(2)  # (B, F, 4Z)
+            scalars = self.distribution_scalar(readout).mean(dim=0).view(batch_size, f, len(SCALAR_ACTIONS))
+            outputs["distribution_features"] = torch.cat([located, scalars], dim=-1)  # (B, F, A)
+            outputs["distribution_state"] = self.distribution_state(readout).mean(dim=0)  # (B, F)
         if self.state_value is not None:
             state = self.state_value(readout).mean(dim=0).view(batch_size, c, q)
             outputs["state_value_logits"] = state[:, :, 0] if q == 1 else None
@@ -198,6 +267,16 @@ class ValueModel(nn.Module):
         if self.joint:
             outputs["policy"] = self.policy.decode_policy(readout, batch)
         return outputs
+
+
+def distribution_logits(model: "ValueModel", outputs: Dict[str, Any], action: Optional[torch.Tensor] = None) -> torch.Tensor:
+    """C51 atom logits of the net return: at ``action`` (B,) -> (B, K), or for all actions -> (B, A, K)."""
+    features = outputs["distribution_features"]  # (B, F, A)
+    if action is not None:
+        features = gather_action(features, action).unsqueeze(-1)  # (B, F, 1)
+    combined = features + outputs["distribution_state"].unsqueeze(-1)  # (B, F, A')
+    logits = model.distribution_mlp(combined.transpose(1, 2))  # (B, A', K)
+    return logits.squeeze(1) if action is not None else logits
 
 
 def gather_action(values: torch.Tensor, index: torch.Tensor) -> torch.Tensor:

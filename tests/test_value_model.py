@@ -62,7 +62,7 @@ def batches(dataset):
     for index in range(len(dataset)):
         by_type.setdefault(int(dataset[index].action_type), []).append(index)
     indices = [i for rows in by_type.values() for i in rows[:3]]
-    return collate_transitions([pairs[i] for i in indices])
+    return collate_transitions([pairs[i] for i in indices])  # (batch, next batch, indices)
 
 
 def _policy():
@@ -91,7 +91,7 @@ def test_transitions_and_rewards(dataset):
 
 
 def test_flat_action_space_matches_policy_likelihood(batches):
-    batch, _ = batches
+    batch = batches[0]
     policy = _policy().eval()
     with torch.no_grad():
         outputs = policy(batch)
@@ -105,7 +105,7 @@ def test_flat_action_space_matches_policy_likelihood(batches):
 
 
 def test_bootstrap_swaps_and_terminates(batches):
-    batch, _ = batches
+    batch = batches[0]
     values = torch.rand(batch.batch_size, 2)
     result = bootstrap(values, batch)
     for i in range(batch.batch_size):
@@ -146,13 +146,13 @@ def test_unsupported_combinations_raise():
 
 @pytest.mark.parametrize("target,head,distribution,training", VALID)
 def test_value_configurations_train(batches, target, head, distribution, training):
-    batch, next_batch = batches
+    batch, next_batch, indices = batches
     torch.manual_seed(0)
     model = ValueModel(_policy(), head=head, distribution=distribution, num_quantiles=5,
                        state_value=target == "iql", joint=training == "joint")
     config = ValueConfig(target=target, head=head, distribution=distribution, training=training)
     learner = ValueLearner(model, config, policy=_policy().eval() if training == "warm" else None)
-    targets = learner.targets(batch, next_batch)
+    targets = learner.targets(batch, next_batch, indices)
     assert torch.isfinite(targets["y"]).all()
     outputs = model(batch)
     assert outputs["q"].shape == (batch.batch_size, 2, action_space_size(Z))
@@ -178,7 +178,7 @@ def _reflect(batch, action):
 
 @pytest.mark.parametrize("head", ["direct", "decomposed"])
 def test_value_surfaces_are_reflection_equivariant(batches, head):
-    batch, _ = batches
+    batch = batches[0]
     model = ValueModel(_policy(), head=head).eval()
     heights = len(PASS_HEIGHTS)
     with torch.no_grad():

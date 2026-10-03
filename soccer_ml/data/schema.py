@@ -30,12 +30,20 @@ class NodeLayout:
 STATSBOMB_NODE_LAYOUT = NodeLayout(
     name="statsbomb", dim=5, x=0, y=1, vx=None, vy=None, actor=2, teammate=3, keeper=4
 )
+# StatsBomb 360 with velocities estimated by matching players to the previous
+# freeze frame (see NextActionDataset(velocities=True)); channel 7 flags
+# whether a player could be matched (velocity known).
+STATSBOMB_VELOCITY_NODE_LAYOUT = NodeLayout(
+    name="statsbomb_velocity", dim=8, x=0, y=1, vx=5, vy=6, actor=2, teammate=3, keeper=4
+)
 # TacticAI-style tracking layout used by the synthetic dataset:
 # x, y, vx, vy, height, weight, ball possession (+ optional extra channels).
 TRACKING_NODE_LAYOUT = NodeLayout(
     name="tracking", dim=7, x=0, y=1, vx=2, vy=3, actor=6, teammate=None, keeper=None
 )
-NODE_LAYOUTS = {layout.name: layout for layout in (STATSBOMB_NODE_LAYOUT, TRACKING_NODE_LAYOUT)}
+NODE_LAYOUTS = {
+    layout.name: layout for layout in (STATSBOMB_NODE_LAYOUT, STATSBOMB_VELOCITY_NODE_LAYOUT, TRACKING_NODE_LAYOUT)
+}
 
 
 def get_node_layout(layout: "str | NodeLayout") -> NodeLayout:

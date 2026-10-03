@@ -8,14 +8,15 @@ fine-tune policy and value heads together.  Finished runs (with a
 
 Screening at reduced scale, e.g. 100 training matches and 3 epochs:
 
-    conda run -n soccer_ml python scripts/value/run_value_sweep.py \\
+    python scripts/value/run_value_sweep.py \\
         --policy-checkpoint checkpoints/next_action_v2/best_model.pt \\
-        --output-dir checkpoints/value_sweep -- \\
+        --output-dir checkpoints/value_sweep \\
         --train-dir data/open-data/data --val-dir data/open-data/data \\
-        --train-file-count 100 --val-file-count 50 --sample-seed 42 --epochs 3
+        --train-file-count 60 --val-file-count 50 --sample-seed 42 --epochs 3
 
-Arguments after ``--`` are passed to every ``train_value.py`` run.  Only the
-table: ``--summarize``.
+Every option the sweep does not know itself is passed to each
+``train_value.py`` run (no ``--`` separator needed, which ``poetry run``
+would intercept).  Only the table: ``--summarize``.
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ import argparse
 import csv
 import itertools
 import json
+import os
 import subprocess
 import sys
 import time
@@ -65,6 +67,9 @@ TABLE_COLUMNS = [
     ("VAEP-xG AUC (same rows)", "comparison", "VAEP-xG.auc"),
     ("pass success AUC", "metrics", "success_auc_pass"),
     ("policy nll", "metrics", "policy_joint_nll"),
+    ("return selection", "metrics", "return_selection"),
+    ("C51 CRPS", "metrics", "distribution_crps"),
+    ("C51 mean AUC", "metrics", "distribution_mean_score_auc"),
     ("best epoch", None, "best_epoch"),
     ("hours", None, "train_seconds"),
 ]
@@ -108,17 +113,15 @@ def summarize(output_dir: Path) -> None:
 
 
 def main() -> None:
-    argv = sys.argv[1:]
-    passthrough = argv[argv.index("--") + 1 :] if "--" in argv else []
-    argv = argv[: argv.index("--")] if "--" in argv else argv
-    parser = argparse.ArgumentParser(description="Sweep value-model configurations.")
+    # allow_abbrev=False: a passthrough option must never be read as a prefix of a sweep option.
+    parser = argparse.ArgumentParser(description="Sweep value-model configurations.", allow_abbrev=False)
     parser.add_argument("--policy-checkpoint")
     parser.add_argument("--output-dir", default="checkpoints/value_sweep")
     parser.add_argument("--only", nargs="*", help="Keep configurations containing all these values, e.g. mc warm.")
     parser.add_argument("--include-frozen", action="store_true", help="Also run warm configurations with a frozen encoder.")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--summarize", action="store_true")
-    args = parser.parse_args(argv)
+    args, passthrough = parser.parse_known_args([arg for arg in sys.argv[1:] if arg != "--"])
     output_dir = Path(args.output_dir)
     if args.summarize:
         summarize(output_dir)
@@ -146,7 +149,10 @@ def main() -> None:
         run_dir.mkdir(parents=True, exist_ok=True)
         started = time.time()
         with (run_dir / "train.log").open("w") as log:
-            result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT)
+            # Unbuffered, so train.log shows progress immediately rather than in 4 KB chunks.
+            result = subprocess.run(
+                command, stdout=log, stderr=subprocess.STDOUT, env={**os.environ, "PYTHONUNBUFFERED": "1"}
+            )
         status = "ok" if result.returncode == 0 else f"FAILED (exit {result.returncode}, see {run_dir / 'train.log'})"
         print(f"    {status} after {(time.time() - started) / 60:.0f} min", flush=True)
     summarize(output_dir)

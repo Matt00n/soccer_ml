@@ -74,6 +74,20 @@ Leakage rules:
   react to (e.g. "Dribbled Past", duels at the same timestamp) are dropped
   from the history.
 
+## Optional inputs (v3)
+
+All are off by default, so v2 checkpoints and their data configuration keep
+working unchanged. They are stored in the checkpoint's `data_config` and
+`model_kwargs`, so value models built on a v3 encoder pick them up
+automatically.
+
+| flag | adds | notes |
+|---|---|---|
+| `--actor-role` | one-hot of the acting player's role (goalkeeper, centre-back, full-back, defensive / central / attacking midfield, wide, forward), from StatsBomb's position | Side-agnostic, so invariant under the wing reflection. **Surprise becomes role-relative** ("unusual for a centre-back"); train without it for population-relative surprise. |
+| `--game-state` | goal difference before the decision (clipped to ±3, / 3) and home/away | Home/away is looked up in `matches/` (0.5 if unavailable). |
+| `--velocities` | v_x, v_y and a "velocity known" flag per player | Estimated by matching each team's players to the previous freeze frame (0.2–3 s earlier) with a gated Hungarian assignment; matches implying more than 11 yd/s are rejected. About 80% of visible players get a velocity. Node features then use `STATSBOMB_VELOCITY_NODE_LAYOUT`, and reflections negate the velocity channels. |
+| `--edge-distance` | pairwise player distance (yards / 40) as a second edge feature | Computed in the model; distances don't change under reflections. |
+
 ## Model
 
 `NextActionModel` uses the `seq2spatial` design, which beat the spatial-only

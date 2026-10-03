@@ -42,7 +42,7 @@ from soccer_ml.data.next_action_dataset import (
     NextActionBatch,
 )
 from soccer_ml.data.pitch_grid import DEFAULT_GRID_M, DEFAULT_GRID_N
-from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT
+from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT, get_node_layout
 from soccer_ml.data.transforms import flip_grid
 from soccer_ml.models.backbone import D2GATv2Backbone
 from soccer_ml.models.heads import pool_graph_readout
@@ -58,6 +58,8 @@ from soccer_ml.models.temporal_receiver import (
 # Located-action head index of each action type (-1: no end zone).
 _LOCATED_INDEX = torch.tensor([LOCATED_ACTIONS.index(a) if a in LOCATED_ACTIONS else -1 for a in ACTION_TYPES])
 _PASS = ACTION_TYPES.index("pass")
+# Pitch normalization used by NextActionDataset (StatsBomb yards onto a 10 x 10 box).
+_PITCH_LENGTH, _PITCH_WIDTH, _TARGET_SCALE = 120.0, 80.0, 10.0
 
 
 def _linear_or_mlp(in_dim: int, out_dim: int, use_mlp: bool, dropout: float) -> nn.Module:
@@ -88,6 +90,8 @@ class NextActionModel(nn.Module):
         use_mlp: bool = False,
         use_history: bool = True,
         use_visibility: bool = True,
+        node_layout: str = STATSBOMB_NODE_LAYOUT.name,
+        edge_distance: bool = False,
     ):
         super().__init__()
         self.model_kwargs: Dict[str, Any] = {
@@ -106,12 +110,16 @@ class NextActionModel(nn.Module):
             "use_mlp": use_mlp,
             "use_history": use_history,
             "use_visibility": use_visibility,
+            "node_layout": node_layout,
+            "edge_distance": edge_distance,
         }
         self.hidden_dim = hidden_dim
         self.grid_m, self.grid_n = grid_m, grid_n
         self.num_zones = grid_m * grid_n
         self.use_history = use_history
         self.use_visibility = use_visibility
+        self.node_layout = get_node_layout(node_layout)
+        self.edge_distance = edge_distance
 
         context_dim = hidden_dim if use_history else 0
         if use_history:
@@ -129,11 +137,11 @@ class NextActionModel(nn.Module):
             hidden_dim=hidden_dim,
             num_layers=num_layers,
             nb_heads=nb_heads,
-            in_edge_dim=in_edge_dim,
+            in_edge_dim=in_edge_dim + int(edge_distance),
             in_graph_dim=in_graph_dim + context_dim,
             dropout=dropout,
             symmetry=symmetry,
-            node_layout=STATSBOMB_NODE_LAYOUT.name,
+            node_layout=self.node_layout.name,
         )
         self.group_actions = self.backbone.group_actions
         self.num_views = len(self.group_actions)
@@ -187,6 +195,17 @@ class NextActionModel(nn.Module):
         visible = batch.visible_zones.view(batch.batch_size, self.grid_m, self.grid_n)
         return torch.stack([flip_grid(visible, action) for action in self.group_actions])
 
+    def pairwise_distance(self, batch: NextActionBatch) -> torch.Tensor:
+        """Player distances in pitch units / 40, ``(B, N, N)``; zero for padded players.
+
+        Coordinates are normalized differently along the length and width of
+        the pitch, so they are mapped back to yards first.  Distances do not
+        change under reflections, so the edge feature keeps equivariance.
+        """
+        xy = batch.node_features[..., [self.node_layout.x, self.node_layout.y]]
+        xy = xy * xy.new_tensor([_PITCH_LENGTH / _TARGET_SCALE, _PITCH_WIDTH / _TARGET_SCALE])
+        return torch.cdist(xy, xy) / 40.0 * batch.adj_mat
+
     def encode(self, batch: NextActionBatch) -> torch.Tensor:
         """Per-view decision readouts ``(V, B, readout_dim)``: [pooled nodes, actor node, history]."""
         views, batch_size = self.num_views, batch.batch_size
@@ -197,10 +216,11 @@ class NextActionModel(nn.Module):
         else:
             temporal = None
             graph_views = [static_graph] * views
-        node_views = self.backbone(
-            batch.node_features, batch.edge_features, graph_views[0], batch.adj_mat, graph_views=graph_views
-        )
-        actor_mask = batch.node_features[..., STATSBOMB_NODE_LAYOUT.actor] > 0.5
+        edges = batch.edge_features
+        if self.edge_distance:
+            edges = torch.cat([edges, self.pairwise_distance(batch).unsqueeze(-1)], dim=-1)
+        node_views = self.backbone(batch.node_features, edges, graph_views[0], batch.adj_mat, graph_views=graph_views)
+        actor_mask = batch.node_features[..., self.node_layout.actor] > 0.5
         readout = pool_graph_readout(torch.stack(node_views), batch.player_mask, actor_mask)  # (V, B, 2H)
         if temporal is not None:
             readout = torch.cat([readout, temporal], dim=-1)

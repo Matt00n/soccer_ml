@@ -154,6 +154,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    # Line-buffered output, so logs written via nohup/redirection update immediately.
+    sys.stdout.reconfigure(line_buffering=True)
     args = parse_args()
     config = load_config(args.config)
     _set_seed(args.sample_seed)

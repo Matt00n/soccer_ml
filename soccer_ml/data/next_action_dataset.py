@@ -43,6 +43,7 @@ Leakage rules:
 
 from __future__ import annotations
 
+import bisect
 import csv
 import json
 import math
@@ -53,10 +54,16 @@ from typing import Any, Dict, List, Literal, Mapping, Optional, Sequence, Union
 
 import numpy as np
 import torch
+from scipy.optimize import linear_sum_assignment
 from torch.utils.data import ConcatDataset, Dataset
 
 from soccer_ml.data.pitch_grid import DEFAULT_GRID_M, DEFAULT_GRID_N, PitchGrid
-from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT, SoccerGraphBatch
+from soccer_ml.data.schema import (
+    STATSBOMB_NODE_LAYOUT,
+    STATSBOMB_VELOCITY_NODE_LAYOUT,
+    NodeLayout,
+    SoccerGraphBatch,
+)
 from soccer_ml.data.temporal_receiver_dataset import (
     EVENT_NUMERIC_DIM,
     _event_categoricals,
@@ -102,6 +109,83 @@ GRAPH_FEATURES = (
 GRAPH_DIM = len(GRAPH_FEATURES)
 EDGE_DIM = 1
 
+# -- Optional features (off by default, so older checkpoints keep their inputs) --
+# Role of the player on the ball from StatsBomb's position, side-agnostic so it
+# is invariant under the wing reflection.
+ACTOR_ROLES = (
+    "goalkeeper", "center_back", "full_back", "defensive_midfield", "central_midfield",
+    "attacking_midfield", "wide", "forward", "unknown_role",
+)
+_POSITION_ROLES = {
+    "Goalkeeper": "goalkeeper",
+    "Center Back": "center_back", "Left Center Back": "center_back", "Right Center Back": "center_back",
+    "Left Back": "full_back", "Right Back": "full_back", "Left Wing Back": "full_back", "Right Wing Back": "full_back",
+    "Center Defensive Midfield": "defensive_midfield", "Left Defensive Midfield": "defensive_midfield",
+    "Right Defensive Midfield": "defensive_midfield",
+    "Center Midfield": "central_midfield", "Left Center Midfield": "central_midfield",
+    "Right Center Midfield": "central_midfield",
+    "Center Attacking Midfield": "attacking_midfield", "Left Attacking Midfield": "attacking_midfield",
+    "Right Attacking Midfield": "attacking_midfield",
+    "Left Wing": "wide", "Right Wing": "wide", "Left Midfield": "wide", "Right Midfield": "wide",
+    "Center Forward": "forward", "Left Center Forward": "forward", "Right Center Forward": "forward",
+    "Secondary Striker": "forward",
+}
+# Score state before the decision, from the actor's team's perspective.
+GAME_STATE_FEATURES = ("goal_difference_over_3", "is_home")
+# Velocity estimation: players of each team are matched to the previous freeze
+# frame at least VELOCITY_MIN_GAP and at most VELOCITY_MAX_GAP seconds earlier;
+# matches implying more than MAX_SPEED yd/s (plus MATCH_SLACK yd of position noise) are rejected.
+VELOCITY_MIN_GAP = 0.2
+VELOCITY_MAX_GAP = 3.0
+MAX_SPEED = 11.0
+MATCH_SLACK = 2.0
+
+
+def graph_feature_names(actor_role: bool = False, game_state: bool = False) -> tuple:
+    names = GRAPH_FEATURES
+    if actor_role:
+        names = names + tuple(f"role_{role}" for role in ACTOR_ROLES)
+    if game_state:
+        names = names + GAME_STATE_FEATURES
+    return names
+
+
+def node_layout_for(velocities: bool = False) -> NodeLayout:
+    return STATSBOMB_VELOCITY_NODE_LAYOUT if velocities else STATSBOMB_NODE_LAYOUT
+
+
+def match_velocities(
+    current_xy: np.ndarray,
+    current_team: np.ndarray,
+    previous_xy: np.ndarray,
+    previous_team: np.ndarray,
+    dt: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Velocities (pitch units / s) of current players matched to a previous frame.
+
+    Players are matched within each team by minimum total squared distance
+    (Hungarian algorithm) over the physically possible pairs: pairs further
+    apart than MAX_SPEED * dt + MATCH_SLACK get a prohibitive cost *before* the
+    assignment (otherwise one outlier, e.g. a player leaving the camera view,
+    can pull correct pairs apart) and stay unmatched.  Returns (n, 2)
+    velocities and an (n,) matched mask.
+    """
+    velocities = np.zeros((len(current_xy), 2))
+    matched = np.zeros(len(current_xy), dtype=bool)
+    limit = MAX_SPEED * dt + MATCH_SLACK
+    for team in (True, False):
+        current = np.flatnonzero(current_team == team)
+        previous = np.flatnonzero(previous_team == team)
+        if len(current) == 0 or len(previous) == 0:
+            continue
+        distance = np.linalg.norm(current_xy[current, None] - previous_xy[None, previous], axis=-1)
+        rows, columns = linear_sum_assignment(np.where(distance <= limit, distance**2, 1e9))
+        for row, column in zip(rows, columns):
+            if distance[row, column] <= limit:
+                velocities[current[row]] = (current_xy[current[row]] - previous_xy[previous[column]]) / dt
+                matched[current[row]] = True
+    return velocities, matched
+
 # Value targets (see ``scripts/value/vaep_baseline.py``): goal and xG-sequence
 # labels of the acting team scoring / conceding within the next 10 SPADL actions.
 VALUE_LABELS = ("scores", "concedes", "xg_scores", "xg_concedes")
@@ -114,19 +198,19 @@ _MIN_PLAYERS = 4
 
 
 @lru_cache(maxsize=8)
-def _womens_match_ids(matches_dir: str) -> frozenset:
-    """Match IDs of women's competitions, from StatsBomb ``matches/*/*.json``."""
-    ids = set()
+def _match_index(matches_dir: str) -> Dict[str, tuple]:
+    """Match id -> (home team id, women's competition), from StatsBomb ``matches/*/*.json``."""
+    index = {}
     for path in Path(matches_dir).glob("*/*.json"):
         for match in json.loads(path.read_text()):
-            if (match.get("home_team") or {}).get("home_team_gender") == "female":
-                ids.add(str(match["match_id"]))
-    return frozenset(ids)
+            home = match.get("home_team") or {}
+            index[str(match["match_id"])] = (home.get("home_team_id"), home.get("home_team_gender") == "female")
+    return index
 
 
-def _is_womens_match(events_path: Path) -> bool:
+def _match_info(events_path: Path) -> Optional[tuple]:
     matches_dir = events_path.parent.parent / "matches"
-    return matches_dir.is_dir() and events_path.stem in _womens_match_ids(str(matches_dir))
+    return _match_index(str(matches_dir)).get(events_path.stem) if matches_dir.is_dir() else None
 
 
 def _visible_zones(polygon: Sequence[float], centers: np.ndarray) -> np.ndarray:
@@ -271,6 +355,12 @@ class NextActionDataset(Dataset):
             decisions; they stay in the history.  Defaults to one grid cell.
         womens_competition: Override the women's-competition flag; by default
             it is looked up in StatsBomb's ``matches`` folder next to ``events``.
+        actor_role: Append a one-hot of the acting player's role (:data:`ACTOR_ROLES`).
+        game_state: Append goal difference and home/away (:data:`GAME_STATE_FEATURES`);
+            home/away is 0.5 when the ``matches`` folder is unavailable.
+        velocities: Estimate player velocities by matching each team's players to
+            the previous freeze frame (:func:`match_velocities`); node features
+            then follow ``STATSBOMB_VELOCITY_NODE_LAYOUT``.
         value_labels: Optional event id -> :data:`VALUE_LABELS` mapping
             (:func:`load_value_labels`) for Monte Carlo value targets.
     """
@@ -291,6 +381,9 @@ class NextActionDataset(Dataset):
         target_scale: float = 10.0,
         max_players: int = 22,
         value_labels: Optional[Mapping[str, Sequence[float]]] = None,
+        actor_role: bool = False,
+        game_state: bool = False,
+        velocities: bool = False,
     ):
         if context_scope not in {"possession", "period"}:
             raise ValueError("context_scope must be 'possession' or 'period'.")
@@ -304,9 +397,14 @@ class NextActionDataset(Dataset):
         self.pitch_width = pitch_width
         self.target_scale = target_scale
         self.max_players = max_players
-        self.womens_competition = (
-            _is_womens_match(self.events_path) if womens_competition is None else womens_competition
-        )
+        info = _match_info(self.events_path)
+        self.home_team_id = info[0] if info else None
+        self.womens_competition = bool(info and info[1]) if womens_competition is None else womens_competition
+        self.actor_role = actor_role
+        self.game_state = game_state
+        self.velocities = velocities
+        self.node_layout = node_layout_for(velocities)
+        self.graph_feature_names = graph_feature_names(actor_role, game_state)
         self._zone_centers = self.grid.zone_centers().numpy()
         self.value_labels = value_labels
         self._load(max_samples)
@@ -329,6 +427,8 @@ class NextActionDataset(Dataset):
     def _load(self, max_samples: Optional[int]) -> None:
         frames = {frame["event_uuid"]: frame for frame in json.loads(self.three_sixty_path.read_text())}
         events = sorted(json.loads(self.events_path.read_text()), key=lambda event: event.get("index", 0))
+        self._frame_positions = [i for i, event in enumerate(events) if event.get("id") in frames]
+        self._score_before = self._score_states(events) if self.game_state else None
         samples: List[NextActionSample] = []
         for position, event in enumerate(events):
             frame = frames.get(event.get("id"))
@@ -341,6 +441,7 @@ class NextActionDataset(Dataset):
             if max_samples is not None and len(samples) >= max_samples:
                 break
         self._add_value_targets(events, samples)
+        del self._frame_positions, self._score_before
         # Store one stacked tensor per field: per-sample tensor objects would
         # cost several KB of Python overhead each at ~650k samples.
         fields = [name for name in NextActionSample.__dataclass_fields__ if name != "metadata"]
@@ -396,7 +497,7 @@ class NextActionDataset(Dataset):
         players = frame.get("freeze_frame", [])[: self.max_players]
         if len(players) < _MIN_PLAYERS or not any(player.get("actor") for player in players):
             return None
-        layout = STATSBOMB_NODE_LAYOUT
+        layout = self.node_layout
         nodes = torch.zeros(self.max_players, layout.dim)
         mask = torch.zeros(self.max_players, dtype=torch.bool)
         positions = []
@@ -469,11 +570,78 @@ class NextActionDataset(Dataset):
         selected.reverse()
         return selected
 
+    @staticmethod
+    def _score_states(events: Sequence[Dict[str, Any]]) -> List[Dict[Any, int]]:
+        """Goals per team scored before each event (penalty shoot-outs excluded)."""
+        score: Dict[Any, int] = {}
+        states = []
+        for event in events:
+            states.append(dict(score))
+            kind = (event.get("type") or {}).get("name")
+            team = (event.get("team") or {}).get("id")
+            if event.get("period", 1) > 4:
+                continue
+            if kind == "Shot" and ((event.get("shot") or {}).get("outcome") or {}).get("name") == "Goal":
+                score[team] = score.get(team, 0) + 1
+            elif kind == "Own Goal For":
+                score[team] = score.get(team, 0) + 1
+        return states
+
+    def _add_velocities(
+        self,
+        nodes: torch.Tensor,
+        positions: List[tuple],
+        players: List[Dict[str, Any]],
+        events: Sequence[Dict[str, Any]],
+        frame_position: int,
+        frames: Dict[str, Dict[str, Any]],
+    ) -> None:
+        """Fill the velocity channels from the most recent earlier freeze frame of the same period."""
+        layout = self.node_layout
+        current = events[frame_position]
+        now = _timestamp_seconds(current)
+        index = bisect.bisect_left(self._frame_positions, frame_position) - 1
+        while index >= 0:
+            previous = events[self._frame_positions[index]]
+            if previous.get("period") != current.get("period"):
+                return
+            dt = now - _timestamp_seconds(previous)
+            if dt > VELOCITY_MAX_GAP:
+                return
+            if dt >= VELOCITY_MIN_GAP:
+                break
+            index -= 1
+        else:
+            return
+        previous_players = frames[previous["id"]].get("freeze_frame", [])
+        if not previous_players:
+            return
+        # Frames are in the frame of the team performing their event: rotate if that differs.
+        rotate = (previous.get("team") or {}).get("id") != (current.get("team") or {}).get("id")
+        previous_xy = np.array([(p.get("location") or [60.0, 40.0])[:2] for p in previous_players], dtype=float)
+        previous_team = np.array([bool(p.get("teammate")) for p in previous_players])
+        if rotate:
+            previous_xy = np.array([self.pitch_length, self.pitch_width]) - previous_xy
+            previous_team = ~previous_team
+        current_xy = np.array(positions, dtype=float)
+        current_team = np.array([bool(p.get("teammate")) for p in players])
+        velocity, matched = match_velocities(current_xy, current_team, previous_xy, previous_team, dt)
+        count = len(players)
+        # Same normalization as the coordinates: pitch units -> target_scale box.
+        nodes[:count, layout.vx] = torch.from_numpy(velocity[:, 0] / self.pitch_length * self.target_scale).float()
+        nodes[:count, layout.vy] = torch.from_numpy(velocity[:, 1] / self.pitch_width * self.target_scale).float()
+        nodes[:count, layout.dim - 1] = torch.from_numpy(matched.astype(np.float32))
+
     def _graph_features(
-        self, event: Dict[str, Any], anchor: Dict[str, Any], visible: np.ndarray, players: List[Dict[str, Any]]
+        self,
+        event: Dict[str, Any],
+        anchor: Dict[str, Any],
+        visible: np.ndarray,
+        players: List[Dict[str, Any]],
+        anchor_position: int,
     ) -> torch.Tensor:
         """Situation at the decision moment (``anchor``); the restart type is fixed by the stoppage."""
-        features = dict.fromkeys(GRAPH_FEATURES, 0.0)
+        features = dict.fromkeys(self.graph_feature_names, 0.0)
         period = int(anchor.get("period", 1))
         features["second_half"] = float(period >= 2)
         features["extra_time"] = float(period >= 3)
@@ -489,7 +657,17 @@ class NextActionDataset(Dataset):
         teammates = sum(bool(player.get("teammate")) for player in players)
         features["visible_teammates_over_11"] = teammates / 11.0
         features["visible_opponents_over_11"] = (len(players) - teammates) / 11.0
-        return torch.tensor([features[name] for name in GRAPH_FEATURES], dtype=torch.float32)
+        if self.actor_role:
+            role = _POSITION_ROLES.get((event.get("position") or {}).get("name"), "unknown_role")
+            features[f"role_{role}"] = 1.0
+        if self.game_state:
+            team = (event.get("team") or {}).get("id")
+            score = self._score_before[anchor_position]
+            own = score.get(team, 0)
+            other = sum(goals for side, goals in score.items() if side != team)
+            features["goal_difference_over_3"] = max(-3, min(3, own - other)) / 3.0
+            features["is_home"] = 0.5 if self.home_team_id is None else float(team == self.home_team_id)
+        return torch.tensor([features[name] for name in self.graph_feature_names], dtype=torch.float32)
 
     def _make_sample(
         self, events: Sequence[Dict[str, Any]], position: int, event: Dict[str, Any], frames: Dict[str, Dict[str, Any]]
@@ -497,11 +675,14 @@ class NextActionDataset(Dataset):
         anchor_position, frame_positions, context, carry_masked = self._decision_anchor(events, position)
         anchor = events[anchor_position]
         # The anchor's freeze frame, else one at the same moment (the touch), else the action's own.
-        frame = next(frames[events[i]["id"]] for i in frame_positions if events[i].get("id") in frames)
+        frame_position = next(i for i in frame_positions if events[i].get("id") in frames)
+        frame = frames[events[frame_position]["id"]]
         parsed = self._frame_tensors(frame)
         if parsed is None:
             return None
         nodes, mask, positions, players = parsed
+        if self.velocities:
+            self._add_velocities(nodes, positions, players, events, frame_position, frames)
         visible = _visible_zones(frame.get("visible_area", []), self._zone_centers)
 
         action = _STATSBOMB_ACTIONS[event["type"]["name"]]
@@ -554,7 +735,7 @@ class NextActionDataset(Dataset):
         return NextActionSample(
             node_features=nodes,
             player_mask=mask,
-            graph_features=self._graph_features(event, anchor, visible, players),
+            graph_features=self._graph_features(event, anchor, visible, players, anchor_position),
             visible_zones=torch.from_numpy(visible),
             event_type=event_type,
             event_outcome=event_outcome,
@@ -614,7 +795,8 @@ def load_value_labels(path: Union[str, Path]) -> Dict[str, tuple]:
 
 
 class TransitionDataset(Dataset):
-    """Pairs every decision with the next one of the same match (for temporal-difference targets).
+    """Pairs every decision with the next one of the same match (for temporal-difference targets)
+    and its dataset index (for precomputed targets such as λ-returns).
 
     At the end of a period the sample itself stands in as the next state; its
     ``done`` flag makes the bootstrap term vanish.
@@ -632,13 +814,75 @@ class TransitionDataset(Dataset):
     def __len__(self) -> int:
         return len(self.dataset)
 
-    def __getitem__(self, index: int) -> tuple[NextActionSample, NextActionSample]:
+    def __getitem__(self, index: int) -> tuple[NextActionSample, NextActionSample, int]:
         sample = self.dataset[index]
         part = int(torch.searchsorted(self._starts, torch.tensor(index), right=True)) - 1
         following = int(sample.next_index)
         next_sample = self._parts[part][following] if following >= 0 else sample
-        return sample, next_sample
+        return sample, next_sample, index
 
 
-def collate_transitions(pairs: Sequence[tuple[NextActionSample, NextActionSample]]) -> tuple[NextActionBatch, NextActionBatch]:
-    return collate_next_action([pair[0] for pair in pairs]), collate_next_action([pair[1] for pair in pairs])
+def collate_transitions(
+    items: Sequence[tuple[NextActionSample, NextActionSample, int]]
+) -> tuple[NextActionBatch, NextActionBatch, torch.Tensor]:
+    """(decisions, next decisions, dataset indices of the decisions)."""
+    return (
+        collate_next_action([item[0] for item in items]),
+        collate_next_action([item[1] for item in items]),
+        torch.tensor([item[2] for item in items]),
+    )
+
+
+def _parts(dataset: Dataset) -> List[tuple]:
+    """(offset, NextActionDataset) for a dataset or a ConcatDataset of them."""
+    if isinstance(dataset, ConcatDataset):
+        return list(zip([0, *dataset.cumulative_sizes[:-1]], dataset.datasets))
+    return [(0, dataset)]
+
+
+def td_rewards_tensor(dataset: Dataset, kind: str = "xg") -> torch.Tensor:
+    """Per-decision (our, their) rewards of every sample, ``(N, 2)``."""
+    names = ("our_xg", "their_xg") if kind == "xg" else ("our_goals", "their_goals")
+    columns = [REWARDS.index(name) for name in names]
+    return torch.cat([part._tensors["reward"][:, columns] for _, part in _parts(dataset)])
+
+
+def lambda_returns(
+    dataset: Dataset,
+    gamma: float,
+    lam: float,
+    bootstrap: Optional[torch.Tensor] = None,
+    reward_kind: str = "xg",
+) -> torch.Tensor:
+    """λ-returns of every decision, ``(N, 2)`` (score, concede components).
+
+        G_t = r_t + γ · swap_t[(1 - λ) · V_{t+1} + λ · G_{t+1}]
+
+    where V_{t+1} = ``bootstrap[next]`` (values of the next decision in its
+    actor's perspective), ``swap_t`` exchanges the components when the other
+    team makes the next decision, and the bootstrap vanishes at the end of a
+    period.  λ = 1 gives the discounted Monte Carlo return (no bootstrap
+    needed); λ = 0 gives the one-step TD target.  Dead balls are *not*
+    episode ends: the restart is the next decision and carries its own value.
+    """
+    if lam < 1.0 and bootstrap is None:
+        raise ValueError("λ < 1 needs bootstrap values of every decision.")
+    rewards = td_rewards_tensor(dataset, reward_kind)
+    returns = torch.zeros_like(rewards)
+    for offset, part in _parts(dataset):
+        tensors, metadata = part._tensors, part._metadata
+        order = sorted(range(len(part)), key=lambda i: metadata[i]["anchor_position"], reverse=True)
+        for local in order:
+            index = offset + local
+            following = int(tensors["next_index"][local])
+            if bool(tensors["done"][local]) or following < 0:
+                returns[index] = rewards[index]
+                continue
+            nxt = offset + following
+            continuation = lam * returns[nxt]
+            if lam < 1.0:
+                continuation = continuation + (1.0 - lam) * bootstrap[nxt]
+            if bool(tensors["next_flip"][local]):
+                continuation = continuation.flip(0)
+            returns[index] = rewards[index] + gamma * continuation
+    return returns
