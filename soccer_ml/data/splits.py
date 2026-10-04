@@ -149,3 +149,26 @@ def set_seed(seed: int) -> None:
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+
+
+def sample_fold_pairs(
+    data_dir: str, num_folds: int, fold: int, seed: int, monitor_matches: int | None = None
+) -> tuple[list[tuple[str, str]], list[tuple[str, str]], list[tuple[str, str]]]:
+    """K-fold split of all matches for cross-fitting: (train, monitoring validation, full fold).
+
+    Matches are shuffled deterministically with ``seed`` and cut into
+    ``num_folds`` contiguous folds; fold ``fold`` is held out and every other
+    match trains.  Over all folds every match is held out exactly once, so each
+    gets out-of-sample predictions.  ``monitor_matches`` limits the per-epoch
+    validation to the first matches of the held-out fold (checkpoint selection
+    only; the full fold is returned for later out-of-fold predictions).
+    """
+    if not 0 <= fold < num_folds:
+        raise ValueError(f"fold must lie in [0, {num_folds}).")
+    pairs = find_match_pairs(data_dir, sample_count=None, seed=seed)
+    random.Random(seed).shuffle(pairs)
+    bounds = [round(i * len(pairs) / num_folds) for i in range(num_folds + 1)]
+    held_out = pairs[bounds[fold] : bounds[fold + 1]]
+    train = pairs[: bounds[fold]] + pairs[bounds[fold + 1] :]
+    monitor = held_out[:monitor_matches] if monitor_matches else held_out
+    return train, monitor, held_out

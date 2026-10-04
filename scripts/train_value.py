@@ -44,7 +44,7 @@ from soccer_ml.data.next_action_dataset import (
     lambda_returns,
     load_value_labels,
 )
-from soccer_ml.data.splits import load_match_datasets, sample_disjoint_train_val_pairs, set_seed
+from soccer_ml.data.splits import load_match_datasets, sample_disjoint_train_val_pairs, sample_fold_pairs, set_seed
 from soccer_ml.models.next_action import NextActionModel
 from soccer_ml.models.value import DISTRIBUTIONS, HEADS, ValueModel
 from soccer_ml.training.metrics import probabilistic_binary_metrics
@@ -93,6 +93,10 @@ def parse_args() -> argparse.Namespace:
     data.add_argument("--three-sixty", help="Single-match mode (train and validate on the same match).")
     data.add_argument("--events")
     data.add_argument("--sample-seed", type=int, default=42)
+    data.add_argument("--num-folds", type=int, help="Cross-fitting: K-fold split of all matches in --train-dir.")
+    data.add_argument("--fold", type=int, help="Cross-fitting: the held-out fold (0 .. K-1).")
+    data.add_argument("--monitor-val-matches", type=int, default=50,
+                      help="Cross-fitting: per-epoch validation on this many held-out matches.")
     data.add_argument("--max-samples", type=int)
     data.add_argument("--value-labels", default="outputs/value_baselines/value_labels_360.csv")
     data.add_argument("--baseline-dir", default="outputs/value_baselines")
@@ -191,9 +195,14 @@ def main() -> None:
         raise FileNotFoundError(f"Monte Carlo targets need {args.value_labels} (run scripts/value/vaep_baseline.py).")
     factory_kwargs = {**data_config, "value_labels": labels}
     if args.train_dir:
-        train_pairs, val_pairs = sample_disjoint_train_val_pairs(
-            args.train_dir, args.val_dir, args.train_file_count, args.val_file_count, args.sample_seed
-        )
+        if args.num_folds is not None:
+            train_pairs, val_pairs, _ = sample_fold_pairs(
+                args.train_dir, args.num_folds, args.fold, args.sample_seed, args.monitor_val_matches
+            )
+        else:
+            train_pairs, val_pairs = sample_disjoint_train_val_pairs(
+                args.train_dir, args.val_dir, args.train_file_count, args.val_file_count, args.sample_seed
+            )
         train_dataset, _ = load_match_datasets(
             train_pairs, lambda t, e: NextActionDataset(t, e, max_samples=args.max_samples, **factory_kwargs)
         )

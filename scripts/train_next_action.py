@@ -33,7 +33,13 @@ from soccer_ml.data.next_action_dataset import (
     node_layout_for,
 )
 from soccer_ml.data.pitch_grid import PitchGrid
-from soccer_ml.data.splits import load_match_datasets, sample_disjoint_train_val_pairs, sample_fingerprint, set_seed
+from soccer_ml.data.splits import (
+    load_match_datasets,
+    sample_disjoint_train_val_pairs,
+    sample_fingerprint,
+    sample_fold_pairs,
+    set_seed,
+)
 from soccer_ml.data.transforms import SYMMETRY_GROUPS
 from soccer_ml.models.next_action import NextActionModel
 from soccer_ml.training.next_action_trainer import (
@@ -79,6 +85,10 @@ def parse_args() -> argparse.Namespace:
     data.add_argument("--events", help="Single event JSON file (single-match mode).")
     data.add_argument("--val-split", type=float, default=0.2, help="Single-match mode only.")
     data.add_argument("--sample-seed", type=int, default=42)
+    data.add_argument("--num-folds", type=int, help="Cross-fitting: K-fold split of all matches in --train-dir.")
+    data.add_argument("--fold", type=int, help="Cross-fitting: the held-out fold (0 .. K-1).")
+    data.add_argument("--monitor-val-matches", type=int, default=50,
+                      help="Cross-fitting: per-epoch validation on this many held-out matches.")
     data.add_argument("--max-samples", type=int, help="Cap samples per training match (quick runs).")
     data.add_argument("--context-length", type=int, default=16, help="Previous events of the possession.")
     data.add_argument("--context-scope", choices=("possession", "period"), default="possession")
@@ -130,11 +140,17 @@ def main() -> None:
 
     started = time.time()
     if args.train_dir or args.val_dir:
-        if not (args.train_dir and args.val_dir):
-            raise ValueError("Provide both --train-dir and --val-dir together.")
-        train_pairs, val_pairs = sample_disjoint_train_val_pairs(
-            args.train_dir, args.val_dir, args.train_file_count, args.val_file_count, args.sample_seed
-        )
+        if not args.train_dir or (args.num_folds is None and not args.val_dir):
+            raise ValueError("Provide --train-dir with --val-dir, or with --num-folds/--fold.")
+        fold_pairs = None
+        if args.num_folds is not None:
+            train_pairs, val_pairs, fold_pairs = sample_fold_pairs(
+                args.train_dir, args.num_folds, args.fold, args.sample_seed, args.monitor_val_matches
+            )
+        else:
+            train_pairs, val_pairs = sample_disjoint_train_val_pairs(
+                args.train_dir, args.val_dir, args.train_file_count, args.val_file_count, args.sample_seed
+            )
         train_dataset, skipped_train = load_match_datasets(
             train_pairs, lambda t, e: NextActionDataset(t, e, max_samples=args.max_samples, **data_config)
         )
@@ -144,6 +160,8 @@ def main() -> None:
             "train_pairs": [pair for pair in train_pairs if pair not in skipped_train],
             "val_pairs": [pair for pair in val_pairs if pair not in skipped_val],
             "skipped_pairs": skipped_train + skipped_val,
+            "fold": None if fold_pairs is None else {"num_folds": args.num_folds, "fold": args.fold,
+                                                     "held_out_pairs": fold_pairs},
         }
     elif args.three_sixty and args.events:
         full = NextActionDataset(args.three_sixty, args.events, max_samples=args.max_samples, **data_config)

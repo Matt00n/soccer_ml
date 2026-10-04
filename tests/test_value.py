@@ -38,3 +38,22 @@ def test_expected_threat_save_load_roundtrip(tmp_path):
     xt.save(tmp_path / "xt.json")
     loaded = ExpectedThreat.load(tmp_path / "xt.json")
     assert loaded.value(110, 40) == pytest.approx(xt.value(110, 40))
+
+
+def test_fold_split_partitions_all_matches():
+    from pathlib import Path
+
+    from soccer_ml.data.splits import find_match_pairs, sample_fold_pairs
+
+    data_dir = "data/open-data/data"
+    if not Path(data_dir, "three-sixty").exists():
+        pytest.skip("open data not available")
+    everything = set(find_match_pairs(data_dir, None, 0))
+    held_out = []
+    for fold in range(2):
+        train, monitor, fold_pairs = sample_fold_pairs(data_dir, 2, fold, seed=42, monitor_matches=50)
+        assert set(train).isdisjoint(fold_pairs) and set(train) | set(fold_pairs) == everything
+        assert monitor == fold_pairs[:50]
+        assert sample_fold_pairs(data_dir, 2, fold, seed=42)[2] == fold_pairs  # deterministic
+        held_out += fold_pairs
+    assert sorted(held_out) == sorted(everything)  # every match held out exactly once

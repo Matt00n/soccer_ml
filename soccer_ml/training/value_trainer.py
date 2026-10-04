@@ -243,7 +243,9 @@ class ValueLearner:
         self, batch: NextActionBatch, next_batch: Optional[NextActionBatch], indices: Optional[torch.Tensor] = None
     ) -> Dict[str, torch.Tensor]:
         config = self.config
-        next_outputs = self.target_model(next_batch) if self.target_model is not None else None
+        # λ-return targets are precomputed; only TD targets and C51 need the next decision's outputs.
+        needs_next = config.distribution == "categorical" or config.target in ("sarsa", "expected_sarsa", "iql")
+        next_outputs = self.target_model(next_batch) if needs_next else None
         extra: Dict[str, torch.Tensor] = {}
         if config.distribution == "categorical":
             extra["distribution_target"] = self._distribution_target(batch, next_batch, next_outputs)
