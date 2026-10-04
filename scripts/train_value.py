@@ -79,7 +79,8 @@ def parse_args() -> argparse.Namespace:
     value.add_argument("--expectile", type=float, default=0.7, help="IQL expectile of the score component.")
     value.add_argument("--lam", type=float, default=0.8, help="λ of lambda_return (1 = discounted Monte Carlo).")
     value.add_argument("--num-atoms", type=int, default=51, help="C51 atoms (categorical).")
-    value.add_argument("--v-max", type=float, default=1.5, help="C51 support [-v_max, v_max] of the net return.")
+    value.add_argument("--v-max", type=float, default=1.0, help="C51 support [-v_max, v_max] of the net return.")
+    value.add_argument("--atom-density", type=float, default=5.0, help="C51 sinh spacing: larger = finer near 0.")
     value.add_argument("--distribution-weight", type=float, default=0.1, help="Weight of the (auxiliary) C51 loss.")
     value.add_argument("--target-tau", type=float, default=0.005, help="Polyak rate of the target network.")
     value.add_argument("--value-weight", type=float, default=1.0)
@@ -220,6 +221,7 @@ def main() -> None:
         joint=config.training == "joint",
         num_atoms=args.num_atoms,
         v_max=args.v_max,
+        atom_density=args.atom_density,
     )
     if config.training == "warm":
         # Policy heads are unused; the encoder is fine-tuned unless frozen.

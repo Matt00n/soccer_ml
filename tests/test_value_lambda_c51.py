@@ -71,7 +71,7 @@ def test_lambda_one_needs_no_bootstrap_and_lambda_below_one_does():
 
 
 def test_categorical_projection():
-    support = categorical_support(51, 1.5)
+    support = categorical_support(51, 1.0)
     assert torch.allclose(support, -support.flip(0)) and support[25] == 0 and torch.all(support.diff() > 0)
     probabilities = torch.softmax(torch.randn(4, 51), dim=-1)
     # Shifting by an exact atom offset at the centre maps atoms onto atoms.

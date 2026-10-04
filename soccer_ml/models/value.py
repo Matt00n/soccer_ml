@@ -98,7 +98,9 @@ def quantile_fractions(num_quantiles: int, device: Optional[torch.device] = None
     return (2 * torch.arange(num_quantiles, device=device, dtype=torch.float32) + 1) / (2 * num_quantiles)
 
 
-def categorical_support(num_atoms: int = 51, v_max: float = 1.5, density: float = 3.0) -> torch.Tensor:
+# Net discounted returns are tiny for most decisions (validation: 50% within [-0.0001, 0.0066],
+# 90% within [-0.016, 0.072], extremes about +-1), so the support must be fine near 0.
+def categorical_support(num_atoms: int = 51, v_max: float = 1.0, density: float = 5.0) -> torch.Tensor:
     """Symmetric atoms in [-v_max, v_max], denser near 0 (sinh spacing), with an exact 0 atom.
 
     Built as a positive half mirrored onto the negative axis, so the support is
@@ -150,7 +152,8 @@ class ValueModel(nn.Module):
         state_value: bool = False,
         joint: bool = False,
         num_atoms: int = 51,
-        v_max: float = 1.5,
+        v_max: float = 1.0,
+        atom_density: float = 5.0,
         distribution_features: int = 16,
     ):
         super().__init__()
@@ -176,6 +179,7 @@ class ValueModel(nn.Module):
             "joint": joint,
             "num_atoms": num_atoms,
             "v_max": v_max,
+            "atom_density": atom_density,
             "distribution_features": distribution_features,
         }
         d, z, c, q = policy.readout_dim, self.num_zones, len(VALUE_COMPONENTS), self.num_quantiles
@@ -195,7 +199,7 @@ class ValueModel(nn.Module):
         self.state_value = nn.Linear(d, c * q) if state_value else None
         if distribution == "categorical":
             f = distribution_features
-            self.register_buffer("atoms", categorical_support(num_atoms, v_max))
+            self.register_buffer("atoms", categorical_support(num_atoms, v_max, atom_density))
             self.distribution_located = nn.Linear(d, f * (heights + 1) * z)  # pass heights + carry, per zone
             self.distribution_scalar = nn.Linear(d, f * scalars)
             self.distribution_state = nn.Linear(d, f)
