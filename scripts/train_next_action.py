@@ -38,6 +38,7 @@ from soccer_ml.data.splits import (
     sample_disjoint_train_val_pairs,
     sample_fingerprint,
     sample_fold_pairs,
+    sample_holdout_pairs,
     set_seed,
 )
 from soccer_ml.data.transforms import SYMMETRY_GROUPS
@@ -89,6 +90,12 @@ def parse_args() -> argparse.Namespace:
     data.add_argument("--fold", type=int, help="Cross-fitting: the held-out fold (0 .. K-1).")
     data.add_argument("--monitor-val-matches", type=int, default=50,
                       help="Cross-fitting: per-epoch validation on this many held-out matches.")
+    data.add_argument("--holdout-competitions", nargs="*", default=[],
+                      help="Reference model: hold out these competitions entirely (e.g. 'La Liga' 'Ligue 1').")
+    data.add_argument("--holdout-teams", nargs="*", default=[],
+                      help="Reference model: hold out every match of these teams (e.g. Argentina).")
+    data.add_argument("--holdout-val-matches", type=int, default=30,
+                      help="Reference model: in-domain validation matches drawn from the remaining pool.")
     data.add_argument("--max-samples", type=int, help="Cap samples per training match (quick runs).")
     data.add_argument("--context-length", type=int, default=16, help="Previous events of the possession.")
     data.add_argument("--context-scope", choices=("possession", "period"), default="possession")
@@ -140,10 +147,15 @@ def main() -> None:
 
     started = time.time()
     if args.train_dir or args.val_dir:
-        if not args.train_dir or (args.num_folds is None and not args.val_dir):
-            raise ValueError("Provide --train-dir with --val-dir, or with --num-folds/--fold.")
-        fold_pairs = None
-        if args.num_folds is not None:
+        grouped = args.num_folds is not None or args.holdout_competitions or args.holdout_teams
+        if not args.train_dir or (not grouped and not args.val_dir):
+            raise ValueError("Provide --train-dir with --val-dir, --num-folds/--fold, or --holdout-*.")
+        fold_pairs = holdout_pairs = None
+        if args.holdout_competitions or args.holdout_teams:
+            train_pairs, val_pairs, holdout_pairs = sample_holdout_pairs(
+                args.train_dir, args.holdout_competitions, args.holdout_teams, args.holdout_val_matches, args.sample_seed
+            )
+        elif args.num_folds is not None:
             train_pairs, val_pairs, fold_pairs = sample_fold_pairs(
                 args.train_dir, args.num_folds, args.fold, args.sample_seed, args.monitor_val_matches
             )
@@ -162,6 +174,9 @@ def main() -> None:
             "skipped_pairs": skipped_train + skipped_val,
             "fold": None if fold_pairs is None else {"num_folds": args.num_folds, "fold": args.fold,
                                                      "held_out_pairs": fold_pairs},
+            "holdout": None if holdout_pairs is None else {"competitions": args.holdout_competitions,
+                                                           "teams": args.holdout_teams,
+                                                           "held_out_pairs": holdout_pairs},
         }
     elif args.three_sixty and args.events:
         full = NextActionDataset(args.three_sixty, args.events, max_samples=args.max_samples, **data_config)

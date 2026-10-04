@@ -57,3 +57,23 @@ def test_fold_split_partitions_all_matches():
         assert sample_fold_pairs(data_dir, 2, fold, seed=42)[2] == fold_pairs  # deterministic
         held_out += fold_pairs
     assert sorted(held_out) == sorted(everything)  # every match held out exactly once
+
+
+def test_holdout_split_isolates_teams_and_competitions():
+    from pathlib import Path
+
+    from soccer_ml.data.splits import _match_metadata, find_match_pairs, match_id_from_filename, sample_holdout_pairs
+
+    data_dir = "data/open-data/data"
+    if not Path(data_dir, "matches").exists():
+        pytest.skip("open data not available")
+    clubs = ["La Liga", "Ligue 1", "1. Bundesliga", "Major League Soccer"]
+    train, val, holdout = sample_holdout_pairs(data_dir, clubs, ["Argentina"], val_matches=30, seed=42)
+    metadata = _match_metadata(str(Path(data_dir) / "matches"))
+    info = lambda pair: metadata[match_id_from_filename(Path(pair[0]))]  # noqa: E731
+    assert all(info(p)["competition"] in clubs or "Argentina" in info(p)["teams"] for p in holdout)
+    for pair in train + val:
+        assert info(pair)["competition"] not in clubs and "Argentina" not in info(pair)["teams"]
+    assert len(val) == 30 and set(train).isdisjoint(val)
+    assert sorted(train + val + holdout) == sorted(find_match_pairs(data_dir, None, 0))
+    assert sample_holdout_pairs(data_dir, clubs, ["Argentina"], 30, 42) == (train, val, holdout)

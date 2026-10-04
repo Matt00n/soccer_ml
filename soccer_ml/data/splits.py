@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import random
+from functools import lru_cache
 from pathlib import Path
 from typing import Callable, Sequence
 
@@ -172,3 +173,52 @@ def sample_fold_pairs(
     train = pairs[: bounds[fold]] + pairs[bounds[fold + 1] :]
     monitor = held_out[:monitor_matches] if monitor_matches else held_out
     return train, monitor, held_out
+
+
+@lru_cache(maxsize=4)
+def _match_metadata(matches_dir: str) -> dict[str, dict]:
+    """Match id -> competition, season and team names, from StatsBomb ``matches/*/*.json``."""
+    metadata = {}
+    for path in Path(matches_dir).glob("*/*.json"):
+        for match in json.loads(path.read_text()):
+            metadata[str(match["match_id"])] = {
+                "competition": match["competition"]["competition_name"],
+                "season": match["season"]["season_name"],
+                "teams": {match["home_team"]["home_team_name"], match["away_team"]["away_team_name"]},
+            }
+    return metadata
+
+
+def sample_holdout_pairs(
+    data_dir: str,
+    holdout_competitions: Sequence[str] = (),
+    holdout_teams: Sequence[str] = (),
+    val_matches: int = 30,
+    seed: int = 42,
+) -> tuple[list[tuple[str, str]], list[tuple[str, str]], list[tuple[str, str]]]:
+    """Group hold-out for team and change analyses: (train, in-domain validation, held out).
+
+    A match is held out if its competition is in ``holdout_competitions`` or
+    one of its teams is in ``holdout_teams``.  Held-out matches are never used
+    during training, not even for checkpoint selection: validation uses
+    ``val_matches`` matches drawn (with ``seed``) from the remaining pool.
+    """
+    pairs = find_match_pairs(data_dir, sample_count=None, seed=seed)
+    metadata = _match_metadata(str(Path(data_dir) / "matches"))
+    competitions, teams = set(holdout_competitions), set(holdout_teams)
+    unknown = {match_id_from_filename(Path(p[0])) for p in pairs} - set(metadata)
+    if unknown:
+        raise ValueError(f"No match metadata for {len(unknown)} matches (e.g. {sorted(unknown)[:3]}).")
+
+    def held_out(pair: tuple[str, str]) -> bool:
+        info = metadata[match_id_from_filename(Path(pair[0]))]
+        return info["competition"] in competitions or bool(info["teams"] & teams)
+
+    holdout = [pair for pair in pairs if held_out(pair)]
+    pool = [pair for pair in pairs if not held_out(pair)]
+    if not holdout:
+        raise ValueError("The hold-out specification matches no match.")
+    val = random.Random(seed).sample(pool, min(val_matches, len(pool) // 5))
+    chosen = set(val)
+    train = [pair for pair in pool if pair not in chosen]
+    return train, val, holdout

@@ -44,7 +44,13 @@ from soccer_ml.data.next_action_dataset import (
     lambda_returns,
     load_value_labels,
 )
-from soccer_ml.data.splits import load_match_datasets, sample_disjoint_train_val_pairs, sample_fold_pairs, set_seed
+from soccer_ml.data.splits import (
+    load_match_datasets,
+    sample_disjoint_train_val_pairs,
+    sample_fold_pairs,
+    sample_holdout_pairs,
+    set_seed,
+)
 from soccer_ml.models.next_action import NextActionModel
 from soccer_ml.models.value import DISTRIBUTIONS, HEADS, ValueModel
 from soccer_ml.training.metrics import probabilistic_binary_metrics
@@ -97,6 +103,12 @@ def parse_args() -> argparse.Namespace:
     data.add_argument("--fold", type=int, help="Cross-fitting: the held-out fold (0 .. K-1).")
     data.add_argument("--monitor-val-matches", type=int, default=50,
                       help="Cross-fitting: per-epoch validation on this many held-out matches.")
+    data.add_argument("--holdout-competitions", nargs="*", default=[],
+                      help="Reference model: hold out these competitions entirely (e.g. 'La Liga' 'Ligue 1').")
+    data.add_argument("--holdout-teams", nargs="*", default=[],
+                      help="Reference model: hold out every match of these teams (e.g. Argentina).")
+    data.add_argument("--holdout-val-matches", type=int, default=30,
+                      help="Reference model: in-domain validation matches drawn from the remaining pool.")
     data.add_argument("--max-samples", type=int)
     data.add_argument("--value-labels", default="outputs/value_baselines/value_labels_360.csv")
     data.add_argument("--baseline-dir", default="outputs/value_baselines")
@@ -195,7 +207,11 @@ def main() -> None:
         raise FileNotFoundError(f"Monte Carlo targets need {args.value_labels} (run scripts/value/vaep_baseline.py).")
     factory_kwargs = {**data_config, "value_labels": labels}
     if args.train_dir:
-        if args.num_folds is not None:
+        if args.holdout_competitions or args.holdout_teams:
+            train_pairs, val_pairs, _ = sample_holdout_pairs(
+                args.train_dir, args.holdout_competitions, args.holdout_teams, args.holdout_val_matches, args.sample_seed
+            )
+        elif args.num_folds is not None:
             train_pairs, val_pairs, _ = sample_fold_pairs(
                 args.train_dir, args.num_folds, args.fold, args.sample_seed, args.monitor_val_matches
             )
