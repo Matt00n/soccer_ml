@@ -1,0 +1,206 @@
+"""Tests for creativity statistics, measures, validation checks and the review kit."""
+
+import json
+import math
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import pytest
+import torch
+from scipy import stats
+
+from soccer_ml.creativity.measures import CREATIVITY_MEASURES, MEASURES, compute_measures, player_scores
+from soccer_ml.creativity.review import build_key, clip_payload, review_page, sample_clips
+from soccer_ml.creativity.scoring import NUM_CALIBRATION_BINS, decision_statistics, set_rarity
+from soccer_ml.creativity.validation import (
+    annotation_controls,
+    artefact_rates,
+    auc,
+    discriminant,
+    famous_moments,
+    known_groups,
+    line_breaking,
+    model_agreement,
+    pit_uniformity,
+    player_rankings,
+    policy_calibration,
+    split_half_reliability,
+    value_calibration_by_rarity,
+    winners_curse,
+)
+from soccer_ml.data.next_action_dataset import ACTION_TYPES, NextActionDataset, collate_next_action
+from soccer_ml.data.schema import STATSBOMB_NODE_LAYOUT
+from soccer_ml.models.next_action import NextActionModel, action_log_likelihood
+from soccer_ml.models.value import ValueModel
+
+THREE_SIXTY = Path("data_toy_receiver/three_sixty_3764440.json")
+EVENTS = Path("data_toy_receiver/events_3764440.json")
+needs_data = pytest.mark.skipif(not THREE_SIXTY.exists(), reason="toy StatsBomb data not available")
+
+
+def test_set_rarity_hand_example():
+    pi = torch.tensor([[0.5, 0.3, 0.2]])
+    result = set_rarity(pi, pi.log(), None, torch.tensor([1]))
+    assert result["rarity"].item() == pytest.approx(0.5 + 0.15)
+    assert result["surprise"].item() == pytest.approx(-math.log(0.3))
+    member = torch.tensor([[False, True, True]])
+    inside = set_rarity(pi, pi.log(), member, torch.tensor([2]))
+    assert inside["mass"].item() == pytest.approx(0.5)
+    assert inside["rarity"].item() == pytest.approx((0.3 + 0.1) / 0.5)
+    assert inside["surprise"].item() == pytest.approx(-math.log(0.2 / 0.5))
+    outside = set_rarity(pi, pi.log(), member, torch.tensor([0]))
+    assert math.isnan(outside["rarity"].item()) and outside["inside"].item() == 0
+
+
+def test_rarity_is_uniform_when_actions_follow_the_policy():
+    generator = torch.Generator().manual_seed(0)
+    logits = torch.randn(4000, 50, generator=generator) * 2
+    pi = torch.softmax(logits, -1)
+    observed = torch.multinomial(pi, 1, generator=generator).squeeze(-1)
+    result = set_rarity(pi, pi.log(), None, observed)
+    randomized = result["above"] + torch.rand(4000, generator=generator) * result["p_obs"]
+    assert stats.kstest(randomized.numpy(), "uniform").statistic < 0.03
+    assert result["rarity"].mean().item() == pytest.approx(0.5, abs=0.02)
+
+
+@pytest.fixture(scope="module")
+def toy_batch():
+    dataset = NextActionDataset(THREE_SIXTY, EVENTS)
+    return collate_next_action([dataset[i] for i in range(0, len(dataset), max(1, len(dataset) // 64))])
+
+
+@needs_data
+def test_decision_statistics_on_toy_batch(toy_batch):
+    torch.manual_seed(0)
+    policy = NextActionModel(hidden_dim=32, num_layers=2, nb_heads=4, temporal_layers=1, dropout=0.0).eval()
+    value = ValueModel(NextActionModel(hidden_dim=32, num_layers=2, nb_heads=4, temporal_layers=1, dropout=0.0),
+                       head="decomposed", distribution="categorical").eval()
+    with torch.no_grad():
+        policy_outputs = policy(toy_batch)
+        result = decision_statistics(policy_outputs, value(toy_batch), toy_batch, value, STATSBOMB_NODE_LAYOUT)
+    b = toy_batch.batch_size
+    assert all(tensor.shape == (b,) for tensor in result.values())
+    assert torch.all((result["rarity"] >= 0) & (result["rarity"] <= 1))
+    nll = action_log_likelihood(policy_outputs, toy_batch)
+    known = nll["has_height"] | (toy_batch.action_type != ACTION_TYPES.index("pass"))
+    torch.testing.assert_close(result["surprise"][known], nll["joint_nll"][known], atol=1e-3, rtol=1e-3)
+    masses = torch.stack([result[f"calib_mass_{k}"] for k in range(NUM_CALIBRATION_BINS)], -1)
+    torch.testing.assert_close(masses.sum(-1), torch.ones(b), atol=1e-4, rtol=1e-4)
+    assert torch.equal(result["in_good"] > 0.5, result["advantage"] > 0)
+    for name in ("good", "tail", "c51_tail", "pass"):
+        assert torch.all((result[f"{name}_mass"] >= 0) & (result[f"{name}_mass"] <= 1 + 1e-5))
+        inside = result[f"in_{name}"] > 0.5
+        assert torch.all(result[f"{name}_rarity"][inside] <= 1 + 1e-5) and result[f"{name}_rarity"][~inside].isnan().all()
+    is_pass = toy_batch.action_type == ACTION_TYPES.index("pass")
+    assert torch.equal(result["in_pass"] > 0.5, is_pass)
+    assert torch.all(result["c51_q10"] <= result["c51_q90"]) and torch.all(result["upside"] >= 0)
+    bypassed = result["opponents_bypassed"]
+    assert torch.all(bypassed[~bypassed.isnan()] >= 0)
+
+
+def _synthetic_table(n: int = 6000, seed: int = 0) -> pd.DataFrame:
+    rng = np.random.default_rng(seed)
+    players = rng.integers(0, 40, n)
+    matches = rng.integers(0, 30, n)
+    action = rng.choice(["pass", "carry", "shot", "dribble"], n, p=[0.6, 0.3, 0.05, 0.05])
+    rarity = rng.uniform(size=n)
+    advantage = rng.normal(0, 0.01, n)
+    table = pd.DataFrame({
+        "event_uuid": [f"e{i}" for i in range(n)], "match_id": matches, "player_id": players,
+        "player": [f"Player {p} Name" for p in players], "team": [f"T{p % 8}" for p in players],
+        "position": rng.choice(["Center Midfield", "Center Back", "Left Wing"], n),
+        "match_date": [f"2024-01-{m % 28 + 1:02d}" for m in matches],
+        "competition": np.where(matches < 15, "Euro", "World Cup"), "season": np.where(matches < 15, "2020", "2022"),
+        "women": matches % 3 == 0, "home_team": [f"Home{m}" for m in matches], "away_team": [f"Away{m}" for m in matches],
+        "minute": rng.integers(0, 95, n), "second": rng.integers(0, 60, n), "period": rng.integers(1, 3, n),
+        "action_type": action, "decision_context": rng.choice(["spell_start", "after_carry", "other"], n),
+        "rarity": rarity, "rarity_random": rng.uniform(size=n), "surprise": -np.log(rng.uniform(0.001, 1, n)),
+        "advantage": advantage, "td_advantage": advantage + rng.normal(0, 0.01, n),
+        "mc_advantage": advantage + rng.normal(0, 0.05, n), "mc_return": rng.normal(0, 0.05, n),
+        "q": rng.uniform(0, 0.05, n), "q_score": rng.uniform(0, 0.05, n), "v": rng.uniform(0, 0.05, n),
+        "label_xg_scores": rng.uniform(0, 0.05, n), "p_success": rng.uniform(size=n),
+        "success": rng.integers(0, 2, n).astype(float), "upside": rng.uniform(0, 0.02, n),
+        "in_good": (advantage > 0).astype(float), "good_rarity": np.where(advantage > 0, rng.uniform(size=n), np.nan),
+        "good_surprise": np.where(advantage > 0, rng.uniform(0, 5, n), np.nan),
+        "in_tail": rng.integers(0, 2, n).astype(float), "tail_rarity": rng.uniform(size=n),
+        "pass_rarity": np.where(action == "pass", rng.uniform(size=n), np.nan),
+        "calib_bin": rng.integers(0, NUM_CALIBRATION_BINS, n),
+        "end_zone_visible": rng.integers(0, 2, n).astype(float), "restart": rng.choice(["", "Goal Kick", "Throw-in"], n, p=[0.9, 0.05, 0.05]),
+        "start_x": rng.uniform(0, 120, n), "end_x": rng.uniform(0, 120, n),
+        "opponents_bypassed": rng.integers(0, 6, n).astype(float),
+    })
+    for k in range(NUM_CALIBRATION_BINS):
+        table[f"calib_mass_{k}"] = 1.0 / NUM_CALIBRATION_BINS
+    for flag in ("miscommunication", "deflected", "through_ball", "no_touch", "nutmeg", "flair_shot", "cut_back",
+                 "switch", "first_time"):
+        table[flag] = rng.uniform(size=n) < 0.05
+    # A planted positive control: through balls are rarer choices.
+    table.loc[table["through_ball"], "rarity"] = rng.uniform(0.8, 1.0, int(table["through_ball"].sum()))
+    return table
+
+
+def test_measures_and_validation_checks_run():
+    table = _synthetic_table()
+    scores = compute_measures(table)
+    assert set(scores.columns) == {m.name for m in MEASURES} - {"c51_tail_rarity"}
+    assert scores["unxpass"][table["action_type"] != "pass"].isna().all()
+    assert (scores["good_rarity"][table["advantage"] <= 0] == 0).all()
+    assert policy_calibration(table)["ratio"].notna().all()
+    assert pit_uniformity(table, "decision_context")["n"].sum() == len(table)
+    assert len(value_calibration_by_rarity(table)) == 10
+    assert set(winners_curse(table, scores)["measure"]) == set(scores.columns)
+    assert len(artefact_rates(table, scores)) == len(scores.columns) + 1
+    controls = annotation_controls(table, scores)
+    through = controls[(controls["control"] == "through_ball") & (controls["measure"] == "rarity")]["auc"].iat[0]
+    assert through > 0.75  # the planted control is recovered
+    assert len(line_breaking(table, scores)) == len(scores.columns)
+    assert discriminant(table, scores, 50)["eta2_team"].between(0, 1).all()
+    reliability = split_half_reliability(table, scores, 50)
+    assert (reliability["players"] > 10).all()
+    rankings = player_rankings(table, scores, 50, top_n=5, bootstrap=20)
+    assert (rankings["rank_p05"] <= rankings["rank_p95"]).all()
+    players = player_scores(table, scores, 50)
+    known = known_groups(players, {0, 1, 2}, list(CREATIVITY_MEASURES[:3]))
+    assert known["known_players"].eq(3).all()
+    agreement = model_agreement(table, scores, table, scores)
+    assert np.allclose(agreement["action_spearman"].dropna(), 1.0)
+    row = table.iloc[0]
+    moments = pd.DataFrame([{"description": "planted", "team_a": row["home_team"], "team_b": row["away_team"],
+                             "minute": row["minute"], "player": row["player"]}])
+    found = famous_moments(table, scores, moments)
+    assert found["matches_found"].iat[0] >= 1 and 0 < found["pct_rarity"].iat[0] <= 1
+
+
+def test_auc_matches_scipy():
+    rng = np.random.default_rng(1)
+    scores, labels = rng.normal(size=500), rng.uniform(size=500) < 0.3
+    value, se, n1 = auc(scores, labels)
+    u = stats.mannwhitneyu(scores[labels], scores[~labels]).statistic
+    assert value == pytest.approx(u / (labels.sum() * (~labels).sum())) and se > 0 and n1 == labels.sum()
+
+
+@needs_data
+def test_review_kit_is_blinded():
+    table = _synthetic_table(3000)
+    events = json.loads(EVENTS.read_text())
+    frames = {frame["event_uuid"] for frame in json.loads(THREE_SIXTY.read_text())}
+    passes = [e for e in events if e["type"]["name"] == "Pass" and e["id"] in frames]
+    scores = compute_measures(table)
+    clips = sample_clips(table, scores, per_measure=2, originality_controls=4, value_controls=3, random_clips=4)
+    assert clips["clip_id"].is_unique and clips["row"].is_unique
+    paired = clips[clips["reason"].str.endswith("control")]
+    assert len(paired) > 0 and paired["pair_clip"].isin(clips["clip_id"]).all()
+    payloads = []
+    for number, clip in enumerate(clips.itertuples()):
+        event = passes[number % len(passes)]
+        row = table.loc[clip.row].copy()
+        row["event_uuid"], row["anchor_uuid"], row["action_type"] = event["id"], event["id"], "pass"
+        payload = clip_payload(row, EVENTS, THREE_SIXTY)
+        assert payload["players"] and payload["action"]["end"] is not None
+        payloads.append({"clip_id": clip.clip_id, **payload})
+    page = review_page(payloads, "test-kit")
+    for secret in ["top:", "control", "random", *scores.columns]:
+        assert f'"{secret}' not in page, secret
+    key = build_key(table, scores, clips)
+    assert {"reason", "pair_clip", "pct_rarity_x_adv"} <= set(key.columns) and len(key) == len(clips)

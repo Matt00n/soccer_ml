@@ -1,0 +1,7 @@
+# External player ratings (convergent and discriminant validity), one row per player.
+# Every numeric column is treated as an attribute. Expected: creativity correlates with vision more than with
+# dribbling or ball control (we measure creative decisions, not technique), and barely with strength or jumping
+# once position is controlled for. Fill from one source (e.g. EA FC 24 for men, EA FC women's ratings) and record it per row.
+# Example (delete the leading '#'):
+# Some Player,,EA FC 24,80,75,82,78,60,55
+player_name,player_id,source,vision,dribbling,short_passing,long_passing,strength,jumping

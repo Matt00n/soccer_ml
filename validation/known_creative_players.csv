@@ -1,0 +1,61 @@
+# Known creative players (known-groups validity). Fill this BEFORE looking at any creativity ranking and commit it:
+# the git timestamp documents that the list was fixed in advance. Take every entry from an external source
+# (e.g. EA FC Vision >= 85 or a 'Incisive Pass'/'Tiki Taka' PlayStyle+, expert lists, award shortlists), never from our output.
+# player_name: commonly used name; nicknames such as 'Pedri' or 'Vitinha' are matched via StatsBomb lineups.
+# player_id: StatsBomb player id, only needed if the report says the name is ambiguous or not found.
+#
+# Provenance of this version: compiled on 2026-10-05 by Claude (an AI assistant) at the author's request, from
+# general football knowledge of players' reputations as creative playmakers, passers and dribblers. No creativity
+# score or ranking of any player had been computed or inspected when the list was written; only presence in the
+# 360 matches (lineups, event counts) was checked. Reputation-based, so a halo bias toward famous players is
+# possible; an independent external list (e.g. EA FC Vision) should complement it. Players with few decisions
+# (e.g. Rose Lavelle, Debinha, Trent Alexander-Arnold) are dropped automatically by --min-decisions.
+player_name,player_id,source,notes
+Lionel Messi,,Claude judgement 2026-10-05,playmaker / creative dribbler
+Neymar,,Claude judgement 2026-10-05,creative dribbler / playmaker
+Kevin De Bruyne,,Claude judgement 2026-10-05,playmaker (vision / passing)
+Luka Modrić,,Claude judgement 2026-10-05,playmaker (passing range / outside-foot passes)
+Pedri,,Claude judgement 2026-10-05,playmaker (press-resistant / line-breaking)
+Florian Wirtz,,Claude judgement 2026-10-05,playmaker / creative dribbler
+Jamal Musiala,,Claude judgement 2026-10-05,creative dribbler / playmaker
+Lamine Yamal,,Claude judgement 2026-10-05,creative winger
+Toni Kroos,,Claude judgement 2026-10-05,deep-lying playmaker (passing range)
+Bruno Fernandes,,Claude judgement 2026-10-05,playmaker (risky final-third passing)
+Bernardo Silva,3193,Claude judgement 2026-10-05,creative dribbler / playmaker
+Antoine Griezmann,,Claude judgement 2026-10-05,playmaker
+Ángel Di María,,Claude judgement 2026-10-05,creative winger (outside-foot passing)
+Hakim Ziyech,,Claude judgement 2026-10-05,playmaker (long / unexpected passing)
+Christian Eriksen,,Claude judgement 2026-10-05,playmaker (vision / passing)
+Hakan Çalhanoğlu,,Claude judgement 2026-10-05,playmaker (passing range)
+Arda Güler,,Claude judgement 2026-10-05,playmaker
+Khvicha Kvaratskhelia,,Claude judgement 2026-10-05,creative dribbler
+Dani Olmo,16532,Claude judgement 2026-10-05,playmaker
+Phil Foden,,Claude judgement 2026-10-05,playmaker / creative dribbler
+Jack Grealish,,Claude judgement 2026-10-05,creative dribbler
+Lorenzo Insigne,,Claude judgement 2026-10-05,creative winger
+Marco Verratti,,Claude judgement 2026-10-05,deep-lying playmaker (press-resistant)
+Ilkay Gündoğan,,Claude judgement 2026-10-05,playmaker
+Xavi Simons,,Claude judgement 2026-10-05,playmaker / creative dribbler
+Piotr Zieliński,,Claude judgement 2026-10-05,playmaker
+Aleksandr Golovin,,Claude judgement 2026-10-05,playmaker
+João Cancelo,,Claude judgement 2026-10-05,creative full-back
+Trent Alexander-Arnold,,Claude judgement 2026-10-05,creative full-back (passing range)
+Alejandro Grimaldo,,Claude judgement 2026-10-05,creative wing-back
+Aitana Bonmatí,,Claude judgement 2026-10-05,playmaker
+Alexia Putellas,,Claude judgement 2026-10-05,playmaker
+Jenni Hermoso,10151,Claude judgement 2026-10-05,playmaker
+Mariona Caldentey,,Claude judgement 2026-10-05,playmaker / creative winger
+Caroline Graham Hansen,,Claude judgement 2026-10-05,creative dribbler
+Guro Reiten,,Claude judgement 2026-10-05,creative winger
+Pernille Harder,,Claude judgement 2026-10-05,playmaker / forward
+Kosovare Asllani,,Claude judgement 2026-10-05,playmaker
+Lina Magull,,Claude judgement 2026-10-05,playmaker
+Fran Kirby,4641,Claude judgement 2026-10-05,playmaker
+Lauren James,,Claude judgement 2026-10-05,creative dribbler / playmaker
+Keira Walsh,,Claude judgement 2026-10-05,deep-lying playmaker (passing range)
+Rose Lavelle,,Claude judgement 2026-10-05,playmaker / creative dribbler
+Linda Caicedo,,Claude judgement 2026-10-05,creative dribbler
+Yui Hasegawa,,Claude judgement 2026-10-05,deep-lying playmaker
+Daniëlle van de Donk,,Claude judgement 2026-10-05,playmaker
+Debinha,,Claude judgement 2026-10-05,playmaker / forward
+Kika Nazareth,,Claude judgement 2026-10-05,playmaker / creative dribbler

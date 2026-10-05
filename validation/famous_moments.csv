@@ -1,0 +1,7 @@
+# Famous creative moments (recall check): take them from external sources such as 'assist of the tournament'
+# lists or UEFA/FIFA technical reports, not from our rankings. team_a/team_b: team names as in StatsBomb
+# (e.g. 'Netherlands', 'Argentina'); minute: match clock as shown on TV (2nd half 46+); player: the creator;
+# action_type (optional): pass, carry, dribble, shot or clearance.
+# Example (delete the leading '#'):
+# Messi no-look pass to Molina,FIFA World Cup 2022 QF,Netherlands,Argentina,35,Lionel Messi,pass
+description,source,team_a,team_b,minute,player,action_type
