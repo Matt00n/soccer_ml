@@ -26,13 +26,14 @@ import hashlib
 import sys
 import time
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from soccer_ml.creativity.events import load_nicknames
-from soccer_ml.creativity.measures import MEASURES, compute_measures, player_scores
+from soccer_ml.creativity.measures import MEASURES, SCOPES, VIEWS, compute_measures, player_scores
 from soccer_ml.creativity.validation import (
     CONTROLS,
     annotation_controls,
@@ -49,6 +50,7 @@ from soccer_ml.creativity.validation import (
     pit_uniformity,
     player_rankings,
     policy_calibration,
+    position_rankings,
     split_half_reliability,
     value_calibration_by_rarity,
     winners_curse,
@@ -79,6 +81,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--min-decisions", type=int, default=200, help="Player-level checks: minimum decisions.")
     parser.add_argument("--top-fraction", type=float, default=0.01, help="'Top decisions' = this fraction per measure.")
     parser.add_argument("--bootstrap", type=int, default=200)
+    parser.add_argument("--scope", choices=SCOPES, default="intended",
+                        help="intended (default): drop incomplete and deflected passes, whose end is not the target.")
+    parser.add_argument("--view", choices=VIEWS, default="all", help="Only actions ending inside / outside the camera view.")
+    parser.add_argument("--headline-measures", nargs="*", default=[
+        "good_surprise", "good_rarity", "c51_tail_rarity", "unxpass", "rarity_x_adv", "rarity", "advantage"],
+        help="Measures shown in the per-position rankings.")
     parser.add_argument("--lineups-dir", default="data/open-data/data/lineups")
     parser.add_argument("--output-dir", default="outputs/creativity/validation")
     return parser.parse_args()
@@ -107,6 +115,48 @@ def resolve_players(listed: pd.DataFrame, players: pd.DataFrame, nicknames: dict
     return pd.Series(ids, index=listed.index, dtype=float), pd.DataFrame(report)
 
 
+def headline_summary(frames: dict[str, pd.DataFrame], measures: list[str]) -> pd.DataFrame:
+    """The key number of every check, one row per measure."""
+    rows = []
+    for name in measures:
+        row: dict = {"measure": name}
+
+        def pick(key: str, column: str, label: str, where: Optional[dict] = None) -> None:
+            frame = frames.get(key)
+            if frame is None or column not in frame:
+                return
+            selected = frame[frame["measure"] == name] if "measure" in frame else frame
+            for field, value in (where or {}).items():
+                selected = selected[selected[field] == value]
+            if len(selected):
+                row[label] = float(selected[column].mean())
+
+        pick("known_groups", "auc_within_position", "known_auc")
+        pick("known_groups", "auc_low", "known_auc_low")
+        pick("known_groups", "diff_vs_advantage", "known_vs_advantage")
+        pick("known_groups", "diff_vs_rarity", "known_vs_rarity")
+        controls = frames.get("annotation_controls")
+        if controls is not None and name in controls:
+            for control in ("through_ball", "flair_shot", "goal_kick", "throw_in"):
+                value = controls.loc[controls["control"] == control, name]
+                if len(value):
+                    row[f"auc_{control}"] = float(value.iat[0])
+        pick("line_breaking", "spearman_forward_passes", "line_breaking_rho")
+        pick("split_half", "spearman_brown", "split_half")
+        pick("cross_competition", "spearman", "cross_competition_rho")
+        pick("model_agreement", "player_spearman", "model_agreement_players")
+        pick("discriminant", "eta2_group", "eta2_position")
+        pick("discriminant", "eta2_team", "eta2_team")
+        pick("artefacts", "end_out_of_view", "top_out_of_view")
+        curse = frames.get("winners_curse")
+        if curse is not None:
+            selected = curse[curse["measure"] == name]
+            if len(selected) and selected["pred_advantage"].iat[0] > 0:
+                row["realized_over_predicted"] = float(selected["realized_mc_advantage"].iat[0] / selected["pred_advantage"].iat[0])
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
 def main() -> None:
     sys.stdout.reconfigure(line_buffering=True)
     args = parse_args()
@@ -114,16 +164,20 @@ def main() -> None:
     output.mkdir(parents=True, exist_ok=True)
     started = time.time()
     table = read_tables(args.tables)
-    scores = compute_measures(table)
+    scores = compute_measures(table, scope=args.scope, view=args.view)
     measures = list(scores.columns)
     top = args.top_fraction
-    print(f"{len(table)} decisions, {table['match_id'].nunique()} matches, measures: {', '.join(measures)}")
+    in_scope = int(scores.notna().any(axis=1).sum())
+    print(f"{len(table)} decisions ({in_scope} in scope '{args.scope}', view '{args.view}'), "
+          f"{table['match_id'].nunique()} matches, measures: {', '.join(measures)}")
 
     sections: list[tuple[str, str, pd.DataFrame]] = []
+    frames: dict[str, pd.DataFrame] = {}
 
     def add(key: str, title: str, frame: pd.DataFrame, note: str = "") -> None:
         frame.to_csv(output / f"{key}.csv", index=False)
         sections.append((title, note, frame))
+        frames[key] = frame
         print(f"  {title} ({time.time() - started:.0f}s)")
 
     descriptions = pd.DataFrame([{"measure": m.name, "family": m.family, "definition": m.description,
@@ -169,13 +223,18 @@ def main() -> None:
     if args.compare:
         other = read_tables(args.compare)
         add("model_agreement", "Agreement with an independently trained model",
-            model_agreement(table, scores, other, compute_measures(other), top, args.min_decisions // 2))
+            model_agreement(table, scores, other, compute_measures(other, scope=args.scope, view=args.view), top,
+                            args.min_decisions // 2))
 
     # 5. Players and external criteria.
     players = player_scores(table, scores, args.min_decisions)
     players.reset_index().to_csv(output / "player_scores.csv", index=False)
     add("player_rankings", "Top players per measure (90% match-bootstrap rank intervals)",
         player_rankings(table, scores, args.min_decisions, 25, args.bootstrap))
+    headline = [m for m in args.headline_measures if m in measures]
+    add("position_rankings", "Top and bottom players by gender and position (headline measures)",
+        position_rankings(players, headline), "Within-group percentiles; players with at least "
+        f"{args.min_decisions} in-scope decisions, position and team = most frequent.")
     nicknames = load_nicknames(Path(args.lineups_dir), table["match_id"].unique())
     if args.known_players:
         listed = pd.read_csv(args.known_players, comment="#")
@@ -196,10 +255,15 @@ def main() -> None:
         add("famous_moments", f"Famous creative moments: percentile per measure ({_file_record(args.famous_moments)})",
             famous_moments(table, scores, moments))
 
+    summary = headline_summary(frames, measures)
+    summary.to_csv(output / "headline.csv", index=False)
+    sections.insert(1, ("Headline metrics", "One row per measure, collected from the checks below "
+                        "(compare runs with scripts/creativity/compare_reports.py).", summary))
     lines = ["# Creativity measure validation", "",
              f"Tables: {', '.join(_file_record(p) for p in args.tables)}", "",
-             f"{len(table)} decisions in {table['match_id'].nunique()} matches; player checks use players with "
-             f"at least {args.min_decisions} decisions; 'top' = top {top:.0%} per measure.", ""]
+             f"{len(table)} decisions in {table['match_id'].nunique()} matches ({in_scope} in scope: scope "
+             f"'{args.scope}', view '{args.view}'); player checks use players with at least {args.min_decisions} "
+             f"in-scope decisions; 'top' = top {top:.0%} per measure.", ""]
     for title, note, frame in sections:
         lines += [f"## {title}", ""] + ([note, ""] if note else []) + [markdown(frame), ""]
     (output / "report.md").write_text("\n".join(lines))

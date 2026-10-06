@@ -96,9 +96,41 @@ def available_measures(table: pd.DataFrame, names: Optional[tuple[str, ...]] = N
     return [m for m in chosen if all(c in table and table[c].notna().any() for c in m.requires)]
 
 
-def compute_measures(table: pd.DataFrame, names: Optional[tuple[str, ...]] = None) -> pd.DataFrame:
-    """One column per available measure (``table``'s index)."""
-    return pd.DataFrame({m.name: m.compute(table).astype(float) for m in available_measures(table, names)},
+SCOPES = ("intended", "all")
+VIEWS = ("all", "in", "out")
+
+
+def scope_mask(table: pd.DataFrame, scope: str = "intended", view: str = "all") -> pd.Series:
+    """Decisions the measures are evaluated on.
+
+    ``scope="intended"`` (default) drops passes whose end location is not the
+    intended target: incomplete passes (the end is where the ball was
+    intercepted or went out) and deflected passes.  Their rarity is inflated
+    (mean 0.66 vs. 0.51 for completed passes), which made miscommunications and
+    deflections look creative.  Carries end where the player went, and shots,
+    dribbles and clearances have no target zone, so they all stay.
+    ``view`` keeps actions ending inside (``"in"``, plus actions without a
+    target) or outside (``"out"``) the 360 camera's visible area.
+    """
+    if scope not in SCOPES or view not in VIEWS:
+        raise ValueError(f"scope must be one of {SCOPES}, view one of {VIEWS}.")
+    keep = pd.Series(True, index=table.index)
+    if scope == "intended":
+        is_pass = table["action_type"] == "pass"
+        unintended = (table["success"] != 1) | table["deflected"].fillna(False).astype(bool)
+        keep &= ~(is_pass & unintended)
+    if view != "all":
+        visible = table["end_zone_visible"]
+        keep &= (visible == 0) if view == "out" else (visible != 0)  # NaN (no target) counts as in view
+    return keep
+
+
+def compute_measures(
+    table: pd.DataFrame, names: Optional[tuple[str, ...]] = None, scope: str = "intended", view: str = "all"
+) -> pd.DataFrame:
+    """One column per available measure (``table``'s index); NaN outside the scope (:func:`scope_mask`)."""
+    keep = scope_mask(table, scope, view)
+    return pd.DataFrame({m.name: m.compute(table).astype(float).where(keep) for m in available_measures(table, names)},
                         index=table.index)
 
 
@@ -112,14 +144,19 @@ def top_fraction_flags(scores: pd.DataFrame, fraction: float = 0.01) -> pd.DataF
 
 
 def player_scores(table: pd.DataFrame, scores: pd.DataFrame, min_decisions: int = 200) -> pd.DataFrame:
-    """Mean measure per player over in-scope decisions (players with at least ``min_decisions``)."""
-    keys = ["player_id", "player"]
-    counts = table.groupby(keys, sort=False).size().rename("decisions")
-    means = scores.groupby([table[k] for k in keys], sort=False).mean()
+    """Mean measure per player over in-scope decisions (players with at least ``min_decisions`` in scope).
+
+    Position and team are the player's most frequent ones; ``women`` marks women's competitions.
+    """
+    keys = [table["player_id"], table["player"]]
+    counts = scores.notna().any(axis=1).groupby(keys, sort=False).sum().rename("decisions")
+    means = scores.groupby(keys, sort=False).mean()
     result = means.join(counts)
-    positions = table.groupby(keys, sort=False)["position"].agg(lambda p: p.mode().iat[0] if len(p) else "")
-    teams = table.groupby(keys, sort=False)["team"].agg(lambda p: p.mode().iat[0] if len(p) else "")
-    result = result.join(positions.rename("position")).join(teams.rename("team"))
+    for column in ("position", "team"):
+        result = result.join(table[column].groupby(keys, sort=False).agg(
+            lambda p: p.mode().iat[0] if p.notna().any() else "").rename(column))
+    if "women" in table:
+        result = result.join(table["women"].astype(str).eq("True").groupby(keys, sort=False).mean().gt(0.5).rename("women"))
     return result[result["decisions"] >= min_decisions]
 
 

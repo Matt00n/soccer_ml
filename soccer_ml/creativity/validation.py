@@ -79,7 +79,7 @@ def markdown(frame: pd.DataFrame, digits: int = 3) -> str:
     def cell(value) -> str:
         if isinstance(value, float):
             return "" if value != value else f"{value:.{digits}f}"
-        return str(value)
+        return str(value).replace("|", "\\|")
     lines = ["| " + " | ".join(map(str, frame.columns)) + " |", "|" + "---|" * len(frame.columns)]
     lines += ["| " + " | ".join(cell(v) for v in row) + " |" for row in frame.itertuples(index=False)]
     return "\n".join(lines) + "\n"
@@ -443,20 +443,62 @@ def match_player_names(players: pd.DataFrame, names: pd.Series, nicknames: Optio
     return pd.Series(result)
 
 
-def known_groups(players: pd.DataFrame, known_ids: set, measures: list[str]) -> pd.DataFrame:
-    """Known creative players vs. all others, compared within position groups (AUC of within-group percentiles)."""
+def known_groups(
+    players: pd.DataFrame, known_ids: set, measures: list[str], baselines: tuple[str, ...] = ("advantage", "rarity"),
+    bootstrap: int = 2000, seed: int = 0,
+) -> pd.DataFrame:
+    """Known creative players vs. all others, compared within position groups.
+
+    AUC of within-group percentiles with a 95% bootstrap interval (players
+    resampled within the known and the other group), and the paired AUC
+    difference to each baseline measure (same resamples), so a measure's
+    added value over value-only or originality-only scores is tested directly.
+    """
     data = players.reset_index()
     data["group"] = data["position"].map(position_group)
-    data["known"] = data["player_id"].isin(known_ids)
+    known = data["player_id"].isin(known_ids).to_numpy()
+    percentiles = {name: data.groupby("group")[name].rank(pct=True).to_numpy() for name in measures}
+    rng = np.random.default_rng(seed)
+    positive, negative = np.where(known)[0], np.where(~known)[0]
+    samples = [np.concatenate([rng.choice(positive, len(positive)), rng.choice(negative, len(negative))])
+               for _ in range(bootstrap if len(positive) else 0)]
+    boot = {name: np.array([auc(percentiles[name][i], known[i])[0] for i in samples]) for name in measures}
     rows = []
     for name in measures:
-        percentile = data.groupby("group")[name].rank(pct=True)
-        value, se, n1 = auc(percentile.to_numpy(), data["known"].to_numpy())
-        rows.append({
+        value, se, n1 = auc(percentiles[name], known)
+        row = {
             "measure": name, "known_players": n1, "auc_within_position": value, "auc_se": se,
-            "mean_known_percentile": float(percentile[data["known"]].mean()),
-            "known_in_top_decile": float((percentile[data["known"]] >= 0.9).mean()),
-        })
+            "auc_low": float(np.nanpercentile(boot[name], 2.5)) if samples else float("nan"),
+            "auc_high": float(np.nanpercentile(boot[name], 97.5)) if samples else float("nan"),
+            "mean_known_percentile": float(np.nanmean(percentiles[name][known])) if n1 else float("nan"),
+            "known_in_top_decile": float((percentiles[name][known] >= 0.9).mean()) if n1 else float("nan"),
+        }
+        for baseline in baselines:
+            if baseline in boot and baseline != name and samples:
+                difference = boot[name] - boot[baseline]
+                row[f"diff_vs_{baseline}"] = float(np.nanmean(difference))
+                row[f"diff_vs_{baseline}_low"] = float(np.nanpercentile(difference, 2.5))
+                row[f"diff_vs_{baseline}_high"] = float(np.nanpercentile(difference, 97.5))
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def position_rankings(players: pd.DataFrame, measures: list[str], top: int = 5, bottom: int = 3) -> pd.DataFrame:
+    """Top and bottom players per measure within gender x position group (within-group percentiles)."""
+    data = players.reset_index()
+    data["group"] = data["position"].map(position_group)
+    data["gender"] = data["women"].map({True: "women", False: "men"}) if "women" in data else "all"
+    rows = []
+    for name in measures:
+        data["percentile"] = data.groupby(["gender", "group"])[name].rank(pct=True)
+        for (gender, group), part in data.groupby(["gender", "group"]):
+            ordered = part.sort_values(name, ascending=False)
+            picks = [("top", ordered.head(top))] + ([("bottom", ordered.tail(bottom).iloc[::-1])] if len(part) > top else [])
+            for side, chosen in picks:
+                for rank, row in enumerate(chosen.itertuples(), start=1):
+                    rows.append({"measure": name, "gender": gender, "group": group, "players": len(part), "side": side,
+                                 "rank": rank, "player": row.player, "team": row.team, "decisions": int(row.decisions),
+                                 "score": float(getattr(row, name)), "percentile": float(row.percentile)})
     return pd.DataFrame(rows)
 
 

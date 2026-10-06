@@ -43,6 +43,59 @@ $PY scripts/creativity/score_review.py --kit-dir outputs/creativity/review_kit1 
 `outputs/creativity/run_scoring.sh` runs the first three steps for the cross-fitted folds and the
 main-split models.
 
+### Scope and camera view
+
+- **`--scope intended`** (default) drops passes whose end location is not the intended target:
+  - incomplete passes, whose end is where the ball was intercepted or went out;
+  - deflected passes.
+
+  Their rarity is inflated (mean 0.66 vs. 0.51 for completed passes), and they made miscommunications
+  and deflections look creative. Carries, shots, dribbles and clearances stay. `--scope all` keeps
+  every decision.
+- **`--view in` / `--view out`** restricts the checks to actions ending inside or outside the 360
+  camera's visible area.
+- **Comparing runs:** `scripts/creativity/compare_reports.py` puts the `headline.csv` of several
+  reports side by side.
+
+### Further analyses
+
+```bash
+# Temperature scaling: fit per-head temperatures on validation matches, test on held-out matches.
+$PY scripts/creativity/calibrate_policy.py --policy-checkpoint checkpoints/reference/next_action/best_model.pt
+# Teams vs. opponents, players across contexts (vs. teammates), change over a season, on the reference yardstick.
+$PY scripts/creativity/team_analyses.py --tables outputs/creativity/reference_holdout.csv.gz \
+    --contrast outputs/creativity/crossfit_c51_fold0.csv.gz outputs/creativity/crossfit_c51_fold1.csv.gz
+```
+
+### Second-order analyses
+
+```bash
+# Match context (score state, players on the pitch, goals, substitutions, cards, possessions, results).
+$PY scripts/creativity/build_context.py --tables outputs/creativity/crossfit_c51_fold0.csv.gz outputs/creativity/crossfit_c51_fold1.csv.gz
+# Every analysis -> outputs/creativity/second_order/: hypotheses.csv with BH q-values, index.md, manifest.json, CSVs per section.
+$PY scripts/creativity/run_second_order.py \
+    --tables outputs/creativity/crossfit_c51_fold0.csv.gz outputs/creativity/crossfit_c51_fold1.csv.gz \
+    --reference outputs/creativity/reference_holdout.csv.gz
+```
+
+The sections are:
+1. surprise premium;
+2. sequences (possessions, chain position, creative flow);
+3. team level and concentration vs. success;
+4. reactions to goals, comebacks and game management;
+5. substitutions, on/off, red cards, tactical shifts and star absence;
+6. time (minute profile, fresh legs, knockouts, editions);
+7. opponents (creativity allowed, opponent strength, pressure, pitch maps, novelty);
+8. player profiles, consistency, enablers and duos.
+
+The primary measure is `good_surprise`, z-scored over intended-scope decisions. The models condition on goal
+difference and minute, so game-state effects are relative to what is typical in that state.
+
+Cross-team comparisons must use the reference model: a cross-fitted model learned each single-team
+club's style from its other matches. Under cross-fitting, club players sit at the 35th percentile of
+their position versus the 53rd for tournament players. Within-team comparisons (player minus teammates
+in the same matches) are robust to this.
+
 ## Per-decision statistics
 
 They are computed over the flat action space (pass height × zone, carry zone, shot, dribble,

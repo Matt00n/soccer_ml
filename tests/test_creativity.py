@@ -10,7 +10,8 @@ import pytest
 import torch
 from scipy import stats
 
-from soccer_ml.creativity.measures import CREATIVITY_MEASURES, MEASURES, compute_measures, player_scores
+from soccer_ml.creativity.analysis import compare_groups, player_in_contexts, season_trend, team_summary
+from soccer_ml.creativity.measures import CREATIVITY_MEASURES, MEASURES, compute_measures, player_scores, scope_mask
 from soccer_ml.creativity.review import build_key, clip_payload, review_page, sample_clips
 from soccer_ml.creativity.scoring import NUM_CALIBRATION_BINS, decision_statistics, set_rarity
 from soccer_ml.creativity.validation import (
@@ -25,6 +26,7 @@ from soccer_ml.creativity.validation import (
     pit_uniformity,
     player_rankings,
     policy_calibration,
+    position_rankings,
     split_half_reliability,
     value_calibration_by_rarity,
     winners_curse,
@@ -142,7 +144,7 @@ def _synthetic_table(n: int = 6000, seed: int = 0) -> pd.DataFrame:
 
 def test_measures_and_validation_checks_run():
     table = _synthetic_table()
-    scores = compute_measures(table)
+    scores = compute_measures(table, scope="all")
     assert set(scores.columns) == {m.name for m in MEASURES} - {"c51_tail_rarity"}
     assert scores["unxpass"][table["action_type"] != "pass"].isna().all()
     assert (scores["good_rarity"][table["advantage"] <= 0] == 0).all()
@@ -161,8 +163,11 @@ def test_measures_and_validation_checks_run():
     rankings = player_rankings(table, scores, 50, top_n=5, bootstrap=20)
     assert (rankings["rank_p05"] <= rankings["rank_p95"]).all()
     players = player_scores(table, scores, 50)
-    known = known_groups(players, {0, 1, 2}, list(CREATIVITY_MEASURES[:3]))
-    assert known["known_players"].eq(3).all()
+    known = known_groups(players, {0, 1, 2}, list(CREATIVITY_MEASURES[:3]) + ["advantage", "rarity"], bootstrap=200)
+    assert known["known_players"].eq(3).all() and (known["auc_low"] <= known["auc_high"]).all()
+    assert known.loc[known["measure"] == CREATIVITY_MEASURES[0], "diff_vs_advantage"].notna().all()
+    rankings_by_position = position_rankings(players, ["rarity_x_adv"], top=2, bottom=1)
+    assert set(rankings_by_position["side"]) == {"top", "bottom"} and rankings_by_position["percentile"].between(0, 1).all()
     agreement = model_agreement(table, scores, table, scores)
     assert np.allclose(agreement["action_spearman"].dropna(), 1.0)
     row = table.iloc[0]
@@ -204,3 +209,92 @@ def test_review_kit_is_blinded():
         assert f'"{secret}' not in page, secret
     key = build_key(table, scores, clips)
     assert {"reason", "pair_clip", "pct_rarity_x_adv"} <= set(key.columns) and len(key) == len(clips)
+
+
+def test_scope_mask_drops_unintended_pass_targets():
+    table = pd.DataFrame({
+        "action_type": ["pass", "pass", "pass", "carry", "shot", "pass"],
+        "success": [1.0, 0.0, 1.0, 0.0, 0.0, np.nan],
+        "deflected": [False, False, True, False, False, False],
+        "end_zone_visible": [1.0, 1.0, 0.0, 0.0, np.nan, 1.0],
+    })
+    assert scope_mask(table, "intended").tolist() == [True, False, False, True, True, False]
+    assert scope_mask(table, "all").all()
+    assert scope_mask(table, "all", "out").tolist() == [False, False, True, True, False, False]
+    assert scope_mask(table, "intended", "in").tolist() == [True, False, False, False, True, False]
+
+
+def _team_table(seed: int = 0) -> pd.DataFrame:
+    """Two teams over 20 matches; player 10 of team A is more creative; team A trends upwards."""
+    rng = np.random.default_rng(seed)
+    rows = []
+    for match in range(20):
+        for team, players in (("A", range(10, 16)), ("B", range(20, 26))):
+            for player in players:
+                for _ in range(30):
+                    value = rng.normal(0, 1) + (1.0 if player == 10 else 0.0) + (0.1 * match if team == "A" else 0.0)
+                    rows.append({"match_id": match, "match_date": f"2024-01-{match + 1:02d}", "team": team,
+                                 "competition": "League", "season": "2024", "player_id": player, "value": value})
+    return pd.DataFrame(rows)
+
+
+def test_team_analyses_recover_planted_effects():
+    table = _team_table()
+    scores = table[["value"]]
+    result = compare_groups(scores, table["match_id"], table["player_id"] == 10,
+                            (table["team"] == "A") & (table["player_id"] != 10), bootstrap=300)
+    assert result["difference"].iat[0] == pytest.approx(1.0, abs=0.15) and result["low"].iat[0] > 0.6
+    contexts = player_in_contexts(table, scores, 10, min_decisions=50, bootstrap=300)
+    assert contexts["percentile_in_team"].iat[0] == 1.0 and contexts["teammates_ranked"].iat[0] == 5
+    per_match, trend = season_trend(table, scores, "A | League 2024", permutations=2000, bootstrap=300)
+    team = trend[trend["series"] == "team"].iloc[0]
+    assert len(per_match) == 20 and team["slope_per_match"] == pytest.approx(0.1, abs=0.02) and team["permutation_p"] < 0.01
+    flat = season_trend(table, scores, "B | League 2024", permutations=2000, bootstrap=300)[1]
+    assert flat[flat["series"] == "team"]["permutation_p"].iat[0] > 0.01
+    summary = team_summary(table, scores, min_matches=5, bootstrap=200)
+    assert set(summary["context"]) == {"A | League 2024", "B | League 2024"}
+
+
+def test_second_order_tools():
+    from soccer_ml.creativity.second_order import Windows, cluster_mean, event_study, fe_slope
+
+    rng = np.random.default_rng(0)
+    n = 4000
+    strata, clusters = rng.integers(0, 20, n), rng.integers(0, 100, n)
+    x = rng.normal(size=n) + strata * 0.5
+    y = 0.3 * x + strata * 2.0 + rng.normal(size=n)  # stratum effects must not leak into the slope
+    estimate, low, high, p, count = fe_slope(pd.Series(y), pd.Series(x), strata, pd.Series(clusters), 300)
+    assert estimate == pytest.approx(0.3, abs=0.05) and low < 0.3 < high and p < 0.01 and count == n
+    mean, low, high, p, count = cluster_mean(pd.Series(rng.normal(0.5, 1, n)), pd.Series(clusters), 300)
+    assert low < 0.5 < high and p < 0.01
+    # Event study: one team's value jumps by 1 at minute 30 in every match; placebo windows see no jump.
+    rows = []
+    for match in range(40):
+        for team in ("A", "B"):
+            for minute in np.arange(0, 45, 0.5):
+                jump = 1.0 if (team == "A" and minute >= 30 and match < 20) else 0.0
+                rows.append({"match_id": match, "team": team, "period_ctx": 1, "clock": minute, "player_id": 1,
+                             "value": jump + rng.normal(0, 0.1)})
+    windows = Windows(pd.DataFrame(rows), "value")
+    events = pd.DataFrame({"match_id": range(20), "period": 1, "clock": 30.0, "team": "A"})
+    result = event_study(windows, events, "team", events, width=10, placebos=10)
+    assert result["effect"].mean() == pytest.approx(1.0, abs=0.1)
+
+
+def test_benjamini_hochberg_and_context(tmp_path):
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("rso", "scripts/creativity/run_second_order.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    q = module.benjamini_hochberg(pd.Series([0.01, 0.04, 0.03, 0.5]))
+    assert q.round(4).tolist() == [0.04, 0.0533, 0.0533, 0.5]
+    if EVENTS.exists():
+        from soccer_ml.creativity.context import match_context
+
+        tables = match_context(EVENTS, {"home_team": "Barcelona"})
+        goals = pd.DataFrame(tables["goals"])
+        assert goals["team"].value_counts().to_dict() == {"Barcelona": 3}  # Barcelona 3-0 Elche
+        decisions = pd.DataFrame(tables["decisions"])
+        assert decisions["players_own"].between(10, 11).all()
+        assert (decisions["goals_for"] + decisions["goals_against"]).max() <= 3
