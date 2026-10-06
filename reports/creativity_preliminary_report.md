@@ -359,24 +359,36 @@ goalkeeper decisions. Among each measure's top 1%:
   value-containing measures (`good_surprise` 56.5th vs. 50.7th), but lower on rarity (50.4th vs.
   54.7th). Rankings are therefore computed within gender.
 
-### 2.7 Face validity (within gender and position, `good_surprise`, players with ≥ 200 decisions)
+### 2.7 Face validity: top and bottom players by position (men)
 
-| Group | Top | Bottom |
+`good_surprise`, cross-fitted, intended targets. There are 369 men with at least 200 in-scope
+decisions, ranked within the position they played most. In brackets: decisions; † = mostly
+single-team club data.
+
+| Position (players) | Top 6, best first | Bottom 4, lowest first |
 |---|---|---|
-| Men, central midfield | Modrić, Zieliński, Kovačić, Ramsey, Shaparenko | Wijnaldum, Moriba |
-| Men, attacking midfield | Baumgartner, Bruno Fernandes, De Bruyne, Wirtz, Shaqiri | Müller, Hložek, Adli |
-| Men, wingers | Malinovskiy, Leão, Doku, Neymar, Ziyech | – |
-| Men, forwards | Messi, Kane, Güler, Mbappé, Embolo | Ronaldo, Morata, Schick |
-| Men, centre-backs | Saïss, Fadlalla, Bonucci, Schär, Alaba | Glik, Demiral, Araújo |
-| Women, central midfield | Clara Mateo, Horan, Andreia Norton, Hermoso, Bonmatí | – |
-| Women, attacking midfield | Kika Nazareth, Harder, Lauren James | – |
-| Women, forwards | – | Esther González, Blackstenius, Russo |
+| GK (11) | Schmeichel (247), ter Stegen† (845), Neuer (371), Bounou (205), Courtois (225), Sommer (334) | Donnarumma† (867), Unai Simón (522), Hrádecký† (641), Livaković (259) |
+| CB (118) | Saïss (204), Abdelkarim Hassan (207), Bonucci (562), Schär (509), Alaba (341), Blind (627) | Glik (301), Demiral (271), Araújo† (938), Danielson (200) |
+| FB (72) | Antonee Robinson (217), Coufal (406), Acuña (226), Meunier (332), Estupiñán (260), Karavaev (287) | Mykolenko (206), Emerson (211), Nélson Semedo (211), Llorente (494) |
+| DM (66) | Kochorashvili (226), Partey (208), Kroos (1,118), Mooy (229), Valverde (275), Amrabat (354) | de Roon (259), Hjulmand (222), Dendoncker (222), McGregor (261) |
+| CM (29) | Modrić (1,281), Zieliński (508), Kovačić (1,033), Ramsey (449), Shaparenko (430), Ounahi (347) | Carlos Soler† (696), Moriba† (430), Wijnaldum† (617), Henderson (291) |
+| AM (20) | Baumgartner (254), Bruno Fernandes (645), De Bruyne (578), Wirtz† (2,235), Shaqiri (343), Hazard (281) | Hložek† (271), Müller (281), Adli† (447), Hofmann† (1,469) |
+| W (37) | Malinovskiy (220), Leão (204), Doku (332), Neymar† (2,650), Ziyech (336), Boufal (228) | Ferran Torres (306), Sarabia (251), Braithwaite† (566), Kramarić (442) |
+| FW (16) | Messi† (8,537), Kane (480), Arda Güler (240), Mbappé† (3,542), Embolo (318), Benzema (261) | Ronaldo (391), Morata (356), Schick† (447), Gnabry (269) |
 
-- **Plausible:** centre-backs (ball-playing vs. stoppers), central and attacking midfielders,
-  wingers and forwards.
-- **Weak:** full-backs (the top are attacking wing-backs) and defensive midfielders (ball-winners
-  such as Oberdorf and Casemiro rank high, probably because quick passes right after recoveries are
-  rare and valuable).
+- **Strongest:**
+  - Centre-backs: ball-playing defenders on top, stoppers at the bottom.
+  - Central and attacking midfield: Modrić, Zieliński, Kovačić, De Bruyne, Bruno Fernandes, Wirtz,
+    Shaqiri on top.
+  - Forwards: creative forwards on top, box strikers (Ronaldo, Morata, Schick) at the bottom.
+- **Plausible:** wingers; defensive midfielders (holding midfielders at the bottom).
+- **Weak:** full-backs, where the top are attacking wing-backs and crossers.
+- **Too small:** goalkeepers (11 players).
+- **Club bias:** the bottom of central and attacking midfield is mostly club squad players (†),
+  pushed down by cross-fitting (§2.6). Stars from the same clubs still rank high.
+- **Possible team effect:** six Morocco WC 2022 players appear in the top lists (η² team = 0.21 for
+  `good_surprise`).
+- **Small samples:** several top entries have only 200–250 decisions, so their ranks are uncertain.
 
 **Reference yardstick: players compared with their teammates in the same matches**
 (`good_surprise`, raw units = nats):
@@ -442,7 +454,7 @@ The blinded rating kit has 62 clips:
   - Added value over originality alone (borderline: +0.063 [−0.002, +0.126]).
   - Reliability of the set measures (about 0.6).
   - Validity for dribbles and technique.
-  - Full-backs and defensive midfielders.
+  - Full-backs (the top are attacking wing-backs) and goalkeepers (too few).
 - **Recommendation:**
   - Primary measure: `good_surprise` on intended targets.
   - Robustness: `good_rarity` and `c51_tail_rarity` (most stable across tournaments, but
