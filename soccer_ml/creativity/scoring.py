@@ -122,6 +122,22 @@ def _opponents_bypassed(batch: NextActionBatch, layout: NodeLayout, pitch_length
     return torch.where(located, count, torch.full_like(count, float("nan")))
 
 
+def _pressure(batch: NextActionBatch, layout: NodeLayout, pitch_length: float, target_scale: float) -> tuple:
+    """Distance (yd) from the actor to the nearest visible opponent, and visible opponents within 5 yd."""
+    nodes, mask = batch.node_features, batch.player_mask
+    x = nodes[..., layout.x] / target_scale * pitch_length
+    y = nodes[..., layout.y] / target_scale * pitch_length * (80.0 / 120.0)
+    actor = (nodes[..., layout.actor] > 0.5) & mask
+    ax = (x * actor).sum(-1, keepdim=True) / actor.sum(-1, keepdim=True).clamp_min(1)
+    ay = (y * actor).sum(-1, keepdim=True) / actor.sum(-1, keepdim=True).clamp_min(1)
+    distance = torch.sqrt((x - ax) ** 2 + (y - ay) ** 2)
+    opponents = mask & (nodes[..., layout.teammate] < 0.5)
+    distance = torch.where(opponents, distance, torch.full_like(distance, float("inf")))
+    nearest = distance.min(-1).values
+    nearest = torch.where(torch.isfinite(nearest), nearest, torch.full_like(nearest, float("nan")))
+    return nearest, (distance < 5.0).sum(-1).float()
+
+
 @torch.no_grad()
 def decision_statistics(
     policy_outputs: Dict[str, torch.Tensor],
@@ -181,7 +197,20 @@ def decision_statistics(
         stats[f"{name}_rarity"] = result["rarity"]
         stats[f"{name}_surprise"] = result["surprise"]
 
-    add_set("good", q_net > v_net.unsqueeze(-1))
+    good = q_net > v_net.unsqueeze(-1)
+    add_set("good", good)
+    # Creative opportunity of the situation (independent of the choice):
+    # * opportunity_expected = E_pi[good_surprise] = pi(S) * H(pi | S), S = positive-advantage actions;
+    # * opportunity_quadrant = share of the unusual options (global rarity >= 0.8, i.e. the least
+    #   likely 20% of policy mass) that are useful: the "unusual and useful" quadrant.
+    conditional = torch.where(good, pi / stats["good_mass"].clamp_min(1e-12).unsqueeze(-1), torch.zeros_like(pi))
+    stats["good_entropy"] = -(conditional * conditional.clamp_min(1e-30).log()).sum(-1)
+    stats["opportunity_expected"] = stats["good_mass"] * stats["good_entropy"]
+    sorted_pi, order = pi.sort(dim=-1, descending=True)
+    option_rarity = torch.empty_like(pi).scatter_(-1, order, sorted_pi.cumsum(-1) - sorted_pi / 2)
+    unusual = option_rarity >= 0.8
+    stats["opportunity_quadrant"] = (pi * (unusual & good)).sum(-1) / (pi * unusual).sum(-1).clamp_min(1e-12)
+    stats["chose_quadrant"] = ((stats["rarity"] >= 0.8) & (stats["advantage"] > 0)).float()
     is_pass = torch.arange(pi.shape[-1], device=pi.device) < len(PASS_HEIGHTS) * z
     add_set("pass", is_pass.unsqueeze(0).expand_as(pi))
 
@@ -223,6 +252,7 @@ def decision_statistics(
     zone_visible = batch.visible_zones.float().gather(1, batch.target_zone.clamp_min(0).unsqueeze(-1)).squeeze(-1)
     stats["end_zone_visible"] = torch.where(located, zone_visible, torch.full_like(zone_visible, float("nan")))
     stats["opponents_bypassed"] = _opponents_bypassed(batch, node_layout, pitch_length, target_scale)
+    stats["nearest_opponent"], stats["opponents_within_5"] = _pressure(batch, node_layout, pitch_length, target_scale)
     return {name: value.float().cpu() for name, value in stats.items()}
 
 
