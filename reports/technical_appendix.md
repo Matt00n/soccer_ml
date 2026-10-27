@@ -85,7 +85,7 @@ $k$, its target zone $z$ for passes and carries, and its height $h$ for passes:
 
 $$\pi_\theta(a \mid s) = \pi_\theta(k \mid s)\, \pi_\theta(z \mid k, s)\, \pi_\theta(h \mid z, s).$$
 
-A graph attention network (GATv2; Brody, Alon, & Yahav, 2022) with 4 layers, 8 attention heads and a hidden dimension
+A graph attention network (GATv2; Brody et al., 2022) with 4 layers, 8 attention heads and a hidden dimension
 of 128 encodes the visible players, where edges carry the team relation and the pairwise distance between players. A
 recurrent encoder (GRU; Cho et al., 2014) summarizes the event history and conditions the graph representation. The
 type head is a classifier, whereas the zone and height heads produce one output per zone on the 26 × 17 grid. Since
@@ -118,7 +118,7 @@ conceding $y^{-}$ is defined analogously over the opponent's shots. The usefulne
 surprise model, is initialized from it and is trained for 3 epochs, with the encoder's learning rate scaled by 0.1.
 For robustness analyses, an auxiliary head additionally predicts the full distribution of the discounted net return
 of every action on a categorical support of 51 atoms in $[-1, 1]$ with a discount of 0.9 per decision. This head is
-trained by distributional temporal-difference learning (Bellemare, Dabney, & Munos, 2017) with a target network
+trained by distributional temporal-difference learning (Bellemare et al., 2017) with a target network
 (Mnih et al., 2015) and a loss weight of 0.1. On the evaluation protocol of Robberechts et al. (2023), which uses
 completed open-play passes and labels them by whether a goal follows within the next ten actions, the usefulness model
 reaches an AUC of 0.77 to 0.78. This is on par with VAEP (Decroos et al., 2019) and expected threat (xT; Singh,
@@ -198,7 +198,7 @@ the choice of usefulness model (ρ = 0.94 between models with and without the di
 ## A.5 Analyses
 
 **Inference.** As decisions, possessions and events within a match are dependent, we compute all confidence intervals
-by resampling matches (cluster bootstrap; Cameron, Gelbach, & Miller, 2008) with 1,000 resamples and derive two-sided
+by resampling matches (cluster bootstrap; Cameron et al., 2008) with 1,000 resamples and derive two-sided
 p-values from the bootstrap distribution. We control the false discovery rate across all claims reported in the
 proposal (Benjamini & Hochberg, 1995). We remark that both models condition on score and time, such that the effects
 of game events are to be read relative to what is typical in the same score and time.
@@ -330,7 +330,7 @@ Leone, S. (2023). *FIFA 23 complete player dataset* [Data set]. Kaggle. https://
 
 Loshchilov, I., & Hutter, F. (2017). SGDR: Stochastic gradient descent with warm restarts. In *International Conference on Learning Representations*.
 
-Mnih, V., Kavukcuoglu, K., Silver, D., Rusu, A. A., Veness, J., Bellemare, M. G., … Hassabis, D. (2015). Human-level control through deep reinforcement learning. *Nature, 518*(7540), 529–533.
+Mnih, V., Kavukcuoglu, K., Silver, D., Rusu, A. A., Veness, J., Bellemare, M. G., Graves, A., Riedmiller, M., Fidjeland, A. K., Ostrovski, G., Petersen, S., Beattie, C., Sadik, A., Antonoglou, I., King, H., Kumaran, D., Wierstra, D., Legg, S., & Hassabis, D. (2015). Human-level control through deep reinforcement learning. *Nature, 518*(7540), 529–533.
 
 Puny, O., Atzmon, M., Ben-Hamu, H., Misra, I., Grover, A., Smith, E. J., & Lipman, Y. (2022). Frame averaging for invariant and equivariant network design. In *International Conference on Learning Representations*.
 
