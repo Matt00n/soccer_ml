@@ -1,0 +1,9 @@
+outcome,regressor,estimate,low,high,p,n,clusters,fixed_effects,spec
+shot,two_plus,0.067754252731112,0.05699609116744392,0.07807061048504305,0.0,47765,417,stratum,"two or more creative contributors, given max creativity"
+shot,max_z_good_surprise,0.03329493734970788,0.03013395341589811,0.03667333280542597,0.0,47765,417,stratum,"two or more creative contributors, given max creativity"
+shot,top_share,-0.03572565285650937,-0.04029204551145995,-0.031001621941803604,0.0,42559,417,stratum,"concentration (top player's share), given max creativity"
+shot,max_z_good_surprise,0.042768755893720665,0.03819974476671542,0.04754996641172117,0.0,42559,417,stratum,"concentration (top player's share), given max creativity"
+goal,two_plus,0.010864677317398682,0.00671364919740615,0.014778325978320975,0.0,47765,417,stratum,"two or more creative contributors, given max creativity"
+goal,max_z_good_surprise,0.0038492504888173774,0.0025415584622374868,0.00512922734211834,0.0,47765,417,stratum,"two or more creative contributors, given max creativity"
+goal,top_share,-0.00630934559680437,-0.007883512996124626,-0.004780077921570473,0.0,42559,417,stratum,"concentration (top player's share), given max creativity"
+goal,max_z_good_surprise,0.004275620829140135,0.0024145517647802465,0.006173895264134497,0.0,42559,417,stratum,"concentration (top player's share), given max creativity"

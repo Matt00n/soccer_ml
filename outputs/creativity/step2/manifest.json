@@ -1,0 +1,17 @@
+{
+  "created": "2026-10-25 17:18",
+  "git_commit": "004e717",
+  "seconds": 127,
+  "tables": {
+    "outputs/creativity/step2/scored/crossfit_c51_fold0.csv.gz": "69a4007ddc7e",
+    "outputs/creativity/step2/scored/crossfit_c51_fold1.csv.gz": "0a4956e1c4d7"
+  },
+  "reference": {
+    "outputs/creativity/step2/scored/reference_holdout.csv.gz": "74c8448fae97"
+  },
+  "bootstrap": 1000,
+  "scope": "intended",
+  "primary": "z_good_surprise",
+  "decisions": 536223,
+  "decisions_in_scope": 469733
+}

@@ -1,0 +1,49 @@
+player_name,player_id,status
+Lionel Messi,5503.0,ok
+Neymar,4320.0,ok
+Kevin De Bruyne,3089.0,ok
+Luka Modrić,5463.0,ok
+Pedri,30486.0,ok
+Florian Wirtz,40724.0,ok
+Jamal Musiala,39565.0,ok
+Lamine Yamal,316046.0,ok
+Toni Kroos,5574.0,ok
+Bruno Fernandes,5204.0,ok
+Bernardo Silva,3193.0,ok (player_id given)
+Antoine Griezmann,5487.0,ok
+Ángel Di María,2995.0,ok
+Hakim Ziyech,5237.0,ok
+Christian Eriksen,3043.0,ok
+Hakan Çalhanoğlu,7039.0,ok
+Arda Güler,116587.0,ok
+Khvicha Kvaratskhelia,,not found (or fewer than --min-decisions decisions)
+Dani Olmo,16532.0,ok (player_id given)
+Phil Foden,4354.0,ok
+Jack Grealish,,not found (or fewer than --min-decisions decisions)
+Lorenzo Insigne,7037.0,ok
+Marco Verratti,3166.0,ok
+Ilkay Gündoğan,10287.0,ok
+Xavi Simons,39167.0,ok
+Piotr Zieliński,5660.0,ok
+Aleksandr Golovin,5177.0,ok
+João Cancelo,7005.0,ok
+Trent Alexander-Arnold,,not found (or fewer than --min-decisions decisions)
+Alejandro Grimaldo,10336.0,ok
+Aitana Bonmatí,15284.0,ok
+Alexia Putellas,10143.0,ok
+Jenni Hermoso,10151.0,ok (player_id given)
+Mariona Caldentey,10161.0,ok
+Caroline Graham Hansen,10386.0,ok
+Guro Reiten,10514.0,ok
+Pernille Harder,10108.0,ok
+Kosovare Asllani,10220.0,ok
+Lina Magull,10259.0,ok
+Fran Kirby,4641.0,ok (player_id given)
+Lauren James,31531.0,ok
+Keira Walsh,4658.0,ok
+Rose Lavelle,,not found (or fewer than --min-decisions decisions)
+Linda Caicedo,386339.0,ok
+Yui Hasegawa,25632.0,ok
+Daniëlle van de Donk,10658.0,ok
+Debinha,,not found (or fewer than --min-decisions decisions)
+Kika Nazareth,62913.0,ok

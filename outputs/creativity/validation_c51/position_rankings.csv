@@ -1,0 +1,897 @@
+measure,gender,group,players,side,rank,player,team,decisions,score,percentile
+good_surprise,men,AM,20,top,1,Christoph Baumgartner,Austria,254,1.6402075736606299,1.0
+good_surprise,men,AM,20,top,2,Bruno Miguel Borges Fernandes,Portugal,645,1.6035230884687621,0.95
+good_surprise,men,AM,20,top,3,Kevin De Bruyne,Belgium,578,1.5933714162456747,0.9
+good_surprise,men,AM,20,top,4,Florian Wirtz,Bayer Leverkusen,2235,1.5389696659364653,0.85
+good_surprise,men,AM,20,top,5,Xherdan Shaqiri,Switzerland,343,1.515379635419825,0.8
+good_surprise,men,AM,20,bottom,1,Adam Hložek,Bayer Leverkusen,271,1.1144523517537812,0.05
+good_surprise,men,AM,20,bottom,2,Thomas Müller,Germany,281,1.1750801456939501,0.1
+good_surprise,men,AM,20,bottom,3,Amine Adli,Bayer Leverkusen,447,1.1991648945637583,0.15
+good_surprise,men,CB,118,top,1,Romain Saïss,Morocco,204,1.6329476505495097,1.0
+good_surprise,men,CB,118,top,2,Abdelkarim Hassan Al Haj Fadlalla,Qatar,207,1.6133876995169083,0.9915254237288136
+good_surprise,men,CB,118,top,3,Leonardo Bonucci,Italy,562,1.5887932650462633,0.9830508474576272
+good_surprise,men,CB,118,top,4,Fabian Lukas Schär,Switzerland,509,1.5844789333005895,0.9745762711864406
+good_surprise,men,CB,118,top,5,David Olatukunbo Alaba,Austria,341,1.534317988264912,0.9661016949152542
+good_surprise,men,CB,118,bottom,1,Kamil Glik,Poland,301,0.7389115844186047,0.00847457627118644
+good_surprise,men,CB,118,bottom,2,Merih Demiral,Turkey,271,0.7993982767121771,0.01694915254237288
+good_surprise,men,CB,118,bottom,3,Ronald Federico Araújo da Silva,Barcelona,938,0.8789136662889125,0.025423728813559324
+good_surprise,men,CM,29,top,1,Luka Modrić,Croatia,1281,1.7638022219660034,1.0
+good_surprise,men,CM,29,top,2,Piotr Zieliński,Poland,508,1.724101163582677,0.9655172413793104
+good_surprise,men,CM,29,top,3,Mateo Kovačić,Croatia,1033,1.5364335386373202,0.9310344827586207
+good_surprise,men,CM,29,top,4,Aaron Ramsey,Wales,449,1.535802726503341,0.896551724137931
+good_surprise,men,CM,29,top,5,Mykola Shaparenko,Ukraine,430,1.4603399418372094,0.8620689655172413
+good_surprise,men,CM,29,bottom,1,Carlos Soler Barragán,Paris Saint-Germain,696,0.9640336982040231,0.034482758620689655
+good_surprise,men,CM,29,bottom,2,Moriba Kourouma Kourouma,Barcelona,430,0.9767644598744186,0.06896551724137931
+good_surprise,men,CM,29,bottom,3,Georginio Wijnaldum,Paris Saint-Germain,617,1.1045967213484602,0.10344827586206896
+good_surprise,men,DM,66,top,1,Giorgi Kochorashvili,Georgia,226,1.7436643799557523,1.0
+good_surprise,men,DM,66,top,2,Thomas Teye Partey,Ghana,208,1.7126159969711539,0.9848484848484849
+good_surprise,men,DM,66,top,3,Toni Kroos,Germany,1118,1.6881069070930232,0.9696969696969697
+good_surprise,men,DM,66,top,4,Aaron Mooy,Australia,229,1.6758964119213973,0.9545454545454546
+good_surprise,men,DM,66,top,5,Federico Santiago Valverde Dipetta,Uruguay,275,1.6330861232727274,0.9393939393939394
+good_surprise,men,DM,66,bottom,1,Marten de Roon,Netherlands,259,0.9056508911312742,0.015151515151515152
+good_surprise,men,DM,66,bottom,2,Morten Hjulmand,Denmark,222,0.9435335522522522,0.030303030303030304
+good_surprise,men,DM,66,bottom,3,Leander Dendoncker,Belgium,222,0.9601025983333333,0.045454545454545456
+good_surprise,men,FB,72,top,1,Antonee Robinson,United States,217,1.6272993058709677,1.0
+good_surprise,men,FB,72,top,2,Vladimír Coufal,Czech Republic,406,1.5936126040812808,0.9861111111111112
+good_surprise,men,FB,72,top,3,Marcos Javier Acuña,Argentina,226,1.5421925187300887,0.9722222222222222
+good_surprise,men,FB,72,top,4,Thomas Meunier,Belgium,332,1.4896522160240964,0.9583333333333334
+good_surprise,men,FB,72,top,5,Pervis Josué Estupiñán Tenorio,Ecuador,260,1.4816566530384616,0.9444444444444444
+good_surprise,men,FB,72,bottom,1,Vitalii Mykolenko,Ukraine,206,0.8307247315533981,0.013888888888888888
+good_surprise,men,FB,72,bottom,2,Emerson Palmieri dos Santos,Italy,211,0.8728737052132701,0.027777777777777776
+good_surprise,men,FB,72,bottom,3,Nélson Cabral Semedo,Portugal,211,0.9291779199526067,0.041666666666666664
+good_surprise,men,FW,16,top,1,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,8537,1.693702776399822,1.0
+good_surprise,men,FW,16,top,2,Harry Kane,England,480,1.5528094979352565,0.9375
+good_surprise,men,FW,16,top,3,Arda Güler,Turkey,240,1.4264369424291667,0.875
+good_surprise,men,FW,16,top,4,Kylian Mbappé Lottin,Paris Saint-Germain,3542,1.3985045583974862,0.8125
+good_surprise,men,FW,16,top,5,Breel-Donald Embolo,Switzerland,318,1.397369729452156,0.75
+good_surprise,men,FW,16,bottom,1,Cristiano Ronaldo dos Santos Aveiro,Portugal,391,1.0173661432169843,0.0625
+good_surprise,men,FW,16,bottom,2,Álvaro Borja Morata Martín,Spain,356,1.0229249981910111,0.125
+good_surprise,men,FW,16,bottom,3,Patrik Schick,Bayer Leverkusen,447,1.025474980853394,0.1875
+good_surprise,men,GK,11,top,1,Kasper Schmeichel,Denmark,247,1.5486747773279352,1.0
+good_surprise,men,GK,11,top,2,Marc-André ter Stegen,Barcelona,845,1.5054276674556213,0.9090909090909091
+good_surprise,men,GK,11,top,3,Manuel Neuer,Germany,371,1.4095834609164422,0.8181818181818182
+good_surprise,men,GK,11,top,4,Yassine Bounou,Morocco,205,1.3669064975609755,0.7272727272727273
+good_surprise,men,GK,11,top,5,Thibaut Courtois,Belgium,225,1.3101749333333332,0.6363636363636364
+good_surprise,men,GK,11,bottom,1,Gianluigi Donnarumma,Paris Saint-Germain,867,1.0626000288350634,0.09090909090909091
+good_surprise,men,GK,11,bottom,2,Unai Simón Mendibil,Spain,522,1.1182748007662837,0.18181818181818182
+good_surprise,men,GK,11,bottom,3,Lukáš Hrádecký,Bayer Leverkusen,641,1.1333339500780033,0.2727272727272727
+good_surprise,men,W,37,top,1,Ruslan Malinovskiy,Ukraine,220,2.045633876051698,1.0
+good_surprise,men,W,37,top,2,Rafael Alexandre Conceição Leão,Portugal,204,1.8035244794411764,0.972972972972973
+good_surprise,men,W,37,top,3,Jeremy Doku,Belgium,332,1.721954939733735,0.9459459459459459
+good_surprise,men,W,37,top,4,Neymar da Silva Santos Junior,Paris Saint-Germain,2650,1.6615560872135022,0.918918918918919
+good_surprise,men,W,37,top,5,Hakim Ziyech,Morocco,336,1.6496375286011904,0.8918918918918919
+good_surprise,men,W,37,bottom,1,Ferrán Torres García,Spain,306,1.0529361530730448,0.02702702702702703
+good_surprise,men,W,37,bottom,2,Pablo Sarabia García,Spain,251,1.065525487569721,0.05405405405405406
+good_surprise,men,W,37,bottom,3,Martin Braithwaite Christensen,Barcelona,566,1.1148556828995657,0.08108108108108109
+good_surprise,women,AM,6,top,1,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,279,1.81687772795502,1.0
+good_surprise,women,AM,6,top,2,Pernille Mosegaard Harder,Denmark Women's,320,1.6856556861295329,0.8333333333333334
+good_surprise,women,AM,6,top,3,Lauren James,England Women's,442,1.5859243961470588,0.6666666666666666
+good_surprise,women,AM,6,top,4,Kosovare Asllani,Sweden Women's,487,1.3438775079475371,0.5
+good_surprise,women,AM,6,top,5,Leicy Maria Santos Herrera,Colombia Women's,237,1.311212136371308,0.3333333333333333
+good_surprise,women,AM,6,bottom,1,Ella Toone,England Women's,498,1.204410824377113,0.16666666666666666
+good_surprise,women,AM,6,bottom,2,Leicy Maria Santos Herrera,Colombia Women's,237,1.311212136371308,0.3333333333333333
+good_surprise,women,AM,6,bottom,3,Kosovare Asllani,Sweden Women's,487,1.3438775079475371,0.5
+good_surprise,women,CB,52,top,1,Katie Bowen,New Zealand Women's,255,1.8182573888509803,1.0
+good_surprise,women,CB,52,top,2,Rafaelle Leone Carvalho Souza,Brazil Women's,278,1.6595165744964029,0.9807692307692307
+good_surprise,women,CB,52,top,3,Sherida Spitse,Netherlands Women's,671,1.64779585219076,0.9615384615384616
+good_surprise,women,CB,52,top,4,Naomi Haile Girma,United States Women's,302,1.615691440860927,0.9423076923076923
+good_surprise,women,CB,52,top,5,Kadeisha Buchanan,Canada Women's,210,1.527343787142857,0.9230769230769231
+good_surprise,women,CB,52,bottom,1,Amanda Ilestedt,Sweden Women's,734,1.0083801776798365,0.019230769230769232
+good_surprise,women,CB,52,bottom,2,Laia Aleixandri López,Spain Women's,516,1.035036711763566,0.038461538461538464
+good_surprise,women,CB,52,bottom,3,Noelle Maritz,Switzerland Women's,614,1.0437532774934855,0.057692307692307696
+good_surprise,women,CM,16,top,1,Clara Mateo,France Women's,278,1.6926081349388489,1.0
+good_surprise,women,CM,16,top,2,Lindsey Michelle Heaps,United States Women's,236,1.6724517751864405,0.9375
+good_surprise,women,CM,16,top,3,Andreia Alexandra Norton,Portugal Women's,314,1.5231511042038217,0.875
+good_surprise,women,CM,16,top,4,Jennifer Hermoso Fuentes,Spain Women's,493,1.4439310019528337,0.8125
+good_surprise,women,CM,16,top,5,Aitana Bonmati Conca,Spain Women's,1293,1.42039168095901,0.75
+good_surprise,women,CM,16,bottom,1,Coumba Sow,Switzerland Women's,232,0.807920189487069,0.0625
+good_surprise,women,CM,16,bottom,2,Lina Magull,Germany Women's,240,0.9785877506041667,0.125
+good_surprise,women,CM,16,bottom,3,Jill Roord,Netherlands Women's,510,1.0000849701680912,0.1875
+good_surprise,women,DM,25,top,1,Kerolin Nicoli Israel Ferraz,Brazil Women's,208,1.941083685096154,1.0
+good_surprise,women,DM,25,top,2,Katrina Gorry,Australia Women's,385,1.559330389922078,0.96
+good_surprise,women,DM,25,top,3,Lena Oberdorf,Germany Women's,313,1.5159368339297126,0.92
+good_surprise,women,DM,25,top,4,Vilde Bøe Risa,Norway Women's,359,1.4852366545961004,0.88
+good_surprise,women,DM,25,top,5,Ingrid Syrstad Engen,Norway Women's,382,1.4627064653638742,0.84
+good_surprise,women,DM,25,bottom,1,Charlotte Bilbault,France Women's,214,1.1351296809345794,0.04
+good_surprise,women,DM,25,bottom,2,Sjoeke Nüsken,Germany Women's,217,1.1390572060327904,0.08
+good_surprise,women,DM,25,bottom,3,Georgia Stanway,England Women's,838,1.1512647555553643,0.12
+good_surprise,women,FB,37,top,1,Ana Borges,Portugal Women's,326,1.8650050857361964,1.0
+good_surprise,women,FB,37,top,2,Eve Perisset,France Women's,459,1.5275758887825184,0.972972972972973
+good_surprise,women,FB,37,top,3,Joana Filipa Gaspar Silva Marchão,Portugal Women's,251,1.5166098574501994,0.9459459459459459
+good_surprise,women,FB,37,top,4,Catarina Amado,Portugal Women's,257,1.5135681732684825,0.918918918918919
+good_surprise,women,FB,37,top,5,Selma Bacha,France Women's,606,1.5118294920165016,0.8918918918918919
+good_surprise,women,FB,37,bottom,1,Leila Ouahabi El Ouahabi,Spain Women's,285,0.8220083428070175,0.02702702702702703
+good_surprise,women,FB,37,bottom,2,Oihane Hernández Zurbano,Spain Women's,270,1.02135757,0.05405405405405406
+good_surprise,women,FB,37,bottom,3,Lucia Di Guglielmo,Italy Women's,362,1.0357834233867405,0.08108108108108109
+good_surprise,women,FW,10,top,1,Mary Boio Fowler,Australia Women's,204,1.7404146700312426,1.0
+good_surprise,women,FW,10,top,2,Tessa Wullaert,Belgium Women's,265,1.570087890864151,0.9
+good_surprise,women,FW,10,top,3,Diana Micaela Abreu de Sousa e Silva,Portugal Women's,217,1.4038033193087558,0.8
+good_surprise,women,FW,10,top,4,Lieke Martens,Netherlands Women's,402,1.4010167218432836,0.7
+good_surprise,women,FW,10,top,5,Ramona Bachmann,Switzerland Women's,330,1.3216602642346988,0.6
+good_surprise,women,FW,10,bottom,1,Esther Gonzalez Rodríguez,Spain Women's,272,0.7453747747959603,0.1
+good_surprise,women,FW,10,bottom,2,Emma Stina Blackstenius,Sweden Women's,308,0.8500545925867706,0.2
+good_surprise,women,FW,10,bottom,3,Alessia Russo,England Women's,390,0.9975068822053815,0.3
+good_surprise,women,GK,7,top,1,Ann-Katrin Berger,Germany Women's,216,1.5317985694444445,1.0
+good_surprise,women,GK,7,top,2,Daphne van Domselaar,Netherlands Women's,259,1.4190202007722008,0.8571428571428571
+good_surprise,women,GK,7,top,3,Merle Frohms,Germany Women's,237,1.1811364092827004,0.7142857142857143
+good_surprise,women,GK,7,top,4,Mary Alexandra Earps,England Women's,209,1.159165023923445,0.5714285714285714
+good_surprise,women,GK,7,top,5,Pauline Peyraud Magnin,France Women's,271,1.0257258413284132,0.42857142857142855
+good_surprise,women,GK,7,bottom,1,Gaëlle Thalmann,Switzerland Women's,207,0.8711901062801932,0.14285714285714285
+good_surprise,women,GK,7,bottom,2,Laura Giuliani,Italy Women's,201,0.9456619104477613,0.2857142857142857
+good_surprise,women,GK,7,bottom,3,Pauline Peyraud Magnin,France Women's,271,1.0257258413284132,0.42857142857142855
+good_surprise,women,W,17,top,1,Jule Brand,Germany Women's,414,1.6440668510072463,1.0
+good_surprise,women,W,17,top,2,Linda Lizeth Caicedo Alegría,Colombia Women's,226,1.5777485867256638,0.9411764705882353
+good_surprise,women,W,17,top,3,Johanna Rytting-Kaneryd,Sweden Women's,470,1.518661532425532,0.8823529411764706
+good_surprise,women,W,17,top,4,Delphine Cascarino,France Women's,347,1.5087899575648416,0.8235294117647058
+good_surprise,women,W,17,top,5,María Francesca Caldentey Oliver,Spain Women's,1179,1.4972944879484755,0.7647058823529411
+good_surprise,women,W,17,bottom,1,Salma Paralluelo Ayingono,Spain Women's,335,1.0809820331432836,0.058823529411764705
+good_surprise,women,W,17,bottom,2,Claudia Pina Medina,Spain Women's,253,1.1566910501185772,0.11764705882352941
+good_surprise,women,W,17,bottom,3,Bethany Mead,England Women's,251,1.2129928100689105,0.17647058823529413
+good_rarity,men,AM,20,top,1,Christoph Baumgartner,Austria,254,0.2473064062992126,1.0
+good_rarity,men,AM,20,top,2,Kevin De Bruyne,Belgium,578,0.22598128062283737,0.95
+good_rarity,men,AM,20,top,3,Florian Wirtz,Bayer Leverkusen,2235,0.22475235601789711,0.9
+good_rarity,men,AM,20,top,4,Xherdan Shaqiri,Switzerland,343,0.22243396180758018,0.85
+good_rarity,men,AM,20,top,5,Bruno Miguel Borges Fernandes,Portugal,645,0.21587175906976747,0.8
+good_rarity,men,AM,20,bottom,1,Thomas Müller,Germany,281,0.18159039644128114,0.05
+good_rarity,men,AM,20,bottom,2,Amine Adli,Bayer Leverkusen,447,0.18243019060402685,0.1
+good_rarity,men,AM,20,bottom,3,Christian Dannemann Eriksen,Denmark,473,0.183192788794926,0.15
+good_rarity,men,CB,118,top,1,Romain Saïss,Morocco,204,0.23520237009803924,1.0
+good_rarity,men,CB,118,top,2,Victor Nilsson Lindelöf,Sweden,266,0.21596677218045113,0.9915254237288136
+good_rarity,men,CB,118,top,3,Fabian Lukas Schär,Switzerland,509,0.21241820471512768,0.9830508474576272
+good_rarity,men,CB,118,top,4,Steven de Sousa Vitoria,Canada,207,0.20870243623188406,0.9745762711864406
+good_rarity,men,CB,118,top,5,Abdelkarim Hassan Al Haj Fadlalla,Qatar,207,0.20639200531400964,0.9661016949152542
+good_rarity,men,CB,118,bottom,1,Grant Campbell Hanley,Scotland,272,0.12270623749999998,0.00847457627118644
+good_rarity,men,CB,118,bottom,2,Ronald Federico Araújo da Silva,Barcelona,938,0.12301685692963753,0.01694915254237288
+good_rarity,men,CB,118,bottom,3,Kamil Glik,Poland,301,0.12452263621262458,0.025423728813559324
+good_rarity,men,CM,29,top,1,Piotr Zieliński,Poland,508,0.24189269527559057,1.0
+good_rarity,men,CM,29,top,2,Luka Modrić,Croatia,1281,0.22952319445745512,0.9655172413793104
+good_rarity,men,CM,29,top,3,Mateo Kovačić,Croatia,1033,0.20865836040658278,0.9310344827586207
+good_rarity,men,CM,29,top,4,Tomáš Souček,Czech Republic,355,0.20373217943661973,0.896551724137931
+good_rarity,men,CM,29,top,5,Aaron Ramsey,Wales,449,0.19449520400890868,0.8620689655172413
+good_rarity,men,CM,29,bottom,1,Carlos Soler Barragán,Paris Saint-Germain,696,0.13337438060344828,0.034482758620689655
+good_rarity,men,CM,29,bottom,2,Moriba Kourouma Kourouma,Barcelona,430,0.13890172,0.06896551724137931
+good_rarity,men,CM,29,bottom,3,Jordan Brian Henderson,England,291,0.14454388419243988,0.10344827586206896
+good_rarity,men,DM,66,top,1,Giorgi Kochorashvili,Georgia,226,0.23548006725663717,1.0
+good_rarity,men,DM,66,top,2,Toni Kroos,Germany,1118,0.2328183778175313,0.9848484848484849
+good_rarity,men,DM,66,top,3,Aaron Mooy,Australia,229,0.22025654192139738,0.9696969696969697
+good_rarity,men,DM,66,top,4,Sofyan Amrabat,Morocco,354,0.2152540488700565,0.9545454545454546
+good_rarity,men,DM,66,top,5,Federico Santiago Valverde Dipetta,Uruguay,275,0.21419247672727273,0.9393939393939394
+good_rarity,men,DM,66,bottom,1,Morten Hjulmand,Denmark,222,0.12170661846846846,0.015151515151515152
+good_rarity,men,DM,66,bottom,2,Leander Dendoncker,Belgium,222,0.12475020945945947,0.030303030303030304
+good_rarity,men,DM,66,bottom,3,Marten de Roon,Netherlands,259,0.12579984092664093,0.045454545454545456
+good_rarity,men,FB,72,top,1,Alphonso Davies,Canada,223,0.21940396322869954,1.0
+good_rarity,men,FB,72,top,2,Antonee Robinson,United States,217,0.21770501751152074,0.9861111111111112
+good_rarity,men,FB,72,top,3,Vladimír Coufal,Czech Republic,406,0.2120559263546798,0.9722222222222222
+good_rarity,men,FB,72,top,4,Andrija Živković,Serbia,229,0.20759802445414846,0.9583333333333334
+good_rarity,men,FB,72,top,5,Marcos Javier Acuña,Argentina,226,0.2074507185840708,0.9444444444444444
+good_rarity,men,FB,72,bottom,1,Vitalii Mykolenko,Ukraine,206,0.1092274354368932,0.013888888888888888
+good_rarity,men,FB,72,bottom,2,Emerson Palmieri dos Santos,Italy,211,0.11614313507109005,0.027777777777777776
+good_rarity,men,FB,72,bottom,3,Borna Sosa,Croatia,265,0.12745683245283018,0.041666666666666664
+good_rarity,men,FW,16,top,1,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,8537,0.2575700848307368,1.0
+good_rarity,men,FW,16,top,2,Victor Okoh Boniface,Bayer Leverkusen,560,0.2474943341071429,0.9375
+good_rarity,men,FW,16,top,3,Harry Kane,England,480,0.23714517208333333,0.875
+good_rarity,men,FW,16,top,4,Kylian Mbappé Lottin,Paris Saint-Germain,3542,0.234293859796725,0.8125
+good_rarity,men,FW,16,top,5,Arda Güler,Turkey,240,0.21528315833333334,0.75
+good_rarity,men,FW,16,bottom,1,Roland Sallai,Hungary,203,0.1742371369458128,0.0625
+good_rarity,men,FW,16,bottom,2,Álvaro Borja Morata Martín,Spain,356,0.17848370814606743,0.125
+good_rarity,men,FW,16,bottom,3,Hugo Ekitike,Paris Saint-Germain,369,0.18961386883468834,0.1875
+good_rarity,men,GK,11,top,1,Kasper Schmeichel,Denmark,247,0.19306424817813764,1.0
+good_rarity,men,GK,11,top,2,Marc-André ter Stegen,Barcelona,845,0.19028001183431953,0.9090909090909091
+good_rarity,men,GK,11,top,3,Manuel Neuer,Germany,371,0.1640482539083558,0.8181818181818182
+good_rarity,men,GK,11,top,4,Yassine Bounou,Morocco,205,0.15849084,0.7272727272727273
+good_rarity,men,GK,11,top,5,Thibaut Courtois,Belgium,225,0.1578154008888889,0.6363636363636364
+good_rarity,men,GK,11,bottom,1,Gianluigi Donnarumma,Paris Saint-Germain,867,0.12456809596309112,0.09090909090909091
+good_rarity,men,GK,11,bottom,2,Lukáš Hrádecký,Bayer Leverkusen,641,0.1381713755070203,0.18181818181818182
+good_rarity,men,GK,11,bottom,3,Dominik Livaković,Croatia,259,0.14110839420849422,0.2727272727272727
+good_rarity,men,W,37,top,1,Ruslan Malinovskiy,Ukraine,220,0.2904544427272727,1.0
+good_rarity,men,W,37,top,2,Rafael Alexandre Conceição Leão,Portugal,204,0.2740407200980392,0.972972972972973
+good_rarity,men,W,37,top,3,Jeremy Doku,Belgium,332,0.2693865692771084,0.9459459459459459
+good_rarity,men,W,37,top,4,Lamine Yamal Nasraoui Ebana,Spain,296,0.2513499540540541,0.918918918918919
+good_rarity,men,W,37,top,5,Neymar da Silva Santos Junior,Paris Saint-Germain,2650,0.24404612252830188,0.8918918918918919
+good_rarity,men,W,37,bottom,1,Pablo Sarabia García,Spain,251,0.16212153944223107,0.02702702702702703
+good_rarity,men,W,37,bottom,2,Andrej Kramarić,Croatia,442,0.1640875769230769,0.05405405405405406
+good_rarity,men,W,37,bottom,3,Francisco António Machado Mota de Castro Trincão,Barcelona,506,0.16674883043478259,0.08108108108108109
+good_rarity,women,AM,6,top,1,Pernille Mosegaard Harder,Denmark Women's,320,0.2599914234375,1.0
+good_rarity,women,AM,6,top,2,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,279,0.2526172340501792,0.8333333333333334
+good_rarity,women,AM,6,top,3,Lauren James,England Women's,442,0.22430088371040724,0.6666666666666666
+good_rarity,women,AM,6,top,4,Kosovare Asllani,Sweden Women's,487,0.20407377227926077,0.5
+good_rarity,women,AM,6,top,5,Leicy Maria Santos Herrera,Colombia Women's,237,0.18171850337552745,0.3333333333333333
+good_rarity,women,AM,6,bottom,1,Ella Toone,England Women's,498,0.17577236606425703,0.16666666666666666
+good_rarity,women,AM,6,bottom,2,Leicy Maria Santos Herrera,Colombia Women's,237,0.18171850337552745,0.3333333333333333
+good_rarity,women,AM,6,bottom,3,Kosovare Asllani,Sweden Women's,487,0.20407377227926077,0.5
+good_rarity,women,CB,52,top,1,Katie Bowen,New Zealand Women's,255,0.23513095764705882,1.0
+good_rarity,women,CB,52,top,2,Sherida Spitse,Netherlands Women's,671,0.21890441549925485,0.9807692307692307
+good_rarity,women,CB,52,top,3,Rafaelle Leone Carvalho Souza,Brazil Women's,278,0.21770473345323743,0.9615384615384616
+good_rarity,women,CB,52,top,4,Kadeisha Buchanan,Canada Women's,210,0.2156625361904762,0.9423076923076923
+good_rarity,women,CB,52,top,5,Julie Beth Ertz,United States Women's,243,0.20903521069958847,0.9230769230769231
+good_rarity,women,CB,52,bottom,1,Noelle Maritz,Switzerland Women's,614,0.1366177328990228,0.019230769230769232
+good_rarity,women,CB,52,bottom,2,Laia Aleixandri López,Spain Women's,516,0.13775511356589148,0.038461538461538464
+good_rarity,women,CB,52,bottom,3,María Méndez Fernández,Spain Women's,295,0.1381581806779661,0.057692307692307696
+good_rarity,women,CM,16,top,1,Clara Mateo,France Women's,278,0.25037063884892086,1.0
+good_rarity,women,CM,16,top,2,Lindsey Michelle Heaps,United States Women's,236,0.23644320720338985,0.9375
+good_rarity,women,CM,16,top,3,Jennifer Hermoso Fuentes,Spain Women's,493,0.2162125612576065,0.875
+good_rarity,women,CM,16,top,4,Aitana Bonmati Conca,Spain Women's,1293,0.20397514516627996,0.8125
+good_rarity,women,CM,16,top,5,Andreia Alexandra Norton,Portugal Women's,314,0.20095726847133757,0.75
+good_rarity,women,CM,16,bottom,1,Coumba Sow,Switzerland Women's,232,0.11668117025862068,0.0625
+good_rarity,women,CM,16,bottom,2,Lina Magull,Germany Women's,240,0.14107648791666666,0.125
+good_rarity,women,CM,16,bottom,3,Jill Roord,Netherlands Women's,510,0.1431926850980392,0.1875
+good_rarity,women,DM,25,top,1,Kerolin Nicoli Israel Ferraz,Brazil Women's,208,0.26787622788461535,1.0
+good_rarity,women,DM,25,top,2,Katrina Gorry,Australia Women's,385,0.2015329625974026,0.96
+good_rarity,women,DM,25,top,3,Ingrid Filippa Angeldal,Sweden Women's,709,0.1961923669957687,0.92
+good_rarity,women,DM,25,top,4,Sara Däbritz,Germany Women's,433,0.19422559584295612,0.88
+good_rarity,women,DM,25,top,5,Frida Maanum,Norway Women's,361,0.1935633811634349,0.84
+good_rarity,women,DM,25,bottom,1,Charlotte Bilbault,France Women's,214,0.1474908070093458,0.04
+good_rarity,women,DM,25,bottom,2,Karen Holmgaard,Denmark Women's,281,0.16079525516014234,0.08
+good_rarity,women,DM,25,bottom,3,Georgia Stanway,England Women's,838,0.16180352064439138,0.12
+good_rarity,women,FB,37,top,1,Ana Borges,Portugal Women's,326,0.2470107064417178,1.0
+good_rarity,women,FB,37,top,2,Janni Thomsen,Denmark Women's,294,0.21192809863945578,0.972972972972973
+good_rarity,women,FB,37,top,3,Selma Bacha,France Women's,606,0.20317219455445545,0.9459459459459459
+good_rarity,women,FB,37,top,4,Victoria Pelova,Netherlands Women's,499,0.19397527615230462,0.918918918918919
+good_rarity,women,FB,37,top,5,Eve Perisset,France Women's,459,0.1926165616557734,0.8918918918918919
+good_rarity,women,FB,37,bottom,1,Leila Ouahabi El Ouahabi,Spain Women's,285,0.10986897473684211,0.02702702702702703
+good_rarity,women,FB,37,bottom,2,Oihane Hernández Zurbano,Spain Women's,270,0.1348151411111111,0.05405405405405406
+good_rarity,women,FB,37,bottom,3,Olga  Carmona García,Spain Women's,799,0.14172790775969962,0.08108108108108109
+good_rarity,women,FW,10,top,1,Mary Boio Fowler,Australia Women's,204,0.2651667406862745,1.0
+good_rarity,women,FW,10,top,2,Tessa Wullaert,Belgium Women's,265,0.22023333320754718,0.9
+good_rarity,women,FW,10,top,3,Jéssica da Silva,Portugal Women's,226,0.2092098221238938,0.8
+good_rarity,women,FW,10,top,4,Lieke Martens,Netherlands Women's,402,0.20770426791044774,0.7
+good_rarity,women,FW,10,top,5,Diana Micaela Abreu de Sousa e Silva,Portugal Women's,217,0.19695192258064514,0.6
+good_rarity,women,FW,10,bottom,1,Ana-Maria Crnogorčević,Switzerland Women's,295,0.17499704915254238,0.1
+good_rarity,women,FW,10,bottom,2,Alessia Russo,England Women's,390,0.1838211028205128,0.2
+good_rarity,women,FW,10,bottom,3,Emma Stina Blackstenius,Sweden Women's,308,0.1873320844155844,0.3
+good_rarity,women,GK,7,top,1,Daphne van Domselaar,Netherlands Women's,259,0.17570561544401544,1.0
+good_rarity,women,GK,7,top,2,Ann-Katrin Berger,Germany Women's,216,0.1747436824074074,0.8571428571428571
+good_rarity,women,GK,7,top,3,Merle Frohms,Germany Women's,237,0.14031752447257384,0.7142857142857143
+good_rarity,women,GK,7,top,4,Mary Alexandra Earps,England Women's,209,0.13614317177033491,0.5714285714285714
+good_rarity,women,GK,7,top,5,Pauline Peyraud Magnin,France Women's,271,0.13570170996309963,0.42857142857142855
+good_rarity,women,GK,7,bottom,1,Gaëlle Thalmann,Switzerland Women's,207,0.1079152265700483,0.14285714285714285
+good_rarity,women,GK,7,bottom,2,Laura Giuliani,Italy Women's,201,0.1164395736318408,0.2857142857142857
+good_rarity,women,GK,7,bottom,3,Pauline Peyraud Magnin,France Women's,271,0.13570170996309963,0.42857142857142855
+good_rarity,women,W,17,top,1,Caitlin Jade Foord,Australia Women's,212,0.24198559528301886,1.0
+good_rarity,women,W,17,top,2,Jule Brand,Germany Women's,414,0.23938172560386475,0.9411764705882353
+good_rarity,women,W,17,top,3,Chloe Kelly,England Women's,316,0.23780344113924054,0.8823529411764706
+good_rarity,women,W,17,top,4,Delphine Cascarino,France Women's,347,0.23641558443804034,0.8235294117647058
+good_rarity,women,W,17,top,5,Klara Bühl,Germany Women's,557,0.2315974536804309,0.7647058823529411
+good_rarity,women,W,17,bottom,1,Claudia Pina Medina,Spain Women's,253,0.1815577375494071,0.058823529411764705
+good_rarity,women,W,17,bottom,2,Salma Paralluelo Ayingono,Spain Women's,335,0.182641076119403,0.11764705882352941
+good_rarity,women,W,17,bottom,3,Svenja Huth,Germany Women's,421,0.18869507410926364,0.17647058823529413
+c51_tail_rarity,men,AM,20,top,1,Kevin De Bruyne,Belgium,578,0.13642512422145328,1.0
+c51_tail_rarity,men,AM,20,top,2,Florian Wirtz,Bayer Leverkusen,2235,0.12719131744966444,0.95
+c51_tail_rarity,men,AM,20,top,3,Aleksandr Golovin,Russia,225,0.12410190888888888,0.9
+c51_tail_rarity,men,AM,20,top,4,Christoph Baumgartner,Austria,254,0.12068002401574802,0.85
+c51_tail_rarity,men,AM,20,top,5,Eden Hazard,Belgium,281,0.11979417402135231,0.8
+c51_tail_rarity,men,AM,20,bottom,1,Adam Hložek,Bayer Leverkusen,271,0.08469147195571956,0.05
+c51_tail_rarity,men,AM,20,bottom,2,Philippe Coutinho Correia,Barcelona,658,0.08684886033434651,0.1
+c51_tail_rarity,men,AM,20,bottom,3,Antoine Griezmann,Barcelona,2163,0.0966907176606565,0.15
+c51_tail_rarity,men,CB,118,top,1,Daley Blind,Netherlands,627,0.10564618070175438,1.0
+c51_tail_rarity,men,CB,118,top,2,Fabian Lukas Schär,Switzerland,509,0.09902458310412574,0.9915254237288136
+c51_tail_rarity,men,CB,118,top,3,Boualem Khoukhi,Qatar,222,0.09268247837837838,0.9830508474576272
+c51_tail_rarity,men,CB,118,top,4,Leonardo Bonucci,Italy,562,0.09259009519572954,0.9745762711864406
+c51_tail_rarity,men,CB,118,top,5,Tomáš Holeš,Czech Republic,241,0.09242668921161826,0.9661016949152542
+c51_tail_rarity,men,CB,118,bottom,1,Joe Rodon,Wales,374,0.0290480320855615,0.00847457627118644
+c51_tail_rarity,men,CB,118,bottom,2,Merih Demiral,Turkey,271,0.030334596678966787,0.01694915254237288
+c51_tail_rarity,men,CB,118,bottom,3,Jason Denayer,Belgium,214,0.032389947663551404,0.025423728813559324
+c51_tail_rarity,men,CM,29,top,1,Piotr Zieliński,Poland,508,0.1199804375984252,1.0
+c51_tail_rarity,men,CM,29,top,2,Mateo Kovačić,Croatia,1033,0.11832226234269118,0.9655172413793104
+c51_tail_rarity,men,CM,29,top,3,Luka Modrić,Croatia,1281,0.11454247985948479,0.9310344827586207
+c51_tail_rarity,men,CM,29,top,4,Aaron Ramsey,Wales,449,0.10171698285077951,0.896551724137931
+c51_tail_rarity,men,CM,29,top,5,Ondrej Duda,Slovakia,287,0.09505454738675959,0.8620689655172413
+c51_tail_rarity,men,CM,29,bottom,1,Moriba Kourouma Kourouma,Barcelona,430,0.05023892604651163,0.034482758620689655
+c51_tail_rarity,men,CM,29,bottom,2,Georginio Wijnaldum,Paris Saint-Germain,617,0.059717503079416534,0.06896551724137931
+c51_tail_rarity,men,CM,29,bottom,3,Carlos Soler Barragán,Paris Saint-Germain,696,0.06459295402298851,0.10344827586206896
+c51_tail_rarity,men,DM,66,top,1,Toni Kroos,Germany,1118,0.12255184141323794,1.0
+c51_tail_rarity,men,DM,66,top,2,Thomas Teye Partey,Ghana,208,0.11149177596153846,0.9848484848484849
+c51_tail_rarity,men,DM,66,top,3,Pedro Chirivella Burgos,Nantes,223,0.10702761793721972,0.9696969696969697
+c51_tail_rarity,men,DM,66,top,4,Grzegorz Krychowiak,Poland,215,0.10444785720930232,0.9545454545454546
+c51_tail_rarity,men,DM,66,top,5,Tijjani Reijnders,Netherlands,364,0.102368825,0.9393939393939394
+c51_tail_rarity,men,DM,66,bottom,1,Serhii Sydorchuk,Ukraine,222,0.03179607117117117,0.015151515151515152
+c51_tail_rarity,men,DM,66,bottom,2,Leander Dendoncker,Belgium,222,0.03918820045045045,0.030303030303030304
+c51_tail_rarity,men,DM,66,bottom,3,Ander Herrera Agüera,Paris Saint-Germain,340,0.04683657117647059,0.045454545454545456
+c51_tail_rarity,men,FB,72,top,1,Andrija Živković,Serbia,229,0.12784648340611354,1.0
+c51_tail_rarity,men,FB,72,top,2,Alphonso Davies,Canada,223,0.11055226143497758,0.9861111111111112
+c51_tail_rarity,men,FB,72,top,3,Jeremie Frimpong,Bayer Leverkusen,1103,0.10178819691749773,0.9722222222222222
+c51_tail_rarity,men,FB,72,top,4,Nathan Tella,Bayer Leverkusen,317,0.10118113974763406,0.9583333333333334
+c51_tail_rarity,men,FB,72,top,5,Vladimír Coufal,Czech Republic,406,0.09805389556650246,0.9444444444444444
+c51_tail_rarity,men,FB,72,bottom,1,Thilo Kehrer,Paris Saint-Germain,644,0.028192400310559005,0.013888888888888888
+c51_tail_rarity,men,FB,72,bottom,2,Danilo Luiz da Silva,Brazil,252,0.03273114880952381,0.027777777777777776
+c51_tail_rarity,men,FB,72,bottom,3,Sergi Roberto Carnicer,Barcelona,980,0.04352760469387755,0.041666666666666664
+c51_tail_rarity,men,FW,16,top,1,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,8537,0.1570544995197376,1.0
+c51_tail_rarity,men,FW,16,top,2,Kylian Mbappé Lottin,Paris Saint-Germain,3542,0.13027463020892152,0.9375
+c51_tail_rarity,men,FW,16,top,3,Victor Okoh Boniface,Bayer Leverkusen,560,0.12361038196428571,0.875
+c51_tail_rarity,men,FW,16,top,4,Breel-Donald Embolo,Switzerland,318,0.1198419179245283,0.8125
+c51_tail_rarity,men,FW,16,top,5,Memphis Depay,Netherlands,488,0.1163835024590164,0.75
+c51_tail_rarity,men,FW,16,bottom,1,Arda Güler,Turkey,240,0.07092102541666666,0.0625
+c51_tail_rarity,men,FW,16,bottom,2,Roland Sallai,Hungary,203,0.08646354433497537,0.125
+c51_tail_rarity,men,FW,16,bottom,3,Cristiano Ronaldo dos Santos Aveiro,Portugal,391,0.08779318184143223,0.1875
+c51_tail_rarity,men,GK,11,top,1,Kasper Schmeichel,Denmark,247,0.05179761093117408,1.0
+c51_tail_rarity,men,GK,11,top,2,Marc-André ter Stegen,Barcelona,845,0.04132372378698225,0.9090909090909091
+c51_tail_rarity,men,GK,11,top,3,Dominik Livaković,Croatia,259,0.040790356370656373,0.8181818181818182
+c51_tail_rarity,men,GK,11,top,4,Manuel Neuer,Germany,371,0.03694655040431267,0.7272727272727273
+c51_tail_rarity,men,GK,11,top,5,Jordan Pickford,England,549,0.036206662659380696,0.6363636363636364
+c51_tail_rarity,men,GK,11,bottom,1,Yann Sommer,Switzerland,334,0.014062530838323354,0.09090909090909091
+c51_tail_rarity,men,GK,11,bottom,2,Yassine Bounou,Morocco,205,0.02967399170731707,0.18181818181818182
+c51_tail_rarity,men,GK,11,bottom,3,Gianluigi Donnarumma,Paris Saint-Germain,867,0.030138806805074973,0.2727272727272727
+c51_tail_rarity,men,W,37,top,1,Ruslan Malinovskiy,Ukraine,220,0.16482391818181819,1.0
+c51_tail_rarity,men,W,37,top,2,Rafael Alexandre Conceição Leão,Portugal,204,0.1594433019607843,0.972972972972973
+c51_tail_rarity,men,W,37,top,3,Jeremy Doku,Belgium,332,0.15079479006024096,0.9459459459459459
+c51_tail_rarity,men,W,37,top,4,Leandro Trossard,Belgium,207,0.14544416811594202,0.918918918918919
+c51_tail_rarity,men,W,37,top,5,Lamine Yamal Nasraoui Ebana,Spain,296,0.1444876820945946,0.8918918918918919
+c51_tail_rarity,men,W,37,bottom,1,Gerard Moreno Balaguero,Spain,213,0.06746072253521126,0.02702702702702703
+c51_tail_rarity,men,W,37,bottom,2,Francisco António Machado Mota de Castro Trincão,Barcelona,506,0.06753542015810277,0.05405405405405406
+c51_tail_rarity,men,W,37,bottom,3,Martin Braithwaite Christensen,Barcelona,566,0.06772654911660778,0.08108108108108109
+c51_tail_rarity,women,AM,6,top,1,Pernille Mosegaard Harder,Denmark Women's,320,0.1319063003125,1.0
+c51_tail_rarity,women,AM,6,top,2,Lauren James,England Women's,442,0.10793873122171944,0.8333333333333334
+c51_tail_rarity,women,AM,6,top,3,Leicy Maria Santos Herrera,Colombia Women's,237,0.09471548185654008,0.6666666666666666
+c51_tail_rarity,women,AM,6,top,4,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,279,0.09436629068100358,0.5
+c51_tail_rarity,women,AM,6,top,5,Ella Toone,England Women's,498,0.09273814116465864,0.3333333333333333
+c51_tail_rarity,women,AM,6,bottom,1,Kosovare Asllani,Sweden Women's,487,0.07923176488706365,0.16666666666666666
+c51_tail_rarity,women,AM,6,bottom,2,Ella Toone,England Women's,498,0.09273814116465864,0.3333333333333333
+c51_tail_rarity,women,AM,6,bottom,3,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,279,0.09436629068100358,0.5
+c51_tail_rarity,women,CB,52,top,1,Sherida Spitse,Netherlands Women's,671,0.10542271013412816,1.0
+c51_tail_rarity,women,CB,52,top,2,Leah Williamson,England Women's,929,0.09978841550053821,0.9807692307692307
+c51_tail_rarity,women,CB,52,top,3,Rafaelle Leone Carvalho Souza,Brazil Women's,278,0.09835342769784174,0.9615384615384616
+c51_tail_rarity,women,CB,52,top,4,Katie Bowen,New Zealand Women's,255,0.09164090039215686,0.9423076923076923
+c51_tail_rarity,women,CB,52,top,5,Julie Beth Ertz,United States Women's,243,0.08250171275720164,0.9230769230769231
+c51_tail_rarity,women,CB,52,bottom,1,Sara Doorsoun-Khajeh,Germany Women's,249,0.02685859919678715,0.019230769230769232
+c51_tail_rarity,women,CB,52,bottom,2,Eva Nyström,WNT Finland,282,0.03575017375886525,0.038461538461538464
+c51_tail_rarity,women,CB,52,bottom,3,Laia Codina Panedas,Spain Women's,240,0.038244754166666665,0.057692307692307696
+c51_tail_rarity,women,CM,16,top,1,Clara Mateo,France Women's,278,0.12345552014388489,1.0
+c51_tail_rarity,women,CM,16,top,2,Jennifer Hermoso Fuentes,Spain Women's,493,0.11617709959432049,0.9375
+c51_tail_rarity,women,CM,16,top,3,Lindsey Michelle Heaps,United States Women's,236,0.10392110296610169,0.875
+c51_tail_rarity,women,CM,16,top,4,Arianna Caruso,Italy Women's,323,0.09784402043343654,0.8125
+c51_tail_rarity,women,CM,16,top,5,Aitana Bonmati Conca,Spain Women's,1293,0.09702627238979118,0.75
+c51_tail_rarity,women,CM,16,bottom,1,Lina Magull,Germany Women's,240,0.06000544708333333,0.0625
+c51_tail_rarity,women,CM,16,bottom,2,Géraldine Reuteler,Switzerland Women's,523,0.06144239120458891,0.125
+c51_tail_rarity,women,CM,16,bottom,3,Coumba Sow,Switzerland Women's,232,0.063640675,0.1875
+c51_tail_rarity,women,DM,25,top,1,Eveliina Summanen,WNT Finland,276,0.10937880688405797,1.0
+c51_tail_rarity,women,DM,25,top,2,Keira Walsh,England Women's,985,0.10504867939086295,0.96
+c51_tail_rarity,women,DM,25,top,3,Kerolin Nicoli Israel Ferraz,Brazil Women's,208,0.10315646009615385,0.92
+c51_tail_rarity,women,DM,25,top,4,Vilde Bøe Risa,Norway Women's,359,0.10145919554317549,0.88
+c51_tail_rarity,women,DM,25,top,5,Ingrid Syrstad Engen,Norway Women's,382,0.10126432984293195,0.84
+c51_tail_rarity,women,DM,25,bottom,1,Sjoeke Nüsken,Germany Women's,217,0.05139407695852534,0.04
+c51_tail_rarity,women,DM,25,bottom,2,Karen Holmgaard,Denmark Women's,281,0.05223483914590748,0.08
+c51_tail_rarity,women,DM,25,bottom,3,Charlotte Bilbault,France Women's,214,0.053178580373831774,0.12
+c51_tail_rarity,women,FB,37,top,1,Janni Thomsen,Denmark Women's,294,0.10971721258503402,1.0
+c51_tail_rarity,women,FB,37,top,2,Selma Bacha,France Women's,606,0.09672818613861386,0.972972972972973
+c51_tail_rarity,women,FB,37,top,3,Gun Nathalie Björn,Sweden Women's,805,0.09042376248447205,0.9459459459459459
+c51_tail_rarity,women,FB,37,top,4,Esmee Brugts,Netherlands Women's,370,0.09003916945945947,0.918918918918919
+c51_tail_rarity,women,FB,37,top,5,Victoria Pelova,Netherlands Women's,499,0.0843557761523046,0.8918918918918919
+c51_tail_rarity,women,FB,37,bottom,1,Thea Bjelde,Norway Women's,235,0.03856295531914894,0.02702702702702703
+c51_tail_rarity,women,FB,37,bottom,2,Oihane Hernández Zurbano,Spain Women's,270,0.04123477888888889,0.05405405405405406
+c51_tail_rarity,women,FB,37,bottom,3,Eseosa Aigbogun,Switzerland Women's,280,0.044371297857142854,0.08108108108108109
+c51_tail_rarity,women,FW,10,top,1,Ramona Bachmann,Switzerland Women's,330,0.1325617975757576,1.0
+c51_tail_rarity,women,FW,10,top,2,Jéssica da Silva,Portugal Women's,226,0.12377747477876105,0.9
+c51_tail_rarity,women,FW,10,top,3,Lieke Martens,Netherlands Women's,402,0.10392885199004975,0.8
+c51_tail_rarity,women,FW,10,top,4,Tessa Wullaert,Belgium Women's,265,0.09880097471698114,0.7
+c51_tail_rarity,women,FW,10,top,5,Mary Boio Fowler,Australia Women's,204,0.09442694264705882,0.6
+c51_tail_rarity,women,FW,10,bottom,1,Alessia Russo,England Women's,390,0.057505518974358974,0.1
+c51_tail_rarity,women,FW,10,bottom,2,Diana Micaela Abreu de Sousa e Silva,Portugal Women's,217,0.06241377419354839,0.2
+c51_tail_rarity,women,FW,10,bottom,3,Ana-Maria Crnogorčević,Switzerland Women's,295,0.0667807440677966,0.3
+c51_tail_rarity,women,GK,7,top,1,Ann-Katrin Berger,Germany Women's,216,0.057435225925925926,1.0
+c51_tail_rarity,women,GK,7,top,2,Gaëlle Thalmann,Switzerland Women's,207,0.04282497584541063,0.8571428571428571
+c51_tail_rarity,women,GK,7,top,3,Merle Frohms,Germany Women's,237,0.04121844345991561,0.7142857142857143
+c51_tail_rarity,women,GK,7,top,4,Daphne van Domselaar,Netherlands Women's,259,0.03878245714285715,0.5714285714285714
+c51_tail_rarity,women,GK,7,top,5,Laura Giuliani,Italy Women's,201,0.029568455223880595,0.42857142857142855
+c51_tail_rarity,women,GK,7,bottom,1,Mary Alexandra Earps,England Women's,209,0.019184172727272727,0.14285714285714285
+c51_tail_rarity,women,GK,7,bottom,2,Pauline Peyraud Magnin,France Women's,271,0.028545522509225096,0.2857142857142857
+c51_tail_rarity,women,GK,7,bottom,3,Laura Giuliani,Italy Women's,201,0.029568455223880595,0.42857142857142855
+c51_tail_rarity,women,W,17,top,1,Jule Brand,Germany Women's,414,0.12837757922705315,1.0
+c51_tail_rarity,women,W,17,top,2,Delphine Cascarino,France Women's,347,0.1262241204610951,0.9411764705882353
+c51_tail_rarity,women,W,17,top,3,Klara Bühl,Germany Women's,557,0.12137926552962298,0.8823529411764706
+c51_tail_rarity,women,W,17,top,4,Johanna Rytting-Kaneryd,Sweden Women's,470,0.11681289085106382,0.8235294117647058
+c51_tail_rarity,women,W,17,top,5,Caitlin Jade Foord,Australia Women's,212,0.11552917594339622,0.7647058823529411
+c51_tail_rarity,women,W,17,bottom,1,Linda Lizeth Caicedo Alegría,Colombia Women's,226,0.07481975796460177,0.058823529411764705
+c51_tail_rarity,women,W,17,bottom,2,Bethany Mead,England Women's,251,0.08161279521912351,0.11764705882352941
+c51_tail_rarity,women,W,17,bottom,3,Fridolina Rolfö,Sweden Women's,504,0.08261241964285715,0.17647058823529413
+unxpass,men,AM,20,top,1,Kevin De Bruyne,Belgium,578,0.23146840932203389,1.0
+unxpass,men,AM,20,top,2,Bruno Miguel Borges Fernandes,Portugal,645,0.2256787011764706,0.95
+unxpass,men,AM,20,top,3,Dušan Tadić,Serbia,232,0.2239399123076923,0.9
+unxpass,men,AM,20,top,4,Christoph Baumgartner,Austria,254,0.20972290703125,0.85
+unxpass,men,AM,20,top,5,Marcel Sabitzer,Austria,437,0.20596799684210526,0.8
+unxpass,men,AM,20,bottom,1,Adam Hložek,Bayer Leverkusen,271,0.12384638040540542,0.05
+unxpass,men,AM,20,bottom,2,Thomas Müller,Germany,281,0.1490174148325359,0.1
+unxpass,men,AM,20,bottom,3,Philippe Coutinho Correia,Barcelona,658,0.16059373157894735,0.15
+unxpass,men,CB,118,top,1,Leonardo Bonucci,Italy,562,0.2512625229166667,1.0
+unxpass,men,CB,118,top,2,Ondrej Celustka,Czech Republic,210,0.2511238633333333,0.9915254237288136
+unxpass,men,CB,118,top,3,Romain Saïss,Morocco,204,0.2508200572519084,0.9830508474576272
+unxpass,men,CB,118,top,4,Daley Blind,Netherlands,627,0.2435258416490486,0.9745762711864406
+unxpass,men,CB,118,top,5,Fabian Lukas Schär,Switzerland,509,0.23892016503067484,0.9661016949152542
+unxpass,men,CB,118,bottom,1,Ronald Federico Araújo da Silva,Barcelona,938,0.12371769816232772,0.00847457627118644
+unxpass,men,CB,118,bottom,2,Kamil Glik,Poland,301,0.1243262843137255,0.01694915254237288
+unxpass,men,CB,118,bottom,3,Ľubomír Šatka,Slovakia,218,0.12445702894736843,0.025423728813559324
+unxpass,men,CM,29,top,1,Luka Modrić,Croatia,1281,0.24755998829663964,1.0
+unxpass,men,CM,29,top,2,Piotr Zieliński,Poland,508,0.21949195144694533,0.9655172413793104
+unxpass,men,CM,29,top,3,Aaron Ramsey,Wales,449,0.20250352334494773,0.9310344827586207
+unxpass,men,CM,29,top,4,Tomáš Souček,Czech Republic,355,0.20234504198113207,0.896551724137931
+unxpass,men,CM,29,top,5,Jorge Resurrección Merodio,Spain,669,0.191081565583174,0.8620689655172413
+unxpass,men,CM,29,bottom,1,Moriba Kourouma Kourouma,Barcelona,430,0.10053123181818181,0.034482758620689655
+unxpass,men,CM,29,bottom,2,Carlos Soler Barragán,Paris Saint-Germain,696,0.1293026370741483,0.06896551724137931
+unxpass,men,CM,29,bottom,3,Georginio Wijnaldum,Paris Saint-Germain,617,0.13206098767772512,0.10344827586206896
+unxpass,men,DM,66,top,1,Giorgi Kochorashvili,Georgia,226,0.2615013465277778,1.0
+unxpass,men,DM,66,top,2,Toni Kroos,Germany,1118,0.2577512631452581,0.9848484848484849
+unxpass,men,DM,66,top,3,Aaron Mooy,Australia,229,0.2570397790849673,0.9696969696969697
+unxpass,men,DM,66,top,4,Woo-Young Jung,South Korea,215,0.2505997123376623,0.9545454545454546
+unxpass,men,DM,66,top,5,Thomas Teye Partey,Ghana,208,0.23947241560283689,0.9393939393939394
+unxpass,men,DM,66,bottom,1,Kobbie Mainoo,England,246,0.10865356529411765,0.015151515151515152
+unxpass,men,DM,66,bottom,2,Marten de Roon,Netherlands,259,0.1194373909090909,0.030303030303030304
+unxpass,men,DM,66,bottom,3,Morten Hjulmand,Denmark,222,0.11991224033149171,0.045454545454545456
+unxpass,men,FB,72,top,1,Marcos Javier Acuña,Argentina,226,0.22603674367088608,1.0
+unxpass,men,FB,72,top,2,Eduardo Camavinga,France,216,0.22540790884353742,0.9861111111111112
+unxpass,men,FB,72,top,3,Vladimír Coufal,Czech Republic,406,0.2203658915708812,0.9722222222222222
+unxpass,men,FB,72,top,4,Thomas Meunier,Belgium,332,0.2184610301369863,0.9583333333333334
+unxpass,men,FB,72,top,5,Pervis Josué Estupiñán Tenorio,Ecuador,260,0.21842789254658387,0.9444444444444444
+unxpass,men,FB,72,bottom,1,Emerson Palmieri dos Santos,Italy,211,0.10301416866666667,0.013888888888888888
+unxpass,men,FB,72,bottom,2,Warren Zaire Emery,Paris Saint-Germain,546,0.10368289626666666,0.027777777777777776
+unxpass,men,FB,72,bottom,3,Vitalii Mykolenko,Ukraine,206,0.111876062,0.041666666666666664
+unxpass,men,FW,16,top,1,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,8537,0.240373438424969,1.0
+unxpass,men,FW,16,top,2,Harry Kane,England,480,0.22280208185654007,0.9375
+unxpass,men,FW,16,top,3,Kylian Mbappé Lottin,Paris Saint-Germain,3542,0.18981819385290888,0.875
+unxpass,men,FW,16,top,4,Karim Benzema,France,261,0.17952078301886792,0.8125
+unxpass,men,FW,16,top,5,Memphis Depay,Netherlands,488,0.17493844628975266,0.75
+unxpass,men,FW,16,bottom,1,Cristiano Ronaldo dos Santos Aveiro,Portugal,391,0.13121757767857142,0.0625
+unxpass,men,FW,16,bottom,2,Patrik Schick,Bayer Leverkusen,447,0.13218995655737706,0.125
+unxpass,men,FW,16,bottom,3,Álvaro Borja Morata Martín,Spain,356,0.13954079126213592,0.1875
+unxpass,men,GK,11,top,1,Kasper Schmeichel,Denmark,247,0.20152085489130436,1.0
+unxpass,men,GK,11,top,2,Marc-André ter Stegen,Barcelona,845,0.19981981756508424,0.9090909090909091
+unxpass,men,GK,11,top,3,Manuel Neuer,Germany,371,0.18505379033457248,0.8181818181818182
+unxpass,men,GK,11,top,4,Jordan Pickford,England,549,0.18482467223796034,0.7272727272727273
+unxpass,men,GK,11,top,5,Yassine Bounou,Morocco,205,0.17968172040816327,0.6363636363636364
+unxpass,men,GK,11,bottom,1,Gianluigi Donnarumma,Paris Saint-Germain,867,0.1266089662576687,0.09090909090909091
+unxpass,men,GK,11,bottom,2,Thibaut Courtois,Belgium,225,0.14831661636363636,0.18181818181818182
+unxpass,men,GK,11,bottom,3,Unai Simón Mendibil,Spain,522,0.15879019777777778,0.2727272727272727
+unxpass,men,W,37,top,1,Ruslan Malinovskiy,Ukraine,220,0.27275135,1.0
+unxpass,men,W,37,top,2,Hakim Ziyech,Morocco,336,0.25536651276595745,0.972972972972973
+unxpass,men,W,37,top,3,Neymar da Silva Santos Junior,Paris Saint-Germain,2650,0.24006316342088405,0.9459459459459459
+unxpass,men,W,37,top,4,Leandro Trossard,Belgium,207,0.23351952713178295,0.918918918918919
+unxpass,men,W,37,top,5,Lamine Yamal Nasraoui Ebana,Spain,296,0.2243664909774436,0.8918918918918919
+unxpass,men,W,37,bottom,1,Andrej Kramarić,Croatia,442,0.12987426463878327,0.02702702702702703
+unxpass,men,W,37,bottom,2,Francisco António Machado Mota de Castro Trincão,Barcelona,506,0.13236651824817516,0.05405405405405406
+unxpass,men,W,37,bottom,3,Martin Braithwaite Christensen,Barcelona,566,0.134875435,0.08108108108108109
+unxpass,women,AM,6,top,1,Pernille Mosegaard Harder,Denmark Women's,320,0.21539641458333333,1.0
+unxpass,women,AM,6,top,2,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,279,0.21358270189873418,0.8333333333333334
+unxpass,women,AM,6,top,3,Leicy Maria Santos Herrera,Colombia Women's,237,0.19072262635135137,0.6666666666666666
+unxpass,women,AM,6,top,4,Lauren James,England Women's,442,0.18323253481781376,0.5
+unxpass,women,AM,6,top,5,Kosovare Asllani,Sweden Women's,487,0.16740973831417627,0.3333333333333333
+unxpass,women,AM,6,bottom,1,Ella Toone,England Women's,498,0.15432598639053252,0.16666666666666666
+unxpass,women,AM,6,bottom,2,Kosovare Asllani,Sweden Women's,487,0.16740973831417627,0.3333333333333333
+unxpass,women,AM,6,bottom,3,Lauren James,England Women's,442,0.18323253481781376,0.5
+unxpass,women,CB,52,top,1,Katie Bowen,New Zealand Women's,255,0.26711183018867923,1.0
+unxpass,women,CB,52,top,2,Rafaelle Leone Carvalho Souza,Brazil Women's,278,0.25115140783132534,0.9807692307692307
+unxpass,women,CB,52,top,3,Vanessa Brigitte Gilles,Canada Women's,264,0.2500473603448276,0.9615384615384616
+unxpass,women,CB,52,top,4,Natalia Kuikka,WNT Finland,364,0.2459978986175115,0.9423076923076923
+unxpass,women,CB,52,top,5,Sherida Spitse,Netherlands Women's,671,0.24179019702760085,0.9230769230769231
+unxpass,women,CB,52,bottom,1,Mathilde Hauge Harviken,Norway Women's,382,0.1349099527559055,0.019230769230769232
+unxpass,women,CB,52,bottom,2,Noelle Maritz,Switzerland Women's,614,0.13594522107728338,0.038461538461538464
+unxpass,women,CB,52,bottom,3,Laia Aleixandri López,Spain Women's,516,0.14679392919075146,0.057692307692307696
+unxpass,women,CM,16,top,1,Lindsey Michelle Heaps,United States Women's,236,0.27131688444444446,1.0
+unxpass,women,CM,16,top,2,Clara Mateo,France Women's,278,0.2522314789808917,0.9375
+unxpass,women,CM,16,top,3,Jennifer Hermoso Fuentes,Spain Women's,493,0.20748012566666665,0.875
+unxpass,women,CM,16,top,4,Andreia Alexandra Norton,Portugal Women's,314,0.20198718104575164,0.8125
+unxpass,women,CM,16,top,5,Tatiana Vanessa Ferreira Pinto,Portugal Women's,352,0.19756524316239316,0.75
+unxpass,women,CM,16,bottom,1,Coumba Sow,Switzerland Women's,232,0.10593047297297296,0.0625
+unxpass,women,CM,16,bottom,2,Jill Roord,Netherlands Women's,510,0.11986925589123866,0.125
+unxpass,women,CM,16,bottom,3,Kathrine Møller Kühl,Denmark Women's,242,0.136148468,0.1875
+unxpass,women,DM,25,top,1,Kerolin Nicoli Israel Ferraz,Brazil Women's,208,0.22011687661290322,1.0
+unxpass,women,DM,25,top,2,Katrina Gorry,Australia Women's,385,0.20871707333333334,0.96
+unxpass,women,DM,25,top,3,Keira Walsh,England Women's,985,0.20513774557291667,0.92
+unxpass,women,DM,25,top,4,Ingrid Syrstad Engen,Norway Women's,382,0.203023138700361,0.88
+unxpass,women,DM,25,top,5,Vilde Bøe Risa,Norway Women's,359,0.2022132619047619,0.84
+unxpass,women,DM,25,bottom,1,Charlotte Bilbault,France Women's,214,0.14624997062937065,0.04
+unxpass,women,DM,25,bottom,2,Sjoeke Nüsken,Germany Women's,217,0.1474140703125,0.08
+unxpass,women,DM,25,bottom,3,Karen Holmgaard,Denmark Women's,281,0.15077484848484848,0.12
+unxpass,women,FB,37,top,1,Ana Borges,Portugal Women's,326,0.2678884276497696,1.0
+unxpass,women,FB,37,top,2,Eve Perisset,France Women's,459,0.22798248899371068,0.972972972972973
+unxpass,women,FB,37,top,3,Joana Filipa Gaspar Silva Marchão,Portugal Women's,251,0.21561821270718232,0.9459459459459459
+unxpass,women,FB,37,top,4,Risa Shimizu,Japan Women's,210,0.21010177218543044,0.918918918918919
+unxpass,women,FB,37,top,5,Elisa De Almeida,France Women's,392,0.2089807819230769,0.8918918918918919
+unxpass,women,FB,37,bottom,1,Leila Ouahabi El Ouahabi,Spain Women's,285,0.1195582121495327,0.02702702702702703
+unxpass,women,FB,37,bottom,2,Oihane Hernández Zurbano,Spain Women's,270,0.12281312459893048,0.05405405405405406
+unxpass,women,FB,37,bottom,3,Lucia Di Guglielmo,Italy Women's,362,0.12521839999999998,0.08108108108108109
+unxpass,women,FW,10,top,1,Mary Boio Fowler,Australia Women's,204,0.267096193258427,1.0
+unxpass,women,FW,10,top,2,Tessa Wullaert,Belgium Women's,265,0.22900700064102564,0.9
+unxpass,women,FW,10,top,3,Diana Micaela Abreu de Sousa e Silva,Portugal Women's,217,0.19525885675675675,0.8
+unxpass,women,FW,10,top,4,Lieke Martens,Netherlands Women's,402,0.1694205355855856,0.7
+unxpass,women,FW,10,top,5,Ana-Maria Crnogorčević,Switzerland Women's,295,0.1425297585106383,0.6
+unxpass,women,FW,10,bottom,1,Emma Stina Blackstenius,Sweden Women's,308,0.10406107352941175,0.1
+unxpass,women,FW,10,bottom,2,Esther Gonzalez Rodríguez,Spain Women's,272,0.10775238699186993,0.2
+unxpass,women,FW,10,bottom,3,Alessia Russo,England Women's,390,0.12250260478723404,0.3
+unxpass,women,GK,7,top,1,Ann-Katrin Berger,Germany Women's,216,0.23257914814814815,1.0
+unxpass,women,GK,7,top,2,Daphne van Domselaar,Netherlands Women's,259,0.18599895803108807,0.8571428571428571
+unxpass,women,GK,7,top,3,Merle Frohms,Germany Women's,237,0.17498185297619048,0.7142857142857143
+unxpass,women,GK,7,top,4,Pauline Peyraud Magnin,France Women's,271,0.17012666043956043,0.5714285714285714
+unxpass,women,GK,7,top,5,Mary Alexandra Earps,England Women's,209,0.150291390797546,0.42857142857142855
+unxpass,women,GK,7,bottom,1,Gaëlle Thalmann,Switzerland Women's,207,0.11550113243243243,0.14285714285714285
+unxpass,women,GK,7,bottom,2,Laura Giuliani,Italy Women's,201,0.13681498928571428,0.2857142857142857
+unxpass,women,GK,7,bottom,3,Mary Alexandra Earps,England Women's,209,0.150291390797546,0.42857142857142855
+unxpass,women,W,17,top,1,Caitlin Jade Foord,Australia Women's,212,0.22232278315789472,1.0
+unxpass,women,W,17,top,2,María Francesca Caldentey Oliver,Spain Women's,1179,0.19652106549560855,0.9411764705882353
+unxpass,women,W,17,top,3,Kadidiatou Diani,France Women's,460,0.19230615550458716,0.8823529411764706
+unxpass,women,W,17,top,4,Chloe Kelly,England Women's,316,0.1920118812903226,0.8235294117647058
+unxpass,women,W,17,top,5,Linda Lizeth Caicedo Alegría,Colombia Women's,226,0.18648870630630632,0.7647058823529411
+unxpass,women,W,17,bottom,1,Klara Bühl,Germany Women's,557,0.13941559826839828,0.058823529411764705
+unxpass,women,W,17,bottom,2,Lauren Hemp,England Women's,581,0.14294374223826714,0.11764705882352941
+unxpass,women,W,17,bottom,3,Athenea del Castillo Belvide,Spain Women's,260,0.1438921512195122,0.17647058823529413
+rarity_x_adv,men,AM,20,top,1,Christoph Baumgartner,Austria,254,0.0038221403359058746,1.0
+rarity_x_adv,men,AM,20,top,2,Amine Adli,Bayer Leverkusen,447,0.003308972217137113,0.95
+rarity_x_adv,men,AM,20,top,3,Xherdan Shaqiri,Switzerland,343,0.002840992689383907,0.9
+rarity_x_adv,men,AM,20,top,4,Kevin De Bruyne,Belgium,578,0.002815984482584757,0.85
+rarity_x_adv,men,AM,20,top,5,Florian Wirtz,Bayer Leverkusen,2235,0.0027768247640856786,0.8
+rarity_x_adv,men,AM,20,bottom,1,Sergej Milinković-Savić,Serbia,208,0.0015772912313605553,0.05
+rarity_x_adv,men,AM,20,bottom,2,Christian Dannemann Eriksen,Denmark,473,0.0016025259887292123,0.1
+rarity_x_adv,men,AM,20,bottom,3,Thomas Müller,Germany,281,0.001741706684493732,0.15
+rarity_x_adv,men,CB,118,top,1,Scott McTominay,Scotland,231,0.0013382121837579167,1.0
+rarity_x_adv,men,CB,118,top,2,Tomáš Holeš,Czech Republic,241,0.0013076578504813798,0.9915254237288136
+rarity_x_adv,men,CB,118,top,3,Romain Saïss,Morocco,204,0.001281762144726578,0.9830508474576272
+rarity_x_adv,men,CB,118,top,4,Abdelkarim Hassan Al Haj Fadlalla,Qatar,207,0.0011476702978812918,0.9745762711864406
+rarity_x_adv,men,CB,118,top,5,Kamal Miller,Canada,417,0.001120337217753298,0.9661016949152542
+rarity_x_adv,men,CB,118,bottom,1,Kamil Glik,Poland,301,0.00025273180739607704,0.00847457627118644
+rarity_x_adv,men,CB,118,bottom,2,Grant Campbell Hanley,Scotland,272,0.0002793583597360978,0.01694915254237288
+rarity_x_adv,men,CB,118,bottom,3,Jason Denayer,Belgium,214,0.00036178915200784707,0.025423728813559324
+rarity_x_adv,men,CM,29,top,1,Yunus Dimoara Musah,United States,236,0.002031497276056737,1.0
+rarity_x_adv,men,CM,29,top,2,Piotr Zieliński,Poland,508,0.0019182652002570038,0.9655172413793104
+rarity_x_adv,men,CM,29,top,3,Aaron Ramsey,Wales,449,0.0017568749313070127,0.9310344827586207
+rarity_x_adv,men,CM,29,top,4,N'Golo Kanté,France,617,0.0017425894659326927,0.896551724137931
+rarity_x_adv,men,CM,29,top,5,Luka Modrić,Croatia,1281,0.0016226372613707231,0.8620689655172413
+rarity_x_adv,men,CM,29,bottom,1,Carlos Soler Barragán,Paris Saint-Germain,696,0.0008414205561178968,0.034482758620689655
+rarity_x_adv,men,CM,29,bottom,2,András Schäfer,Hungary,257,0.0008623913225309823,0.06896551724137931
+rarity_x_adv,men,CM,29,bottom,3,Idrissa Gana Gueye,Paris Saint-Germain,1387,0.000945784898768549,0.10344827586206896
+rarity_x_adv,men,DM,66,top,1,Konrad Laimer,Austria,354,0.0021443479731945085,1.0
+rarity_x_adv,men,DM,66,top,2,Federico Santiago Valverde Dipetta,Uruguay,275,0.0019932204304266067,0.9848484848484849
+rarity_x_adv,men,DM,66,top,3,Tijjani Reijnders,Netherlands,364,0.0018247110941884274,0.9696969696969697
+rarity_x_adv,men,DM,66,top,4,Leon Goretzka,Germany,272,0.0018026995732283962,0.9545454545454546
+rarity_x_adv,men,DM,66,top,5,Paul Pogba,France,340,0.0016517990787133722,0.9393939393939394
+rarity_x_adv,men,DM,66,bottom,1,Leander Dendoncker,Belgium,222,0.0003877203144643155,0.015151515151515152
+rarity_x_adv,men,DM,66,bottom,2,Marten de Roon,Netherlands,259,0.0005219294536332904,0.030303030303030304
+rarity_x_adv,men,DM,66,bottom,3,Morten Hjulmand,Denmark,222,0.0005558279800126926,0.045454545454545456
+rarity_x_adv,men,FB,72,top,1,Nathan Tella,Bayer Leverkusen,317,0.0031535091015035517,1.0
+rarity_x_adv,men,FB,72,top,2,Yannick Ferreira Carrasco,Belgium,343,0.002645199422329244,0.9861111111111112
+rarity_x_adv,men,FB,72,top,3,Jeremie Frimpong,Bayer Leverkusen,1103,0.002641968756175375,0.9722222222222222
+rarity_x_adv,men,FB,72,top,4,Andrija Živković,Serbia,229,0.0025674316980541386,0.9583333333333334
+rarity_x_adv,men,FB,72,top,5,Oleksandr Karavaev,Ukraine,287,0.0025261567775116327,0.9444444444444444
+rarity_x_adv,men,FB,72,bottom,1,Thilo Kehrer,Paris Saint-Germain,644,0.00043810253763733407,0.013888888888888888
+rarity_x_adv,men,FB,72,bottom,2,Vitalii Mykolenko,Ukraine,206,0.0006322730856363848,0.027777777777777776
+rarity_x_adv,men,FB,72,bottom,3,Éder Gabriel Militão,Brazil,303,0.0006897684004789768,0.041666666666666664
+rarity_x_adv,men,FW,16,top,1,Victor Okoh Boniface,Bayer Leverkusen,560,0.005039007196827135,1.0
+rarity_x_adv,men,FW,16,top,2,Kylian Mbappé Lottin,Paris Saint-Germain,3542,0.003733995074663004,0.9375
+rarity_x_adv,men,FW,16,top,3,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,8537,0.0033133305307277484,0.875
+rarity_x_adv,men,FW,16,top,4,Karim Benzema,France,261,0.003046683382872857,0.8125
+rarity_x_adv,men,FW,16,top,5,Breel-Donald Embolo,Switzerland,318,0.002948429664589752,0.75
+rarity_x_adv,men,FW,16,bottom,1,Arda Güler,Turkey,240,0.0016804830100420863,0.0625
+rarity_x_adv,men,FW,16,bottom,2,Roland Sallai,Hungary,203,0.0018669615058975876,0.125
+rarity_x_adv,men,FW,16,bottom,3,Hugo Ekitike,Paris Saint-Germain,369,0.002315448783857455,0.1875
+rarity_x_adv,men,GK,11,top,1,Kasper Schmeichel,Denmark,247,0.0006056061723253429,1.0
+rarity_x_adv,men,GK,11,top,2,Dominik Livaković,Croatia,259,0.0005573783683598225,0.9090909090909091
+rarity_x_adv,men,GK,11,top,3,Thibaut Courtois,Belgium,225,0.000544252368581034,0.8181818181818182
+rarity_x_adv,men,GK,11,top,4,Marc-André ter Stegen,Barcelona,845,0.0005103953899595294,0.7272727272727273
+rarity_x_adv,men,GK,11,top,5,Yassine Bounou,Morocco,205,0.0004926673124668078,0.6363636363636364
+rarity_x_adv,men,GK,11,bottom,1,Yann Sommer,Switzerland,334,0.0002517076345676758,0.09090909090909091
+rarity_x_adv,men,GK,11,bottom,2,Lukáš Hrádecký,Bayer Leverkusen,641,0.0003745576266720244,0.18181818181818182
+rarity_x_adv,men,GK,11,bottom,3,Gianluigi Donnarumma,Paris Saint-Germain,867,0.00039391317933594894,0.2727272727272727
+rarity_x_adv,men,W,37,top,1,Cody Mathès Gakpo,Netherlands,323,0.0040909872602115545,1.0
+rarity_x_adv,men,W,37,top,2,Ruslan Malinovskiy,Ukraine,220,0.0036403515983296935,0.972972972972973
+rarity_x_adv,men,W,37,top,3,Jeremy Doku,Belgium,332,0.0036315092625825085,0.9459459459459459
+rarity_x_adv,men,W,37,top,4,Nicholas Williams Arthuer,Spain,362,0.0036250868417316917,0.918918918918919
+rarity_x_adv,men,W,37,top,5,Jamal Musiala,Germany,558,0.0035906482023594735,0.8918918918918919
+rarity_x_adv,men,W,37,bottom,1,Timothy Weah,United States,213,0.0013474305043985571,0.02702702702702703
+rarity_x_adv,men,W,37,bottom,2,Lovro Majer,Croatia,348,0.0013895633052485087,0.05405405405405406
+rarity_x_adv,men,W,37,bottom,3,Hakim Ziyech,Morocco,336,0.001396810631382208,0.08108108108108109
+rarity_x_adv,women,AM,6,top,1,Pernille Mosegaard Harder,Denmark Women's,320,0.004354254368806831,1.0
+rarity_x_adv,women,AM,6,top,2,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,279,0.003536129625812449,0.8333333333333334
+rarity_x_adv,women,AM,6,top,3,Lauren James,England Women's,442,0.0024472458879805556,0.6666666666666666
+rarity_x_adv,women,AM,6,top,4,Kosovare Asllani,Sweden Women's,487,0.002361077616575697,0.5
+rarity_x_adv,women,AM,6,top,5,Leicy Maria Santos Herrera,Colombia Women's,237,0.002111848221439772,0.3333333333333333
+rarity_x_adv,women,AM,6,bottom,1,Ella Toone,England Women's,498,0.002009919366223363,0.16666666666666666
+rarity_x_adv,women,AM,6,bottom,2,Leicy Maria Santos Herrera,Colombia Women's,237,0.002111848221439772,0.3333333333333333
+rarity_x_adv,women,AM,6,bottom,3,Kosovare Asllani,Sweden Women's,487,0.002361077616575697,0.5
+rarity_x_adv,women,CB,52,top,1,Rafaelle Leone Carvalho Souza,Brazil Women's,278,0.0013692349056396373,1.0
+rarity_x_adv,women,CB,52,top,2,Katie Bowen,New Zealand Women's,255,0.0013342504762056371,0.9807692307692307
+rarity_x_adv,women,CB,52,top,3,Sherida Spitse,Netherlands Women's,671,0.001333552179792667,0.9615384615384616
+rarity_x_adv,women,CB,52,top,4,Diana Catarina Ribeiro Gomes,Portugal Women's,381,0.0011688347408668098,0.9423076923076923
+rarity_x_adv,women,CB,52,top,5,Janice Cayman,Belgium Women's,204,0.001153138546556466,0.9230769230769231
+rarity_x_adv,women,CB,52,bottom,1,Sara Doorsoun-Khajeh,Germany Women's,249,0.00038337865849908087,0.019230769230769232
+rarity_x_adv,women,CB,52,bottom,2,Eva Nyström,WNT Finland,282,0.0004116869805099521,0.038461538461538464
+rarity_x_adv,women,CB,52,bottom,3,Luana Bühler,Switzerland Women's,250,0.00046649540644345673,0.057692307692307696
+rarity_x_adv,women,CM,16,top,1,Clara Mateo,France Women's,278,0.0032113197884880104,1.0
+rarity_x_adv,women,CM,16,top,2,Arianna Caruso,Italy Women's,323,0.0025749165132619625,0.9375
+rarity_x_adv,women,CM,16,top,3,Lindsey Michelle Heaps,United States Women's,236,0.002424804717588319,0.875
+rarity_x_adv,women,CM,16,top,4,Alexia Putellas Segura,Spain Women's,635,0.002254476891557493,0.8125
+rarity_x_adv,women,CM,16,top,5,Aitana Bonmati Conca,Spain Women's,1293,0.0021601309598391835,0.75
+rarity_x_adv,women,CM,16,bottom,1,Jill Roord,Netherlands Women's,510,0.0012527077186194164,0.0625
+rarity_x_adv,women,CM,16,bottom,2,Tatiana Vanessa Ferreira Pinto,Portugal Women's,352,0.0013500705626761033,0.125
+rarity_x_adv,women,CM,16,bottom,3,Kathrine Møller Kühl,Denmark Women's,242,0.0013865702240197677,0.1875
+rarity_x_adv,women,DM,25,top,1,Kerolin Nicoli Israel Ferraz,Brazil Women's,208,0.002537376469588925,1.0
+rarity_x_adv,women,DM,25,top,2,Frida Maanum,Norway Women's,361,0.0020727284239216563,0.96
+rarity_x_adv,women,DM,25,top,3,Sara Däbritz,Germany Women's,433,0.002029737411476354,0.92
+rarity_x_adv,women,DM,25,top,4,Ingrid Filippa Angeldal,Sweden Women's,709,0.0019229853947939283,0.88
+rarity_x_adv,women,DM,25,top,5,Yui Hasegawa,Japan Women's,308,0.001895729866823625,0.84
+rarity_x_adv,women,DM,25,bottom,1,Lia Wälti,Switzerland Women's,615,0.0008628398114736645,0.04
+rarity_x_adv,women,DM,25,bottom,2,Charlotte Bilbault,France Women's,214,0.0008918694416590448,0.08
+rarity_x_adv,women,DM,25,bottom,3,Elin Ingrid Johanna Rubensson,Sweden Women's,331,0.0010121045270873575,0.12
+rarity_x_adv,women,FB,37,top,1,Janni Thomsen,Denmark Women's,294,0.0023589536508365067,1.0
+rarity_x_adv,women,FB,37,top,2,Victoria Pelova,Netherlands Women's,499,0.001962854882719346,0.972972972972973
+rarity_x_adv,women,FB,37,top,3,Risa Shimizu,Japan Women's,210,0.0018282801163188717,0.9459459459459459
+rarity_x_adv,women,FB,37,top,4,Nadine Riesen,Switzerland Women's,254,0.0017159630937884222,0.918918918918919
+rarity_x_adv,women,FB,37,top,5,Selma Bacha,France Women's,606,0.001676511891298077,0.8918918918918919
+rarity_x_adv,women,FB,37,bottom,1,Thea Bjelde,Norway Women's,235,0.0005544104058188443,0.02702702702702703
+rarity_x_adv,women,FB,37,bottom,2,Felicitas Rauch,Germany Women's,332,0.0006158612855013626,0.05405405405405406
+rarity_x_adv,women,FB,37,bottom,3,Oihane Hernández Zurbano,Spain Women's,270,0.0006465724693884676,0.08108108108108109
+rarity_x_adv,women,FW,10,top,1,Emma Stina Blackstenius,Sweden Women's,308,0.0037793919093334115,1.0
+rarity_x_adv,women,FW,10,top,2,Esther Gonzalez Rodríguez,Spain Women's,272,0.0032057808442825545,0.9
+rarity_x_adv,women,FW,10,top,3,Jéssica da Silva,Portugal Women's,226,0.0029810774120511865,0.8
+rarity_x_adv,women,FW,10,top,4,Tessa Wullaert,Belgium Women's,265,0.002817522074842722,0.7
+rarity_x_adv,women,FW,10,top,5,Mary Boio Fowler,Australia Women's,204,0.0028067411440731494,0.6
+rarity_x_adv,women,FW,10,bottom,1,Diana Micaela Abreu de Sousa e Silva,Portugal Women's,217,0.0016815982155047897,0.1
+rarity_x_adv,women,FW,10,bottom,2,Ana-Maria Crnogorčević,Switzerland Women's,295,0.001704314864470398,0.2
+rarity_x_adv,women,FW,10,bottom,3,Ramona Bachmann,Switzerland Women's,330,0.0021806730404541515,0.3
+rarity_x_adv,women,GK,7,top,1,Daphne van Domselaar,Netherlands Women's,259,0.0005793674121420055,1.0
+rarity_x_adv,women,GK,7,top,2,Ann-Katrin Berger,Germany Women's,216,0.0005726604749913829,0.8571428571428571
+rarity_x_adv,women,GK,7,top,3,Mary Alexandra Earps,England Women's,209,0.000464698796234589,0.7142857142857143
+rarity_x_adv,women,GK,7,top,4,Merle Frohms,Germany Women's,237,0.00041683578470043885,0.5714285714285714
+rarity_x_adv,women,GK,7,top,5,Gaëlle Thalmann,Switzerland Women's,207,0.0003780652444946751,0.42857142857142855
+rarity_x_adv,women,GK,7,bottom,1,Laura Giuliani,Italy Women's,201,0.00025271850007552827,0.14285714285714285
+rarity_x_adv,women,GK,7,bottom,2,Pauline Peyraud Magnin,France Women's,271,0.0003397760816195628,0.2857142857142857
+rarity_x_adv,women,GK,7,bottom,3,Gaëlle Thalmann,Switzerland Women's,207,0.0003780652444946751,0.42857142857142855
+rarity_x_adv,women,W,17,top,1,Athenea del Castillo Belvide,Spain Women's,260,0.004346792671226371,1.0
+rarity_x_adv,women,W,17,top,2,Bethany Mead,England Women's,251,0.003987528517829201,0.9411764705882353
+rarity_x_adv,women,W,17,top,3,Caitlin Jade Foord,Australia Women's,212,0.0037825213560604754,0.8823529411764706
+rarity_x_adv,women,W,17,top,4,Johanna Rytting-Kaneryd,Sweden Women's,470,0.0034638996535339027,0.8235294117647058
+rarity_x_adv,women,W,17,top,5,Delphine Cascarino,France Women's,347,0.0033111726773029514,0.7647058823529411
+rarity_x_adv,women,W,17,bottom,1,Linda Lizeth Caicedo Alegría,Colombia Women's,226,0.0019466786322137764,0.058823529411764705
+rarity_x_adv,women,W,17,bottom,2,Svenja Huth,Germany Women's,421,0.0020471016806000598,0.11764705882352941
+rarity_x_adv,women,W,17,bottom,3,Claudia Pina Medina,Spain Women's,253,0.0020899904953133757,0.17647058823529413
+rarity,men,AM,20,top,1,Sergej Milinković-Savić,Serbia,208,0.5395728980769231,1.0
+rarity,men,AM,20,top,2,Eden Hazard,Belgium,281,0.5375139614590747,0.95
+rarity,men,AM,20,top,3,Bruno Miguel Borges Fernandes,Portugal,645,0.5285708688372093,0.9
+rarity,men,AM,20,top,4,Dušan Tadić,Serbia,232,0.5280361469827587,0.85
+rarity,men,AM,20,top,5,Jude Bellingham,England,803,0.5213357881693649,0.8
+rarity,men,AM,20,bottom,1,Philippe Coutinho Correia,Barcelona,658,0.4671994291793313,0.05
+rarity,men,AM,20,bottom,2,Amine Adli,Bayer Leverkusen,447,0.48233949440715884,0.1
+rarity,men,AM,20,bottom,3,Mason Mount,England,294,0.4853719666666667,0.15
+rarity,men,CB,118,top,1,Denis Vavro,Slovakia,262,0.5462070854961832,1.0
+rarity,men,CB,118,top,2,Tomáš Kalas,Czech Republic,206,0.5412044203883495,0.9915254237288136
+rarity,men,CB,118,top,3,Fabian Lukas Schär,Switzerland,509,0.5355963897838899,0.9830508474576272
+rarity,men,CB,118,top,4,Philipp Lienhart,Austria,243,0.5330442127572017,0.9745762711864406
+rarity,men,CB,118,top,5,Montassar Omar Talbi,Tunisia,218,0.5328195908256881,0.9661016949152542
+rarity,men,CB,118,bottom,1,Abdülkerim Bardakcı,Turkey,225,0.4407185453333333,0.00847457627118644
+rarity,men,CB,118,bottom,2,Piero Martín Hincapié Reyna,Bayer Leverkusen,1656,0.4427489922705314,0.01694915254237288
+rarity,men,CB,118,bottom,3,Óscar Mingueza García,Barcelona,1718,0.4458547144935972,0.025423728813559324
+rarity,men,CM,29,top,1,Luka Modrić,Croatia,1281,0.5418990275565964,1.0
+rarity,men,CM,29,top,2,Jorge Resurrección Merodio,Spain,669,0.5301773261584454,0.9655172413793104
+rarity,men,CM,29,top,3,Tomáš Souček,Czech Republic,355,0.5294062087323944,0.9310344827586207
+rarity,men,CM,29,top,4,Aaron Ramsey,Wales,449,0.5162279024498886,0.896551724137931
+rarity,men,CM,29,top,5,Mateo Kovačić,Croatia,1033,0.5140946276863504,0.8620689655172413
+rarity,men,CM,29,bottom,1,Moriba Kourouma Kourouma,Barcelona,430,0.4482393679069767,0.034482758620689655
+rarity,men,CM,29,bottom,2,Carlos Soler Barragán,Paris Saint-Germain,696,0.4663708946839081,0.06896551724137931
+rarity,men,CM,29,bottom,3,Bryan Cristante,Italy,216,0.4689980268518518,0.10344827586206896
+rarity,men,DM,66,top,1,Toni Kroos,Germany,1118,0.558551356529517,1.0
+rarity,men,DM,66,top,2,Giorgi Kochorashvili,Georgia,226,0.5539082898230089,0.9848484848484849
+rarity,men,DM,66,top,3,Johan Gastien,Clermont Foot,249,0.5412410799196787,0.9696969696969697
+rarity,men,DM,66,top,4,Aaron Mooy,Australia,229,0.5402990637554586,0.9545454545454546
+rarity,men,DM,66,top,5,Federico Santiago Valverde Dipetta,Uruguay,275,0.5385194716363636,0.9393939393939394
+rarity,men,DM,66,bottom,1,Leander Dendoncker,Belgium,222,0.4226906373873874,0.015151515151515152
+rarity,men,DM,66,bottom,2,Morten Hjulmand,Denmark,222,0.44701314054054053,0.030303030303030304
+rarity,men,DM,66,bottom,3,Axel Witsel,Belgium,461,0.4655952015184382,0.045454545454545456
+rarity,men,FB,72,top,1,Oleksandr Karavaev,Ukraine,287,0.533529943554007,1.0
+rarity,men,FB,72,top,2,Marcos Javier Acuña,Argentina,226,0.532587067699115,0.9861111111111112
+rarity,men,FB,72,top,3,Andrija Živković,Serbia,229,0.5295239065502183,0.9722222222222222
+rarity,men,FB,72,top,4,Ferdi Erenay Kadıoğlu,Turkey,286,0.5224310730769232,0.9583333333333334
+rarity,men,FB,72,top,5,Connor Roberts,Wales,205,0.5176472156097561,0.9444444444444444
+rarity,men,FB,72,bottom,1,Emerson Palmieri dos Santos,Italy,211,0.43118843601895734,0.013888888888888888
+rarity,men,FB,72,bottom,2,Warren Zaire Emery,Paris Saint-Germain,546,0.43853357014652017,0.027777777777777776
+rarity,men,FB,72,bottom,3,Sergino Dest,Barcelona,1646,0.4414419020656136,0.041666666666666664
+rarity,men,FW,16,top,1,Harry Kane,England,480,0.5246810441666666,1.0
+rarity,men,FW,16,top,2,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,8537,0.52263268370622,0.9375
+rarity,men,FW,16,top,3,Arda Güler,Turkey,240,0.5208616483333334,0.875
+rarity,men,FW,16,top,4,Serge Gnabry,Germany,269,0.5144365338289963,0.8125
+rarity,men,FW,16,top,5,Patrik Schick,Bayer Leverkusen,447,0.501852441163311,0.75
+rarity,men,FW,16,bottom,1,Memphis Depay,Netherlands,488,0.47326174631147544,0.0625
+rarity,men,FW,16,bottom,2,Kai Havertz,Germany,351,0.4835491552706553,0.125
+rarity,men,FW,16,bottom,3,Kylian Mbappé Lottin,Paris Saint-Germain,3542,0.48470306109542627,0.1875
+rarity,men,GK,11,top,1,Marc-André ter Stegen,Barcelona,845,0.5129426318461539,1.0
+rarity,men,GK,11,top,2,Kasper Schmeichel,Denmark,247,0.5041253809716599,0.9090909090909091
+rarity,men,GK,11,top,3,Manuel Neuer,Germany,371,0.48272362641509436,0.8181818181818182
+rarity,men,GK,11,top,4,Jordan Pickford,England,549,0.47681815173041897,0.7272727272727273
+rarity,men,GK,11,top,5,Unai Simón Mendibil,Spain,522,0.4681365888888889,0.6363636363636364
+rarity,men,GK,11,bottom,1,Yassine Bounou,Morocco,205,0.455110447804878,0.09090909090909091
+rarity,men,GK,11,bottom,2,Lukáš Hrádecký,Bayer Leverkusen,641,0.4604401455538222,0.18181818181818182
+rarity,men,GK,11,bottom,3,Yann Sommer,Switzerland,334,0.46096485269461074,0.2727272727272727
+rarity,men,W,37,top,1,Ruslan Malinovskiy,Ukraine,220,0.5803193754545455,1.0
+rarity,men,W,37,top,2,Rafael Alexandre Conceição Leão,Portugal,204,0.5547723799019607,0.972972972972973
+rarity,men,W,37,top,3,Ivan Perišić,Croatia,447,0.539812748769575,0.9459459459459459
+rarity,men,W,37,top,4,Lorenzo Insigne,Italy,380,0.5376285923684211,0.918918918918919
+rarity,men,W,37,top,5,Sofiane Boufal,Morocco,228,0.5375291096491228,0.8918918918918919
+rarity,men,W,37,bottom,1,Timothy Weah,United States,213,0.4523998694835681,0.02702702702702703
+rarity,men,W,37,bottom,2,Anssumane Fati,Barcelona,330,0.4525540812121212,0.05405405405405406
+rarity,men,W,37,bottom,3,Daniel Olmo Carvajal,Spain,805,0.4563113472049689,0.08108108108108109
+rarity,women,AM,6,top,1,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,279,0.5373132512544804,1.0
+rarity,women,AM,6,top,2,Lauren James,England Women's,442,0.515399086199095,0.8333333333333334
+rarity,women,AM,6,top,3,Pernille Mosegaard Harder,Denmark Women's,320,0.5047120496875,0.6666666666666666
+rarity,women,AM,6,top,4,Leicy Maria Santos Herrera,Colombia Women's,237,0.49897514219409284,0.5
+rarity,women,AM,6,top,5,Ella Toone,England Women's,498,0.4957685263052209,0.3333333333333333
+rarity,women,AM,6,bottom,1,Kosovare Asllani,Sweden Women's,487,0.46126335112936345,0.16666666666666666
+rarity,women,AM,6,bottom,2,Ella Toone,England Women's,498,0.4957685263052209,0.3333333333333333
+rarity,women,AM,6,bottom,3,Leicy Maria Santos Herrera,Colombia Women's,237,0.49897514219409284,0.5
+rarity,women,CB,52,top,1,Katie Bowen,New Zealand Women's,255,0.5300247450980392,1.0
+rarity,women,CB,52,top,2,Leah Williamson,England Women's,929,0.5253423330462863,0.9807692307692307
+rarity,women,CB,52,top,3,Sherida Spitse,Netherlands Women's,671,0.5161134695976155,0.9615384615384616
+rarity,women,CB,52,top,4,Kadeisha Buchanan,Canada Women's,210,0.5156461304761905,0.9423076923076923
+rarity,women,CB,52,top,5,Marina Hegering,Germany Women's,472,0.5127748281779662,0.9230769230769231
+rarity,women,CB,52,bottom,1,Sara Doorsoun-Khajeh,Germany Women's,249,0.43262666024096386,0.019230769230769232
+rarity,women,CB,52,bottom,2,Laia Aleixandri López,Spain Women's,516,0.4375895098837209,0.038461538461538464
+rarity,women,CB,52,bottom,3,Noelle Maritz,Switzerland Women's,614,0.43773071530944624,0.057692307692307696
+rarity,women,CM,16,top,1,Jill Roord,Netherlands Women's,510,0.5177895760000001,1.0
+rarity,women,CM,16,top,2,Aitana Bonmati Conca,Spain Women's,1293,0.5117315252126836,0.9375
+rarity,women,CM,16,top,3,Tatiana Vanessa Ferreira Pinto,Portugal Women's,352,0.510655840625,0.875
+rarity,women,CM,16,top,4,Danielle van de Donk,Netherlands Women's,403,0.5103489188585608,0.8125
+rarity,women,CM,16,top,5,Kathrine Møller Kühl,Denmark Women's,242,0.5050415863636364,0.75
+rarity,women,CM,16,bottom,1,Lina Magull,Germany Women's,240,0.44827057,0.0625
+rarity,women,CM,16,bottom,2,Arianna Caruso,Italy Women's,323,0.4580360077399381,0.125
+rarity,women,CM,16,bottom,3,Coumba Sow,Switzerland Women's,232,0.4583971146551724,0.1875
+rarity,women,DM,25,top,1,Kerolin Nicoli Israel Ferraz,Brazil Women's,208,0.5303479846153846,1.0
+rarity,women,DM,25,top,2,Elin Ingrid Johanna Rubensson,Sweden Women's,331,0.5242046087613293,0.96
+rarity,women,DM,25,top,3,Fuka Nagano,Japan Women's,219,0.5182341853881278,0.92
+rarity,women,DM,25,top,4,Lena Oberdorf,Germany Women's,313,0.5164941830670927,0.88
+rarity,women,DM,25,top,5,Keira Walsh,England Women's,985,0.5160893105583756,0.84
+rarity,women,DM,25,bottom,1,Sjoeke Nüsken,Germany Women's,217,0.4524935198156682,0.04
+rarity,women,DM,25,bottom,2,Ingrid Filippa Angeldal,Sweden Women's,709,0.4669035272214387,0.08
+rarity,women,DM,25,bottom,3,Karen Holmgaard,Denmark Women's,281,0.47345915373665476,0.12
+rarity,women,FB,37,top,1,Ana Borges,Portugal Women's,326,0.524093109202454,1.0
+rarity,women,FB,37,top,2,Esmee Brugts,Netherlands Women's,370,0.5216271524324325,0.972972972972973
+rarity,women,FB,37,top,3,Janni Thomsen,Denmark Women's,294,0.5146244598639456,0.9459459459459459
+rarity,women,FB,37,top,4,Joana Filipa Gaspar Silva Marchão,Portugal Women's,251,0.5127039310756972,0.918918918918919
+rarity,women,FB,37,top,5,Risa Shimizu,Japan Women's,210,0.5083735804761904,0.8918918918918919
+rarity,women,FB,37,bottom,1,Olga  Carmona García,Spain Women's,799,0.4244164140175219,0.02702702702702703
+rarity,women,FB,37,bottom,2,Thea Bjelde,Norway Women's,235,0.4372501131914893,0.05405405405405406
+rarity,women,FB,37,bottom,3,Eseosa Aigbogun,Switzerland Women's,280,0.4408556203571428,0.08108108108108109
+rarity,women,FW,10,top,1,Tessa Wullaert,Belgium Women's,265,0.5261473109433962,1.0
+rarity,women,FW,10,top,2,Diana Micaela Abreu de Sousa e Silva,Portugal Women's,217,0.5241913571428571,0.9
+rarity,women,FW,10,top,3,Mary Boio Fowler,Australia Women's,204,0.5221407073529412,0.8
+rarity,women,FW,10,top,4,Alessia Russo,England Women's,390,0.5157386374358974,0.7
+rarity,women,FW,10,top,5,Ramona Bachmann,Switzerland Women's,330,0.5113972472727273,0.6
+rarity,women,FW,10,bottom,1,Jéssica da Silva,Portugal Women's,226,0.4773135221238938,0.1
+rarity,women,FW,10,bottom,2,Ana-Maria Crnogorčević,Switzerland Women's,295,0.48214195796610165,0.2
+rarity,women,FW,10,bottom,3,Esther Gonzalez Rodríguez,Spain Women's,272,0.4896424154411765,0.3
+rarity,women,GK,7,top,1,Daphne van Domselaar,Netherlands Women's,259,0.48119145714285716,1.0
+rarity,women,GK,7,top,2,Ann-Katrin Berger,Germany Women's,216,0.4777803751388889,0.8571428571428571
+rarity,women,GK,7,top,3,Mary Alexandra Earps,England Women's,209,0.45674771770334927,0.7142857142857143
+rarity,women,GK,7,top,4,Pauline Peyraud Magnin,France Women's,271,0.44041125535055353,0.5714285714285714
+rarity,women,GK,7,top,5,Merle Frohms,Germany Women's,237,0.43723750843881853,0.42857142857142855
+rarity,women,GK,7,bottom,1,Laura Giuliani,Italy Women's,201,0.41524689353233835,0.14285714285714285
+rarity,women,GK,7,bottom,2,Gaëlle Thalmann,Switzerland Women's,207,0.42845383091787437,0.2857142857142857
+rarity,women,GK,7,bottom,3,Merle Frohms,Germany Women's,237,0.43723750843881853,0.42857142857142855
+rarity,women,W,17,top,1,Jule Brand,Germany Women's,414,0.5273031973429951,1.0
+rarity,women,W,17,top,2,María Francesca Caldentey Oliver,Spain Women's,1179,0.5171532266327395,0.9411764705882353
+rarity,women,W,17,top,3,Linda Lizeth Caicedo Alegría,Colombia Women's,226,0.5128248168141593,0.8823529411764706
+rarity,women,W,17,top,4,Fridolina Rolfö,Sweden Women's,504,0.5081278037698412,0.8235294117647058
+rarity,women,W,17,top,5,Svenja Huth,Germany Women's,421,0.5012149997624703,0.7647058823529411
+rarity,women,W,17,bottom,1,Claudia Pina Medina,Spain Women's,253,0.4513326509881423,0.058823529411764705
+rarity,women,W,17,bottom,2,Athenea del Castillo Belvide,Spain Women's,260,0.4736077515384615,0.11764705882352941
+rarity,women,W,17,bottom,3,Delphine Cascarino,France Women's,347,0.47610180951008646,0.17647058823529413
+advantage,men,AM,20,top,1,Christoph Baumgartner,Austria,254,0.003095668996456693,1.0
+advantage,men,AM,20,top,2,Mason Mount,England,294,0.0020325285292517007,0.95
+advantage,men,AM,20,top,3,Amine Adli,Bayer Leverkusen,447,0.001905452070872483,0.9
+advantage,men,AM,20,top,4,Kevin De Bruyne,Belgium,578,0.001631050303114187,0.85
+advantage,men,AM,20,top,5,Xherdan Shaqiri,Switzerland,343,0.0016217484530612243,0.8
+advantage,men,AM,20,bottom,1,Thomas Müller,Germany,281,-0.0022784220707117438,0.05
+advantage,men,AM,20,bottom,2,Adam Hložek,Bayer Leverkusen,271,-0.0009911737654907749,0.1
+advantage,men,AM,20,bottom,3,Ruben Vargas,Switzerland,345,-0.0007269649889855073,0.15
+advantage,men,CB,118,top,1,Romain Saïss,Morocco,204,0.0008224218765980392,1.0
+advantage,men,CB,118,top,2,Kamal Miller,Canada,417,0.0004012791356498801,0.9915254237288136
+advantage,men,CB,118,top,3,Joachim Andersen,Denmark,630,0.0003041214025555556,0.9830508474576272
+advantage,men,CB,118,top,4,Tomáš Kalas,Czech Republic,206,0.0002675727538883495,0.9745762711864406
+advantage,men,CB,118,top,5,Leonardo Bonucci,Italy,562,0.00025720661453736653,0.9661016949152542
+advantage,men,CB,118,bottom,1,Nordi Mukiele Mulere,Paris Saint-Germain,495,-0.0010707830519191919,0.00847457627118644
+advantage,men,CB,118,bottom,2,Grant Campbell Hanley,Scotland,272,-0.0009458000518088235,0.01694915254237288
+advantage,men,CB,118,bottom,3,Jason Denayer,Belgium,214,-0.0007338724560373832,0.025423728813559324
+advantage,men,CM,29,top,1,Piotr Zieliński,Poland,508,0.0009547607755118109,1.0
+advantage,men,CM,29,top,2,Aaron Ramsey,Wales,449,0.0007022785015812918,0.9655172413793104
+advantage,men,CM,29,top,3,N'Golo Kanté,France,617,0.0005554663172123177,0.9310344827586207
+advantage,men,CM,29,top,4,Luka Modrić,Croatia,1281,0.00052482427264637,0.896551724137931
+advantage,men,CM,29,top,5,Yunus Dimoara Musah,United States,236,0.00046996338546610175,0.8620689655172413
+advantage,men,CM,29,bottom,1,Alexis Mac Allister,Argentina,320,-0.002089995435,0.034482758620689655
+advantage,men,CM,29,bottom,2,Carlos Soler Barragán,Paris Saint-Germain,696,-0.0016533260001666667,0.06896551724137931
+advantage,men,CM,29,bottom,3,Oleksandr Zinchenko,Ukraine,478,-0.0009540641873640167,0.10344827586206896
+advantage,men,DM,66,top,1,Giorgi Kochorashvili,Georgia,226,0.0009695603792035398,1.0
+advantage,men,DM,66,top,2,Federico Santiago Valverde Dipetta,Uruguay,275,0.0008074042238545454,0.9848484848484849
+advantage,men,DM,66,top,3,Kristjan Asllani,Albania,216,0.0007731824079629629,0.9696969696969697
+advantage,men,DM,66,top,4,Tijjani Reijnders,Netherlands,364,0.0007584601827747253,0.9545454545454546
+advantage,men,DM,66,top,5,Paul Pogba,France,340,0.0007435799828235293,0.9393939393939394
+advantage,men,DM,66,bottom,1,Morten Hjulmand,Denmark,222,-0.0015195091229729728,0.015151515151515152
+advantage,men,DM,66,bottom,2,Ander Herrera Agüera,Paris Saint-Germain,340,-0.0014871129618235295,0.030303030303030304
+advantage,men,DM,66,bottom,3,Aïssa Bilal Laïdouni,Tunisia,207,-0.0012553765399227052,0.045454545454545456
+advantage,men,FB,72,top,1,Yannick Ferreira Carrasco,Belgium,343,0.0019222529358892712,1.0
+advantage,men,FB,72,top,2,Nathan Tella,Bayer Leverkusen,317,0.0018925071728706623,0.9861111111111112
+advantage,men,FB,72,top,3,Andrija Živković,Serbia,229,0.0014678420782008733,0.9722222222222222
+advantage,men,FB,72,top,4,Alphonso Davies,Canada,223,0.0008937549672376681,0.9583333333333334
+advantage,men,FB,72,top,5,Joakim Mæhle,Denmark,699,0.0008900371451316167,0.9444444444444444
+advantage,men,FB,72,bottom,1,Nicolás Alejandro Tagliafico,Argentina,211,-0.0021727650885023696,0.013888888888888888
+advantage,men,FB,72,bottom,2,Daniel Wass,Denmark,260,-0.0019111516936153846,0.027777777777777776
+advantage,men,FB,72,bottom,3,Sergi Roberto Carnicer,Barcelona,980,-0.0016437437065204082,0.041666666666666664
+advantage,men,FW,16,top,1,Victor Okoh Boniface,Bayer Leverkusen,560,0.004170720642875,1.0
+advantage,men,FW,16,top,2,Kylian Mbappé Lottin,Paris Saint-Germain,3542,0.0028540156813297575,0.9375
+advantage,men,FW,16,top,3,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,8537,0.002423985015093944,0.875
+advantage,men,FW,16,top,4,Kai Havertz,Germany,351,0.0014631112199715098,0.8125
+advantage,men,FW,16,top,5,Memphis Depay,Netherlands,488,0.0013997153024590165,0.75
+advantage,men,FW,16,bottom,1,Hugo Ekitike,Paris Saint-Germain,369,-0.0022896768650894307,0.0625
+advantage,men,FW,16,bottom,2,Serge Gnabry,Germany,269,-0.0016870650998513012,0.125
+advantage,men,FW,16,bottom,3,Robert Lewandowski,Poland,241,-0.0011043875688883816,0.1875
+advantage,men,GK,11,top,1,Manuel Neuer,Germany,371,-4.6635378261455534e-05,1.0
+advantage,men,GK,11,top,2,Kasper Schmeichel,Denmark,247,-0.0001266724728744939,0.9090909090909091
+advantage,men,GK,11,top,3,Thibaut Courtois,Belgium,225,-0.00013317403333333336,0.8181818181818182
+advantage,men,GK,11,top,4,Dominik Livaković,Croatia,259,-0.00014810515864864868,0.7272727272727273
+advantage,men,GK,11,top,5,Marc-André ter Stegen,Barcelona,845,-0.00023670966175384618,0.6363636363636364
+advantage,men,GK,11,bottom,1,Yann Sommer,Switzerland,334,-0.0006820375224341318,0.09090909090909091
+advantage,men,GK,11,bottom,2,Lukáš Hrádecký,Bayer Leverkusen,641,-0.0004948269390795632,0.18181818181818182
+advantage,men,GK,11,bottom,3,Jordan Pickford,England,549,-0.0004341949807103825,0.2727272727272727
+advantage,men,W,37,top,1,Cody Mathès Gakpo,Netherlands,323,0.0034723025941486066,1.0
+advantage,men,W,37,top,2,Lamine Yamal Nasraoui Ebana,Spain,296,0.002880950448614865,0.972972972972973
+advantage,men,W,37,top,3,Ruslan Malinovskiy,Ukraine,220,0.0025600815309090906,0.9459459459459459
+advantage,men,W,37,top,4,Jamal Musiala,Germany,558,0.0025443321440681006,0.918918918918919
+advantage,men,W,37,top,5,Sofiane Boufal,Morocco,228,0.0025058742695614035,0.8918918918918919
+advantage,men,W,37,bottom,1,Andrej Kramarić,Croatia,442,-0.0012040290171945701,0.02702702702702703
+advantage,men,W,37,bottom,2,Lovro Majer,Croatia,348,-0.0006225372530172413,0.05405405405405406
+advantage,men,W,37,bottom,3,Timothy Weah,United States,213,-0.000559078391314554,0.08108108108108109
+advantage,women,AM,6,top,1,Pernille Mosegaard Harder,Denmark Women's,320,0.003920407178718751,1.0
+advantage,women,AM,6,top,2,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,279,0.0030374835519713264,0.8333333333333334
+advantage,women,AM,6,top,3,Lauren James,England Women's,442,0.0015391250339366516,0.6666666666666666
+advantage,women,AM,6,top,4,Kosovare Asllani,Sweden Women's,487,0.0007013938258110883,0.5
+advantage,women,AM,6,top,5,Leicy Maria Santos Herrera,Colombia Women's,237,0.00024586388274261607,0.3333333333333333
+advantage,women,AM,6,bottom,1,Ella Toone,England Women's,498,-1.2994887242971919e-05,0.16666666666666666
+advantage,women,AM,6,bottom,2,Leicy Maria Santos Herrera,Colombia Women's,237,0.00024586388274261607,0.3333333333333333
+advantage,women,AM,6,bottom,3,Kosovare Asllani,Sweden Women's,487,0.0007013938258110883,0.5
+advantage,women,CB,52,top,1,Katie Bowen,New Zealand Women's,255,0.0008635390417647058,1.0
+advantage,women,CB,52,top,2,Rafaelle Leone Carvalho Souza,Brazil Women's,278,0.0006128100331294963,0.9807692307692307
+advantage,women,CB,52,top,3,Glódís Perla Viggósdóttir,Iceland Women's,232,0.0005474122317327586,0.9615384615384616
+advantage,women,CB,52,top,4,Diana Catarina Ribeiro Gomes,Portugal Women's,381,0.000492807739160105,0.9423076923076923
+advantage,women,CB,52,top,5,Kadeisha Buchanan,Canada Women's,210,0.00045402233295238094,0.9230769230769231
+advantage,women,CB,52,bottom,1,María Méndez Fernández,Spain Women's,295,-0.0008853581971864407,0.019230769230769232
+advantage,women,CB,52,bottom,2,Rikke Læntver Sevecke,Denmark Women's,315,-0.0006866852369968254,0.038461538461538464
+advantage,women,CB,52,bottom,3,Laia Aleixandri López,Spain Women's,516,-0.0006257430232945736,0.057692307692307696
+advantage,women,CM,16,top,1,Clara Mateo,France Women's,278,0.001484742948057554,1.0
+advantage,women,CM,16,top,2,Lindsey Michelle Heaps,United States Women's,236,0.0013392046059322034,0.9375
+advantage,women,CM,16,top,3,Arianna Caruso,Italy Women's,323,0.0005756412967801857,0.875
+advantage,women,CM,16,top,4,Alexia Putellas Segura,Spain Women's,635,0.0003934673257165355,0.8125
+advantage,women,CM,16,top,5,Jennifer Hermoso Fuentes,Spain Women's,493,0.0003300197381338742,0.75
+advantage,women,CM,16,bottom,1,Kathrine Møller Kühl,Denmark Women's,242,-0.0009899657809917355,0.0625
+advantage,women,CM,16,bottom,2,Jill Roord,Netherlands Women's,510,-0.000934113565372549,0.125
+advantage,women,CM,16,bottom,3,Lina Magull,Germany Women's,240,-0.0008278761983333334,0.1875
+advantage,women,DM,25,top,1,Ingrid Filippa Angeldal,Sweden Women's,709,0.0010370800670521862,1.0
+advantage,women,DM,25,top,2,Karen Holmgaard,Denmark Women's,281,0.0007346015817263345,0.96
+advantage,women,DM,25,top,3,Frida Maanum,Norway Women's,361,0.0005134551190858726,0.92
+advantage,women,DM,25,top,4,Sara Däbritz,Germany Women's,433,0.00036559088133949195,0.88
+advantage,women,DM,25,top,5,Eveliina Summanen,WNT Finland,276,0.0003601944264384058,0.84
+advantage,women,DM,25,bottom,1,Sjoeke Nüsken,Germany Women's,217,-0.001429325483502304,0.04
+advantage,women,DM,25,bottom,2,Georgia Stanway,England Women's,838,-0.0010877669105119332,0.08
+advantage,women,DM,25,bottom,3,Sandie Toletti,France Women's,501,-0.0008762666921756487,0.12
+advantage,women,FB,37,top,1,Janni Thomsen,Denmark Women's,294,0.0011410127389115646,1.0
+advantage,women,FB,37,top,2,Ana Borges,Portugal Women's,326,0.0009654693340828221,0.972972972972973
+advantage,women,FB,37,top,3,Ellie Madison Carpenter,Australia Women's,318,0.00048650003133333334,0.9459459459459459
+advantage,women,FB,37,top,4,Victoria Pelova,Netherlands Women's,499,0.000365139218496994,0.918918918918919
+advantage,women,FB,37,top,5,Sakina Karchaoui,France Women's,858,0.0003569294594522144,0.8918918918918919
+advantage,women,FB,37,bottom,1,Leila Ouahabi El Ouahabi,Spain Women's,285,-0.0022427624027017545,0.02702702702702703
+advantage,women,FB,37,bottom,2,Oihane Hernández Zurbano,Spain Women's,270,-0.0015323006641111113,0.05405405405405406
+advantage,women,FB,37,bottom,3,Rachel Daly,England Women's,609,-0.0010982384010689654,0.08108108108108109
+advantage,women,FW,10,top,1,Mary Boio Fowler,Australia Women's,204,0.0026276907102941176,1.0
+advantage,women,FW,10,top,2,Emma Stina Blackstenius,Sweden Women's,308,0.002049454206623377,0.9
+advantage,women,FW,10,top,3,Tessa Wullaert,Belgium Women's,265,0.0013449103931396226,0.8
+advantage,women,FW,10,top,4,Ramona Bachmann,Switzerland Women's,330,0.0012959293431212121,0.7
+advantage,women,FW,10,top,5,Jéssica da Silva,Portugal Women's,226,0.0011975460445132742,0.6
+advantage,women,FW,10,bottom,1,Alessia Russo,England Women's,390,-0.0015662893586923076,0.1
+advantage,women,FW,10,bottom,2,Esther Gonzalez Rodríguez,Spain Women's,272,-0.0015325721727941178,0.2
+advantage,women,FW,10,bottom,3,Diana Micaela Abreu de Sousa e Silva,Portugal Women's,217,-0.000967014250829493,0.3
+advantage,women,GK,7,top,1,Ann-Katrin Berger,Germany Women's,216,-0.0002276800625,1.0
+advantage,women,GK,7,top,2,Daphne van Domselaar,Netherlands Women's,259,-0.00023036181961389962,0.8571428571428571
+advantage,women,GK,7,top,3,Merle Frohms,Germany Women's,237,-0.00023241738624472572,0.7142857142857143
+advantage,women,GK,7,top,4,Mary Alexandra Earps,England Women's,209,-0.0002767959282296651,0.5714285714285714
+advantage,women,GK,7,top,5,Gaëlle Thalmann,Switzerland Women's,207,-0.0005849837143043478,0.42857142857142855
+advantage,women,GK,7,bottom,1,Laura Giuliani,Italy Women's,201,-0.0007036213424875622,0.14285714285714285
+advantage,women,GK,7,bottom,2,Pauline Peyraud Magnin,France Women's,271,-0.0006488918333210332,0.2857142857142857
+advantage,women,GK,7,bottom,3,Gaëlle Thalmann,Switzerland Women's,207,-0.0005849837143043478,0.42857142857142855
+advantage,women,W,17,top,1,Delphine Cascarino,France Women's,347,0.0033563338697406337,1.0
+advantage,women,W,17,top,2,Athenea del Castillo Belvide,Spain Women's,260,0.002898318953846154,0.9411764705882353
+advantage,women,W,17,top,3,Caitlin Jade Foord,Australia Women's,212,0.0027439149966037735,0.8823529411764706
+advantage,women,W,17,top,4,Johanna Rytting-Kaneryd,Sweden Women's,470,0.0020922056016957446,0.8235294117647058
+advantage,women,W,17,top,5,Bethany Mead,England Women's,251,0.001854162228772908,0.7647058823529411
+advantage,women,W,17,bottom,1,Salma Paralluelo Ayingono,Spain Women's,335,-0.0007889067196716416,0.058823529411764705
+advantage,women,W,17,bottom,2,Linda Lizeth Caicedo Alegría,Colombia Women's,226,0.0001345452460176992,0.11764705882352941
+advantage,women,W,17,bottom,3,Caroline Graham Hansen,Norway Women's,410,0.00036597785124390243,0.17647058823529413

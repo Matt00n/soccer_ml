@@ -85,7 +85,7 @@ $k$, its target zone $z$ for passes and carries, and its height $h$ for passes:
 
 $$\pi_\theta(a \mid s) = \pi_\theta(k \mid s)\, \pi_\theta(z \mid k, s)\, \pi_\theta(h \mid z, s).$$
 
-A graph attention network (GATv2; Brody et al., 2022) with 4 layers, 8 attention heads and a hidden dimension
+A graph attention network (GATv2; Brody, Alon, & Yahav, 2022) with 4 layers, 8 attention heads and a hidden dimension
 of 128 encodes the visible players, where edges carry the team relation and the pairwise distance between players. A
 recurrent encoder (GRU; Cho et al., 2014) summarizes the event history and conditions the graph representation. The
 type head is a classifier, whereas the zone and height heads produce one output per zone on the 26 × 17 grid. Since
@@ -118,10 +118,9 @@ conceding $y^{-}$ is defined analogously over the opponent's shots. The usefulne
 surprise model, is initialized from it and is trained for 3 epochs, with the encoder's learning rate scaled by 0.1.
 For robustness analyses, an auxiliary head additionally predicts the full distribution of the discounted net return
 of every action on a categorical support of 51 atoms in $[-1, 1]$ with a discount of 0.9 per decision. This head is
-trained by distributional temporal-difference learning (Bellemare et al., 2017) with a target network
-(Mnih et al., 2015) and a loss weight of 0.1. On the evaluation protocol of Robberechts et al. (2023), which uses
-completed open-play passes and labels them by whether a goal follows within the next ten actions, the usefulness model
-reaches an AUC of 0.77 to 0.78. This is on par with VAEP (Decroos et al., 2019) and expected threat (xT; Singh,
+trained by distributional temporal-difference learning (Bellemare, Dabney, & Munos, 2017) with a target network
+(Mnih et al., 2015) and a loss weight of 0.1. On completed open-play passes, labeled by whether a goal follows within
+the next ten actions, the usefulness model reaches an AUC of 0.77 to 0.78. This is on par with VAEP (Decroos et al., 2019) and expected threat (xT; Singh,
 2018) with 0.78 each, while VAEP trained on xG labels reaches 0.80.
 
 **Out-of-sample scoring.** All scores we report are out-of-sample. Following the idea of cross-fitting (Chernozhukov
@@ -165,7 +164,7 @@ the creativity its situation offered and the creativity the player made of it. A
 creativity is close to average opportunity (1.31 vs. 1.38 nats), with the small gap stemming from the excluded
 incomplete passes, which are disproportionately unusual. As an alternative definition of the creative opportunity,
 we use the share of unusual options, i.e., the least likely 20% of the probability mass, that are useful, which
-corresponds to the upper right quadrant in Figure 1.
+corresponds to the upper right quadrant in Figure 2.
 
 **Robustness measures and aggregation.** We repeat key analyses with two variants of the measure. The first replaces
 surprise by rarity among the useful options, where the rarity of an action is the probability mass of all more
@@ -184,10 +183,18 @@ Temperature scaling (Guo et al., 2017) does not improve calibration further.
 
 We then compare player scores with the external FIFA ratings, ranking both within competition and position group to
 remove differences in level and role. Creativity correlates with the vision rating (Spearman ρ = 0.17, 95% CI
-[0.08, 0.27]), whereas usefulness alone does not (ρ = 0.02), with a difference of 0.15 [0.07, 0.24]. Creativity
+[0.08, 0.27]), whereas usefulness alone does not (ρ = 0.01), with a difference of 0.15 [0.07, 0.24]. Creativity
 further correlates with passing, ball control and dribbling (ρ between 0.12 and 0.19) but not with strength, jumping
 or stamina (|ρ| < 0.08), and players labeled as playmakers in the game score higher than other players in their
 position (AUC = 0.62).
+
+We further compare known creative players with other players in the same position. As no established list of such
+players exists, an AI assistant (Claude) compiled a list of 48 players (30 men, 18 women) with a reputation as creative
+playmakers, passers or dribblers from general football knowledge at our request. We fixed this list by a
+version-controlled commit before any player scores were computed or inspected, but note that a reputation-based list
+may favor famous players. Of the 539 players with at least 200 in-scope decisions, 42 are on the list. Ranking players
+within position groups, known creative players score higher than other players (AUC = 0.65, 95% CI [0.57, 0.73]),
+whereas usefulness alone discriminates less well (AUC = 0.55), with a difference of 0.10 [0.02, 0.18].
 
 As StatsBomb annotations are not used as model inputs for the decision itself, they provide independent controls.
 Among passes, through balls score higher than other passes (AUC = 0.82), whereas goal kicks and throw-ins do not
@@ -197,9 +204,10 @@ the choice of usefulness model (ρ = 0.94 between models with and without the di
 
 ## A.5 Analyses
 
-**Inference.** As decisions, possessions and events within a match are dependent, we compute all confidence intervals
-by resampling matches (cluster bootstrap; Cameron et al., 2008) with 1,000 resamples and derive two-sided
-p-values from the bootstrap distribution. We control the false discovery rate across all claims reported in the
+**Inference.** As decisions, possessions and events within a match are dependent, we compute confidence intervals for
+decision-, possession- and event-level estimates by resampling matches (cluster bootstrap; Cameron, Gelbach, & Miller,
+2008) with 1,000 resamples and derive two-sided p-values from the bootstrap distribution. For comparisons at the player
+level, i.e., with external ratings, known creative players, and goals and assists, we resample players instead. We control the false discovery rate across all claims reported in the
 proposal (Benjamini & Hochberg, 1995). We remark that both models condition on score and time, such that the effects
 of game events are to be read relative to what is typical in the same score and time.
 
@@ -271,7 +279,8 @@ the shots until the next decision, and take its residual with respect to the pre
 regress this residual on the rarity of the chosen action within strata of the same predicted value (deciles of $Q$),
 action type and pitch third. We estimate this separately for passes and carries, with the Monte Carlo return as an
 alternative realized value, and with scores from the reference model. Across all decisions, the residual increases with rarity
-(+0.0019 per unit rarity). The premium is concentrated in passes (+0.0024, about a third of the mean value of a pass),
+(+0.0019 per unit rarity), which amounts to about 19% of the mean value of an action (0.0097) between the most typical
+and the most unusual actions. The premium is concentrated in passes (+0.0024, about a third of the mean value of a pass),
 holds with the Monte Carlo return and the reference model, but is negative for carries (−0.0016).
 
 **Enabling.** We pair each decision with the next decision of a different player of the same team, yielding 313,166
@@ -281,7 +290,8 @@ area (10 × 10 yd), action type and starting value decile, as well as match fixe
 with the nearest opponent 0.19 yd closer per SD of creativity. The next player's creative opportunity increases only
 marginally (+0.01 SD), and their creativity is unchanged.
 
-**Table A2: Preliminary estimates cited in the proposal.** 95% confidence intervals from the match bootstrap; q-values
+**Table A2: Preliminary estimates cited in the proposal.** 95% confidence intervals from the match bootstrap, or from
+resampling players for player-level estimates; q-values
 after Benjamini–Hochberg correction across the tested claims. Estimates without q-values are descriptive or not part
 of the confirmatory set.
 
@@ -301,8 +311,10 @@ of the confirmatory set.
 | After a tactical substitution: creativity / opportunity (SD) | +0.011 [−0.002, 0.025] / +0.046 [0.024, 0.068] | 0.114 / – |
 | Two or more creative players in a possession → shot / goal | +6.8 pp [5.7, 7.8] / +1.1 pp [0.7, 1.5] | – |
 | Share of variance in player creativity due to use / opportunity | 1.00 / 0.13 (covariance −0.14) | – |
+| Surprise premium, all decisions (per unit rarity; mean action value 0.0097) | +0.0019 [0.0017, 0.0021] | <0.001 |
 | Surprise premium, passes (per unit rarity; mean pass value 0.007) | +0.0024 [0.0022, 0.0026] | <0.001 |
-| Creativity vs. FIFA vision rating (Spearman, within position) | 0.17 [0.08, 0.27] | – |
+| Creativity / usefulness vs. FIFA vision rating (Spearman, within position) | 0.17 [0.08, 0.27] / 0.01 [−0.08, 0.11] | – |
+| Known creative players vs. other players, within position (AUC) | 0.65 [0.57, 0.73] | – |
 
 ## References
 
@@ -333,8 +345,6 @@ Loshchilov, I., & Hutter, F. (2017). SGDR: Stochastic gradient descent with warm
 Mnih, V., Kavukcuoglu, K., Silver, D., Rusu, A. A., Veness, J., Bellemare, M. G., Graves, A., Riedmiller, M., Fidjeland, A. K., Ostrovski, G., Petersen, S., Beattie, C., Sadik, A., Antonoglou, I., King, H., Kumaran, D., Wierstra, D., Legg, S., & Hassabis, D. (2015). Human-level control through deep reinforcement learning. *Nature, 518*(7540), 529–533.
 
 Puny, O., Atzmon, M., Ben-Hamu, H., Misra, I., Grover, A., Smith, E. J., & Lipman, Y. (2022). Frame averaging for invariant and equivariant network design. In *International Conference on Learning Representations*.
-
-Robberechts, P., Van Roy, M., & Davis, J. (2023). un-xPass: Measuring soccer player's creativity. In *Proceedings of the 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining* (pp. 4768–4777).
 
 Shannon, C. E. (1948). A mathematical theory of communication. *Bell System Technical Journal, 27*(3), 379–423.
 

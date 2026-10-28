@@ -1,25 +1,3 @@
-\documentclass[11pt]{article}
-
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage[a4paper, margin=2.5cm]{geometry}
-\usepackage{amsmath, amssymb}
-\usepackage{booktabs}
-\usepackage{tabularx}
-\usepackage{caption}
-\usepackage{array}
-\usepackage{placeins}
-\usepackage[american]{babel}
-\usepackage{csquotes}
-\usepackage[style=apa, backend=biber]{biblatex}
-\usepackage[hidelinks]{hyperref}
-\addbibresource{technical_appendix.bib}
-
-\renewcommand{\thetable}{A\arabic{table}}
-\captionsetup[table]{labelfont=bf, textfont=bf, labelsep=colon, justification=raggedright, singlelinecheck=false}
-
-\begin{document}
-
 \section*{Technical Appendix}
 
 In this appendix, we describe the data we use and how we prepare it (A.1), our surprise and usefulness models
@@ -151,9 +129,8 @@ surprise model, is initialized from it and is trained for 3 epochs, with the enc
 For robustness analyses, an auxiliary head additionally predicts the full distribution of the discounted net return
 of every action on a categorical support of 51 atoms in $[-1, 1]$ with a discount of 0.9 per decision. This head is
 trained by distributional temporal-difference learning \parencite{bellemare2017distributional} with a target network
-\parencite{mnih2015human} and a loss weight of 0.1. On the evaluation protocol of \textcite{robberechts2023unxpass},
-which uses completed open-play passes and labels them by whether a goal follows within the next ten actions, the
-usefulness model reaches an AUC of 0.77 to 0.78. This is on par with VAEP \parencite{decroos2019actions} and expected
+\parencite{mnih2015human} and a loss weight of 0.1. On completed open-play passes, labeled by whether a goal follows
+within the next ten actions, the usefulness model reaches an AUC of 0.77 to 0.78. This is on par with VAEP \parencite{decroos2019actions} and expected
 threat \parencite[xT;][]{singh2018expected} with 0.78 each, while VAEP trained on xG labels reaches 0.80.
 
 \paragraph{Out-of-sample scoring.} All scores we report are out-of-sample. Following the idea of cross-fitting
@@ -199,7 +176,7 @@ the creativity its situation offered and the creativity the player made of it. A
 creativity is close to average opportunity (1.31 vs.\ 1.38 nats), with the small gap stemming from the excluded
 incomplete passes, which are disproportionately unusual. As an alternative definition of the creative opportunity,
 we use the share of unusual options, i.e., the least likely 20\% of the probability mass, that are useful, which
-corresponds to the upper right quadrant in Figure~1.
+corresponds to the upper right quadrant in Figure~2.
 
 \paragraph{Robustness measures and aggregation.} We repeat key analyses with two variants of the measure. The first
 replaces surprise by rarity among the useful options, where the rarity of an action is the probability mass of all
@@ -218,10 +195,18 @@ Temperature scaling \parencite{guo2017calibration} does not improve calibration 
 
 We then compare player scores with the external FIFA ratings, ranking both within competition and position group to
 remove differences in level and role. Creativity correlates with the vision rating (Spearman $\rho = 0.17$, 95\% CI
-[0.08, 0.27]), whereas usefulness alone does not ($\rho = 0.02$), with a difference of 0.15 [0.07, 0.24]. Creativity
+[0.08, 0.27]), whereas usefulness alone does not ($\rho = 0.01$), with a difference of 0.15 [0.07, 0.24]. Creativity
 further correlates with passing, ball control and dribbling ($\rho$ between 0.12 and 0.19) but not with strength,
 jumping or stamina ($|\rho| < 0.08$), and players labeled as playmakers in the game score higher than other players in
 their position (AUC $=$ 0.62).
+
+We further compare known creative players with other players in the same position. As no established list of such
+players exists, an AI assistant (Claude) compiled a list of 48 players (30 men, 18 women) with a reputation as
+creative playmakers, passers or dribblers from general football knowledge at our request. We fixed this list by a
+version-controlled commit before any player scores were computed or inspected, but note that a reputation-based list
+may favor famous players. Of the 539 players with at least 200 in-scope decisions, 42 are on the list. Ranking players
+within position groups, known creative players score higher than other players (AUC $=$ 0.65, 95\% CI [0.57, 0.73]),
+whereas usefulness alone discriminates less well (AUC $=$ 0.55), with a difference of 0.10 [0.02, 0.18].
 
 As StatsBomb annotations are not used as model inputs for the decision itself, they provide independent controls.
 Among passes, through balls score higher than other passes (AUC $=$ 0.82), whereas goal kicks and throw-ins do not
@@ -231,9 +216,11 @@ robust to the choice of usefulness model ($\rho = 0.94$ between models with and 
 
 \subsection*{A.5 Analyses}
 
-\paragraph{Inference.} As decisions, possessions and events within a match are dependent, we compute all confidence
-intervals by resampling matches \parencite[cluster bootstrap;][]{cameron2008bootstrap} with 1,000 resamples and derive
-two-sided p-values from the bootstrap distribution. We control the false discovery rate across all claims reported in
+\paragraph{Inference.} As decisions, possessions and events within a match are dependent, we compute confidence
+intervals for decision-, possession- and event-level estimates by resampling matches
+\parencite[cluster bootstrap;][]{cameron2008bootstrap} with 1,000 resamples and derive two-sided p-values from the
+bootstrap distribution. For comparisons at the player level, i.e., with external ratings, known creative players, and
+goals and assists, we resample players instead. We control the false discovery rate across all claims reported in
 the proposal \parencite{benjamini1995controlling}. We remark that both models condition on score and time, such that
 the effects of game events are to be read relative to what is typical in the same score and time.
 
@@ -308,7 +295,8 @@ difference of the shots until the next decision, and take its residual with resp
 $U(s_i, a_i)$. We regress this residual on the rarity of the chosen action within strata of the same predicted value
 (deciles of $Q$), action type and pitch third. We estimate this separately for passes and carries, with the Monte
 Carlo return as an alternative realized value, and with scores from the reference model. Across all decisions, the
-residual increases with rarity ($+0.0019$ per unit rarity). The premium is concentrated in passes ($+0.0024$, about a
+residual increases with rarity ($+0.0019$ per unit rarity), which amounts to about 19\% of the mean value of an action
+(0.0097) between the most typical and the most unusual actions. The premium is concentrated in passes ($+0.0024$, about a
 third of the mean value of a pass), holds with the Monte Carlo return and the reference model, but is negative for
 carries ($-0.0016$).
 
@@ -342,16 +330,14 @@ After a tactical shift: creativity (SD) & $+0.023$ [0.009, 0.036] & $<0.001$ \\
 After a tactical substitution: creativity / opportunity (SD) & $+0.011$ [$-0.002$, 0.025] / $+0.046$ [0.024, 0.068] & 0.114 / -- \\
 Two or more creative players in a possession $\rightarrow$ shot / goal & $+6.8$ pp [5.7, 7.8] / $+1.1$ pp [0.7, 1.5] & -- \\
 Share of variance in player creativity due to use / opportunity & 1.00 / 0.13 (covariance $-0.14$) & -- \\
+Surprise premium, all decisions (per unit rarity; mean action value 0.0097) & $+0.0019$ [0.0017, 0.0021] & $<0.001$ \\
 Surprise premium, passes (per unit rarity; mean pass value 0.007) & $+0.0024$ [0.0022, 0.0026] & $<0.001$ \\
-Creativity vs.\ FIFA vision rating (Spearman, within position) & 0.17 [0.08, 0.27] & -- \\
+Creativity / usefulness vs.\ FIFA vision rating (Spearman, within position) & 0.17 [0.08, 0.27] / 0.01 [$-0.08$, 0.11] & -- \\
+Known creative players vs.\ other players, within position (AUC) & 0.65 [0.57, 0.73] & -- \\
 \bottomrule
 \end{tabularx}
 \par\smallskip
-\footnotesize 95\% confidence intervals from the match bootstrap; $q$-values after Benjamini--Hochberg correction
+\footnotesize 95\% confidence intervals from the match bootstrap, or from resampling players for player-level
+estimates; $q$-values after Benjamini--Hochberg correction
 across the tested claims. Estimates without $q$-values are descriptive or not part of the confirmatory set.
 \end{table}
-
-\FloatBarrier
-\printbibliography
-
-\end{document}

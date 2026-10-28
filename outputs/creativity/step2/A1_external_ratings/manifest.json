@@ -1,0 +1,79 @@
+{
+  "created": "2026-10-25 16:23",
+  "tables": [
+    "outputs/creativity/crossfit_c51_fold0.csv.gz",
+    "outputs/creativity/crossfit_c51_fold1.csv.gz"
+  ],
+  "ratings": "huggingface jsulz/FIFA23 (male_players (legacy).csv, female_players.csv)",
+  "versions": {
+    "UEFA Euro 2020": [
+      "male",
+      21,
+      false,
+      null
+    ],
+    "La Liga 2020/2021": [
+      "male",
+      21,
+      false,
+      null
+    ],
+    "Ligue 1 2021/2022": [
+      "male",
+      22,
+      false,
+      null
+    ],
+    "Ligue 1 2022/2023": [
+      "male",
+      23,
+      false,
+      null
+    ],
+    "FIFA World Cup 2022": [
+      "male",
+      23,
+      false,
+      null
+    ],
+    "Major League Soccer 2023": [
+      "male",
+      23,
+      false,
+      null
+    ],
+    "UEFA Euro 2024": [
+      "male",
+      23,
+      true,
+      null
+    ],
+    "1. Bundesliga 2023/2024": [
+      "male",
+      23,
+      true,
+      null
+    ],
+    "UEFA Women's Euro 2022": [
+      "female",
+      22,
+      false,
+      "2022-07-06"
+    ],
+    "Women's World Cup 2023": [
+      "female",
+      23,
+      false,
+      "2023-07-20"
+    ],
+    "UEFA Women's Euro 2025": [
+      "female",
+      23,
+      true,
+      "2025-07-02"
+    ]
+  },
+  "min_decisions": 150,
+  "bootstrap": 500,
+  "seconds": 28
+}

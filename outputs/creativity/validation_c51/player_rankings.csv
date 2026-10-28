@@ -1,0 +1,326 @@
+measure,rank,player,team,position,decisions,score,rank_p05,rank_p95
+rarity,1,Ruslan Malinovskiy,Ukraine,Left Wing,220,0.5803193754545455,1.0,11.099999999999966
+rarity,2,Toni Kroos,Germany,Left Defensive Midfield,1118,0.558551356529517,2.0,29.049999999999983
+rarity,3,Rafael Alexandre Conceição Leão,Portugal,Left Wing,204,0.5547723799019607,1.0,162.8499999999997
+rarity,4,Giorgi Kochorashvili,Georgia,Left Defensive Midfield,226,0.5539082898230089,2.950000000000001,66.79999999999973
+rarity,5,Denis Vavro,Slovakia,Right Center Back,262,0.5462070854961832,6.0,28.149999999999977
+rarity,6,Luka Modrić,Croatia,Right Center Midfield,1281,0.5418990275565964,9.0,40.0
+rarity,7,Johan Gastien,Clermont Foot,Left Defensive Midfield,249,0.5412410799196787,6.0,84.69999999999999
+rarity,8,Tomáš Kalas,Czech Republic,Left Center Back,206,0.5412044203883495,7.9,61.39999999999998
+rarity,9,Aaron Mooy,Australia,Left Defensive Midfield,229,0.5402990637554586,2.8500000000000014,167.14999999999998
+rarity,10,Ivan Perišić,Croatia,Left Wing,447,0.539812748769575,7.0,98.09999999999997
+rarity,11,Sergej Milinković-Savić,Serbia,Left Attacking Midfield,208,0.5395728980769231,5.0,120.09999999999997
+rarity,12,Federico Santiago Valverde Dipetta,Uruguay,Right Defensive Midfield,275,0.5385194716363636,3.0,237.69999999999985
+rarity,13,Stanislav Lobotka,Slovakia,Center Defensive Midfield,326,0.5376911116564417,7.9,156.09999999999994
+rarity,14,Lorenzo Insigne,Italy,Left Wing,380,0.5376285923684211,4.0,130.29999999999998
+rarity,15,Sofiane Boufal,Morocco,Left Wing,228,0.5375291096491228,2.0,172.04999999999998
+rarity,16,Eden Hazard,Belgium,Left Attacking Midfield,281,0.5375139614590747,9.0,136.04999999999998
+rarity,17,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,Center Attacking Midfield,279,0.5373132512544804,2.0,126.04999999999998
+rarity,18,Leandro Trossard,Belgium,Right Wing,207,0.5371658739130435,3.0,186.99999999999966
+rarity,19,Fabian Lukas Schär,Switzerland,Right Center Back,509,0.5355963897838899,7.0,103.14999999999995
+rarity,20,Thomas Teye Partey,Ghana,Right Defensive Midfield,208,0.5339322576923077,3.0,296.79999999999995
+rarity,21,Oleksandr Karavaev,Ukraine,Right Back,287,0.533529943554007,7.0,141.49999999999997
+rarity,22,Philipp Lienhart,Austria,Left Center Back,243,0.5330442127572017,2.950000000000001,217.09999999999997
+rarity,23,Montassar Omar Talbi,Tunisia,Left Center Back,218,0.5328195908256881,10.8,120.59999999999997
+rarity,24,Marcos Javier Acuña,Argentina,Left Back,226,0.532587067699115,2.0,207.99999999999966
+rarity,25,Kerolin Nicoli Israel Ferraz,Brazil Women's,Right Defensive Midfield,208,0.5303479846153846,20.450000000000003,160.0
+advantage,1,Victor Okoh Boniface,Bayer Leverkusen,Center Forward,560,0.004170720642875,1.0,14.0
+advantage,2,Pernille Mosegaard Harder,Denmark Women's,Center Attacking Midfield,320,0.003920407178718751,1.0,32.04999999999998
+advantage,3,Cody Mathès Gakpo,Netherlands,Left Wing,323,0.0034723025941486066,1.0,47.19999999999993
+advantage,4,Delphine Cascarino,France Women's,Right Wing,347,0.0033563338697406337,2.0,40.19999999999999
+advantage,5,Christoph Baumgartner,Austria,Center Attacking Midfield,254,0.003095668996456693,1.0,78.04999999999998
+advantage,6,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,Center Attacking Midfield,279,0.0030374835519713264,3.950000000000001,56.0
+advantage,7,Athenea del Castillo Belvide,Spain Women's,Right Wing,260,0.002898318953846154,2.950000000000001,40.14999999999995
+advantage,8,Lamine Yamal Nasraoui Ebana,Spain,Right Wing,296,0.002880950448614865,2.0,75.49999999999983
+advantage,9,Kylian Mbappé Lottin,Paris Saint-Germain,Center Forward,3542,0.0028540156813297575,6.0,24.0
+advantage,10,Caitlin Jade Foord,Australia Women's,Left Midfield,212,0.0027439149966037735,1.0,231.0
+advantage,11,Mary Boio Fowler,Australia Women's,Left Center Forward,204,0.0026276907102941176,5.0,78.69999999999996
+advantage,12,Ruslan Malinovskiy,Ukraine,Left Wing,220,0.0025600815309090906,3.0,117.14999999999995
+advantage,13,Jamal Musiala,Germany,Left Wing,558,0.0025443321440681006,2.0,104.09999999999997
+advantage,14,Sofiane Boufal,Morocco,Left Wing,228,0.0025058742695614035,5.0,56.19999999999993
+advantage,15,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,Right Center Forward,8537,0.002423985015093944,11.950000000000001,30.049999999999983
+advantage,16,Rafael Alexandre Conceição Leão,Portugal,Left Wing,204,0.002278875295980392,8.0,127.39999999999986
+advantage,17,Jeremy Doku,Belgium,Left Wing,332,0.002234010273192771,9.0,46.04999999999998
+advantage,18,Mikkel Damsgaard,Denmark,Left Wing,243,0.0020999064,7.0,79.49999999999997
+advantage,19,Johanna Rytting-Kaneryd,Sweden Women's,Right Wing,470,0.0020922056016957446,4.0,280.9499999999997
+advantage,20,Emma Stina Blackstenius,Sweden Women's,Center Forward,308,0.002049454206623377,2.0,451.09999999999997
+advantage,21,Mason Mount,England,Center Attacking Midfield,294,0.0020325285292517007,9.950000000000001,86.24999999999991
+advantage,22,Yannick Ferreira Carrasco,Belgium,Left Wing Back,343,0.0019222529358892712,6.0,251.29999999999922
+advantage,23,Amine Adli,Bayer Leverkusen,Left Attacking Midfield,447,0.001905452070872483,5.0,147.94999999999933
+advantage,24,Nathan Tella,Bayer Leverkusen,Right Wing Back,317,0.0018925071728706623,6.0,149.19999999999993
+advantage,25,Nicholas Williams Arthuer,Spain,Left Wing,362,0.001885511085359116,6.0,377.7999999999997
+difficulty,1,Manuela Vanegas Cataño,Colombia Women's,Left Back,213,0.1851655502347418,1.0,23.0
+difficulty,2,Clara Mateo,France Women's,Left Center Midfield,278,0.17612878776978416,1.0,32.0
+difficulty,3,Caitlin Jade Foord,Australia Women's,Left Midfield,212,0.1734023820754717,2.0,37.04999999999998
+difficulty,4,Kosovare Asllani,Sweden Women's,Center Attacking Midfield,487,0.17285920164609056,2.0,21.0
+difficulty,5,Lisa Boattin,Italy Women's,Left Back,500,0.1710352222,2.0,40.04999999999998
+difficulty,6,Jonna Ann-Charlotte Andersson,Sweden Women's,Left Back,443,0.17024485507900675,1.0,37.099999999999966
+difficulty,7,Cody Mathès Gakpo,Netherlands,Left Wing,323,0.16930683819875775,2.0,46.099999999999966
+difficulty,8,Pernille Mosegaard Harder,Denmark Women's,Center Attacking Midfield,320,0.16215294062500002,5.0,46.0
+difficulty,9,Ana-Maria Crnogorčević,Switzerland Women's,Center Forward,295,0.16077577288135592,7.950000000000001,36.04999999999998
+difficulty,10,Leicy Maria Santos Herrera,Colombia Women's,Center Attacking Midfield,237,0.15881734978902953,6.0,44.04999999999998
+difficulty,11,Tessa Wullaert,Belgium Women's,Center Forward,265,0.1587927283018868,3.0,60.0
+difficulty,12,Janni Thomsen,Denmark Women's,Right Wing Back,294,0.1585973244897959,2.0,90.2999999999999
+difficulty,13,Robert Lewandowski,Poland,Left Center Forward,241,0.1570258062240664,2.0,93.09999999999997
+difficulty,14,Jéssica da Silva,Portugal Women's,Right Center Forward,226,0.1567510446902655,10.950000000000001,42.0
+difficulty,15,Patrik Schick,Bayer Leverkusen,Center Forward,447,0.15665538031319912,7.0,47.04999999999998
+difficulty,16,Lindsey Michelle Heaps,United States Women's,Left Center Midfield,236,0.15612511949152544,2.0,104.69999999999996
+difficulty,17,Jun Endo,Japan Women's,Left Wing Back,216,0.15581908333333333,2.0,140.09999999999968
+difficulty,18,Johanna Rytting-Kaneryd,Sweden Women's,Right Wing,470,0.15563313617021277,9.0,53.099999999999966
+difficulty,19,Caroline Graham Hansen,Norway Women's,Right Midfield,410,0.15540579341463415,6.900000000000002,52.04999999999998
+difficulty,20,Bethany Mead,England Women's,Right Wing,251,0.15342788247011951,8.950000000000001,74.04999999999998
+difficulty,21,Emma Stina Blackstenius,Sweden Women's,Center Forward,308,0.153363637987013,11.0,57.0
+difficulty,22,Alessia Russo,England Women's,Center Forward,390,0.1530403128205128,8.950000000000001,53.0
+difficulty,23,Delphine Cascarino,France Women's,Right Wing,347,0.15201901040462426,13.9,53.099999999999994
+difficulty,24,Chloe Kelly,England Women's,Right Wing,316,0.15063479299363058,10.950000000000001,69.09999999999997
+difficulty,25,Vladimír Coufal,Czech Republic,Right Back,406,0.1503925312807882,6.0,79.0
+surprise_x_adv,1,Victor Okoh Boniface,Bayer Leverkusen,Center Forward,560,0.03431728526132074,1.0,15.049999999999983
+surprise_x_adv,2,Athenea del Castillo Belvide,Spain Women's,Right Wing,260,0.0341505074411462,1.0,38.2999999999999
+surprise_x_adv,3,Pernille Mosegaard Harder,Denmark Women's,Center Attacking Midfield,320,0.033626495496143625,1.0,37.0
+surprise_x_adv,4,Cody Mathès Gakpo,Netherlands,Left Wing,323,0.031898052277831,1.0,30.199999999999932
+surprise_x_adv,5,Christoph Baumgartner,Austria,Center Attacking Midfield,254,0.029931332485737,1.0,66.04999999999998
+surprise_x_adv,6,Ruslan Malinovskiy,Ukraine,Left Wing,220,0.02961827947622264,3.0,45.0
+surprise_x_adv,7,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,Center Attacking Midfield,279,0.02957135919855335,4.0,42.04999999999998
+surprise_x_adv,8,Jamal Musiala,Germany,Left Wing,558,0.02906067982254054,2.0,43.04999999999998
+surprise_x_adv,9,Johanna Rytting-Kaneryd,Sweden Women's,Right Wing,470,0.02894019347672967,2.0,62.0
+surprise_x_adv,10,Bethany Mead,England Women's,Right Wing,251,0.027980106617641148,3.950000000000001,43.14999999999995
+surprise_x_adv,11,Kylian Mbappé Lottin,Paris Saint-Germain,Center Forward,3542,0.027536580364334203,8.950000000000001,26.0
+surprise_x_adv,12,Emma Stina Blackstenius,Sweden Women's,Center Forward,308,0.027385821372421588,4.0,77.14999999999995
+surprise_x_adv,13,Caitlin Jade Foord,Australia Women's,Left Midfield,212,0.027358472860489962,4.0,70.09999999999997
+surprise_x_adv,14,Jeremy Doku,Belgium,Left Wing,332,0.027072057477065776,3.0,50.04999999999998
+surprise_x_adv,15,Delphine Cascarino,France Women's,Right Wing,347,0.026857576805209168,6.800000000000001,44.099999999999994
+surprise_x_adv,16,Nicholas Williams Arthuer,Spain,Left Wing,362,0.02674768567725656,4.0,82.54999999999981
+surprise_x_adv,17,Clara Mateo,France Women's,Left Center Midfield,278,0.02670825050453813,6.0,57.099999999999966
+surprise_x_adv,18,Rafael Alexandre Conceição Leão,Portugal,Left Wing,204,0.026338553926183884,7.0,64.0
+surprise_x_adv,19,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,Right Center Forward,8537,0.026123794984850228,13.0,29.049999999999983
+surprise_x_adv,20,Vinícius José Paixão de Oliveira Júnior,Brazil,Left Wing,213,0.025855047438698216,5.0,71.19999999999982
+surprise_x_adv,21,Ousmane Dembélé,Barcelona,Right Wing,1761,0.02534022114741727,13.0,44.0
+surprise_x_adv,22,Amine Adli,Bayer Leverkusen,Left Attacking Midfield,447,0.025283089258496937,3.0,86.14999999999995
+surprise_x_adv,23,Lamine Yamal Nasraoui Ebana,Spain,Right Wing,296,0.02515461381003289,7.0,78.44999999999985
+surprise_x_adv,24,Klara Bühl,Germany Women's,Left Wing,557,0.025064873776694103,7.950000000000001,77.2999999999999
+surprise_x_adv,25,Nathan Tella,Bayer Leverkusen,Right Wing Back,317,0.024468336814932094,4.0,97.04999999999998
+rarity_x_adv,1,Victor Okoh Boniface,Bayer Leverkusen,Center Forward,560,0.005039007196827135,1.0,8.0
+rarity_x_adv,2,Pernille Mosegaard Harder,Denmark Women's,Center Attacking Midfield,320,0.004354254368806831,1.0,31.049999999999983
+rarity_x_adv,3,Athenea del Castillo Belvide,Spain Women's,Right Wing,260,0.004346792671226371,1.0,50.04999999999998
+rarity_x_adv,4,Cody Mathès Gakpo,Netherlands,Left Wing,323,0.0040909872602115545,2.0,35.0
+rarity_x_adv,5,Bethany Mead,England Women's,Right Wing,251,0.003987528517829201,2.0,35.04999999999998
+rarity_x_adv,6,Christoph Baumgartner,Austria,Center Attacking Midfield,254,0.0038221403359058746,1.950000000000001,60.19999999999993
+rarity_x_adv,7,Caitlin Jade Foord,Australia Women's,Left Midfield,212,0.0037825213560604754,2.0,63.099999999999966
+rarity_x_adv,8,Emma Stina Blackstenius,Sweden Women's,Center Forward,308,0.0037793919093334115,3.0,56.099999999999966
+rarity_x_adv,9,Kylian Mbappé Lottin,Paris Saint-Germain,Center Forward,3542,0.003733995074663004,8.0,21.0
+rarity_x_adv,10,Ruslan Malinovskiy,Ukraine,Left Wing,220,0.0036403515983296935,5.0,57.099999999999966
+rarity_x_adv,11,Jeremy Doku,Belgium,Left Wing,332,0.0036315092625825085,3.0,44.14999999999995
+rarity_x_adv,12,Nicholas Williams Arthuer,Spain,Left Wing,362,0.0036250868417316917,3.0,79.04999999999998
+rarity_x_adv,13,Jamal Musiala,Germany,Left Wing,558,0.0035906482023594735,3.950000000000001,52.099999999999966
+rarity_x_adv,14,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,Center Attacking Midfield,279,0.003536129625812449,5.0,76.0
+rarity_x_adv,15,Johanna Rytting-Kaneryd,Sweden Women's,Right Wing,470,0.0034638996535339027,4.0,75.09999999999997
+rarity_x_adv,16,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,Right Center Forward,8537,0.0033133305307277484,15.0,33.0
+rarity_x_adv,17,Delphine Cascarino,France Women's,Right Wing,347,0.0033111726773029514,10.0,50.0
+rarity_x_adv,18,Amine Adli,Bayer Leverkusen,Left Attacking Midfield,447,0.003308972217137113,4.0,80.24999999999991
+rarity_x_adv,19,Lamine Yamal Nasraoui Ebana,Spain,Right Wing,296,0.003302590091381856,8.0,77.04999999999998
+rarity_x_adv,20,Ousmane Dembélé,Barcelona,Right Wing,1761,0.0032945755310600957,12.950000000000001,44.0
+rarity_x_adv,21,Vinícius José Paixão de Oliveira Júnior,Brazil,Left Wing,213,0.0032825232069529317,5.0,87.74999999999989
+rarity_x_adv,22,Klara Bühl,Germany Women's,Left Wing,557,0.0032794520715740644,8.0,72.0
+rarity_x_adv,23,Rafael Alexandre Conceição Leão,Portugal,Left Wing,204,0.003256039095189656,10.0,66.14999999999995
+rarity_x_adv,24,Mikel Oyarzabal Ugarte,Spain,Right Wing,245,0.003251382712580708,2.0,141.24999999999991
+rarity_x_adv,25,Clara Mateo,France Women's,Left Center Midfield,278,0.0032113197884880104,10.950000000000001,66.09999999999997
+rarity_x_adv_completed,1,Victor Okoh Boniface,Bayer Leverkusen,Center Forward,560,0.004113407004375908,1.0,16.049999999999983
+rarity_x_adv_completed,2,Pernille Mosegaard Harder,Denmark Women's,Center Attacking Midfield,320,0.003999845437282197,1.0,26.049999999999983
+rarity_x_adv_completed,3,Bethany Mead,England Women's,Right Wing,251,0.0037913789164156753,1.0,37.0
+rarity_x_adv_completed,4,Cody Mathès Gakpo,Netherlands,Left Wing,323,0.0037436582081126994,2.0,36.0
+rarity_x_adv_completed,5,Caitlin Jade Foord,Australia Women's,Left Midfield,212,0.0034616347952385177,2.0,71.0
+rarity_x_adv_completed,6,Christoph Baumgartner,Austria,Center Attacking Midfield,254,0.003451168580092304,1.0,88.0
+rarity_x_adv_completed,7,Jeremy Doku,Belgium,Left Wing,332,0.003429305326936912,2.0,41.04999999999998
+rarity_x_adv_completed,8,Jamal Musiala,Germany,Left Wing,558,0.003427233825641201,2.950000000000001,45.0
+rarity_x_adv_completed,9,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,Center Attacking Midfield,279,0.0034141770289042974,3.950000000000001,64.0
+rarity_x_adv_completed,10,Nicholas Williams Arthuer,Spain,Left Wing,362,0.003386421080663223,2.0,92.49999999999983
+rarity_x_adv_completed,11,Athenea del Castillo Belvide,Spain Women's,Right Wing,260,0.003342468699414122,1.0,59.099999999999966
+rarity_x_adv_completed,12,Ruslan Malinovskiy,Ukraine,Left Wing,220,0.0033089373325772007,5.0,52.0
+rarity_x_adv_completed,13,Johanna Rytting-Kaneryd,Sweden Women's,Right Wing,470,0.00327787920703757,2.950000000000001,79.09999999999997
+rarity_x_adv_completed,14,Kylian Mbappé Lottin,Paris Saint-Germain,Center Forward,3542,0.0032667422812852637,9.0,26.0
+rarity_x_adv_completed,15,Nathan Tella,Bayer Leverkusen,Right Wing Back,317,0.0030982774480361043,3.0,83.24999999999991
+rarity_x_adv_completed,16,Emma Stina Blackstenius,Sweden Women's,Center Forward,308,0.003078875610594528,4.0,99.19999999999993
+rarity_x_adv_completed,17,Delphine Cascarino,France Women's,Right Wing,347,0.003076864343613899,10.0,38.099999999999994
+rarity_x_adv_completed,18,Ousmane Dembélé,Barcelona,Right Wing,1761,0.0030688810907317,10.0,40.0
+rarity_x_adv_completed,19,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,Right Center Forward,8537,0.0030594382023092074,15.0,30.0
+rarity_x_adv_completed,20,Mikel Oyarzabal Ugarte,Spain,Right Wing,245,0.0030288665606443407,1.0,156.09999999999997
+rarity_x_adv_completed,21,Lamine Yamal Nasraoui Ebana,Spain,Right Wing,296,0.0030125957330682245,8.0,86.09999999999997
+rarity_x_adv_completed,22,Clara Mateo,France Women's,Left Center Midfield,278,0.0029808766568310266,10.0,62.19999999999993
+rarity_x_adv_completed,23,Karim Benzema,France,Center Forward,261,0.002917590895255504,1.0,176.09999999999997
+rarity_x_adv_completed,24,Amine Adli,Bayer Leverkusen,Left Attacking Midfield,447,0.0028945709239288284,4.0,83.24999999999991
+rarity_x_adv_completed,25,Klara Bühl,Germany Women's,Left Wing,557,0.00287062711068455,8.0,81.14999999999995
+rarity_x_td,1,Robert Lewandowski,Poland,Left Center Forward,241,0.008507899224244511,1.0,85.19999999999993
+rarity_x_td,2,Emma Stina Blackstenius,Sweden Women's,Center Forward,308,0.007898435282607034,1.0,28.249999999999915
+rarity_x_td,3,Kai Havertz,Germany,Center Forward,351,0.007296378293410778,1.0,48.399999999999864
+rarity_x_td,4,Victor Okoh Boniface,Bayer Leverkusen,Center Forward,560,0.0072487249389677055,3.0,16.0
+rarity_x_td,5,Mary Boio Fowler,Australia Women's,Left Center Forward,204,0.0070561651550758876,2.0,61.099999999999994
+rarity_x_td,6,Bethany Mead,England Women's,Right Wing,251,0.007024500496382761,2.0,56.04999999999998
+rarity_x_td,7,Nathan Tella,Bayer Leverkusen,Right Wing Back,317,0.006880096554757218,2.0,49.249999999999915
+rarity_x_td,8,Andrija Živković,Serbia,Right Wing Back,229,0.006740223799311967,1.0,186.04999999999998
+rarity_x_td,9,Ruslan Malinovskiy,Ukraine,Left Wing,220,0.006645527814988633,2.0,84.2999999999999
+rarity_x_td,10,Kylian Mbappé Lottin,Paris Saint-Germain,Center Forward,3542,0.006472848306661307,6.0,25.0
+rarity_x_td,11,Tessa Wullaert,Belgium Women's,Center Forward,265,0.0064445784787822945,1.950000000000001,99.14999999999995
+rarity_x_td,12,Cristiano Ronaldo dos Santos Aveiro,Portugal,Center Forward,391,0.006335221962147011,3.0,55.14999999999995
+rarity_x_td,13,Chloe Kelly,England Women's,Right Wing,316,0.006209572362557476,5.950000000000001,47.14999999999995
+rarity_x_td,14,Alessia Russo,England Women's,Center Forward,390,0.005979733114570802,3.0,67.04999999999998
+rarity_x_td,15,Kadidiatou Diani,France Women's,Right Wing,460,0.005879897201027456,3.950000000000001,83.0
+rarity_x_td,16,Harry Kane,England,Center Forward,480,0.005872042403015701,7.0,53.0
+rarity_x_td,17,Jeremy Doku,Belgium,Left Wing,332,0.005624858122607706,2.0,98.09999999999997
+rarity_x_td,18,Álvaro Borja Morata Martín,Spain,Center Forward,356,0.005563258108781629,7.950000000000001,68.04999999999998
+rarity_x_td,19,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,Center Attacking Midfield,279,0.005396779405296371,7.0,133.0
+rarity_x_td,20,Breel-Donald Embolo,Switzerland,Center Forward,318,0.005369249482204608,4.0,88.04999999999998
+rarity_x_td,21,Lamine Yamal Nasraoui Ebana,Spain,Right Wing,296,0.005337398971206451,11.950000000000001,77.14999999999995
+rarity_x_td,22,Memphis Depay,Netherlands,Left Center Forward,488,0.0053339024121556835,11.950000000000001,59.04999999999998
+rarity_x_td,23,Adam Hložek,Bayer Leverkusen,Right Attacking Midfield,271,0.005231656983756328,8.950000000000001,80.04999999999998
+rarity_x_td,24,Clara Mateo,France Women's,Left Center Midfield,278,0.0052100117910405,12.0,72.0
+rarity_x_td,25,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,Right Center Forward,8537,0.005188479261088085,22.0,41.0
+rarity_x_upside,1,Victor Okoh Boniface,Bayer Leverkusen,Center Forward,560,0.006258311459162736,1.0,7.0
+rarity_x_upside,2,Athenea del Castillo Belvide,Spain Women's,Right Wing,260,0.005333758142916758,1.0,45.04999999999998
+rarity_x_upside,3,Emma Stina Blackstenius,Sweden Women's,Center Forward,308,0.0053180692962090294,1.0,29.049999999999983
+rarity_x_upside,4,Pernille Mosegaard Harder,Denmark Women's,Center Attacking Midfield,320,0.005190313295614925,2.0,32.0
+rarity_x_upside,5,Bethany Mead,England Women's,Right Wing,251,0.004987175531769355,2.0,35.0
+rarity_x_upside,6,Cody Mathès Gakpo,Netherlands,Left Wing,323,0.004931321460148013,2.0,35.04999999999998
+rarity_x_upside,7,Christoph Baumgartner,Austria,Center Attacking Midfield,254,0.0047874795924875745,2.0,51.04999999999998
+rarity_x_upside,8,Kylian Mbappé Lottin,Paris Saint-Germain,Center Forward,3542,0.0046112452287885184,8.0,20.0
+rarity_x_upside,9,Caitlin Jade Foord,Australia Women's,Left Midfield,212,0.00460507144654124,2.950000000000001,66.09999999999997
+rarity_x_upside,10,Jeremy Doku,Belgium,Left Wing,332,0.004353938366118432,4.0,48.0
+rarity_x_upside,11,Nicholas Williams Arthuer,Spain,Left Wing,362,0.004322008178214269,4.0,82.24999999999991
+rarity_x_upside,12,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,Center Attacking Midfield,279,0.0043167490454059975,5.0,84.04999999999998
+rarity_x_upside,13,Delphine Cascarino,France Women's,Right Wing,347,0.004251339793665667,8.9,38.0
+rarity_x_upside,14,Clara Mateo,France Women's,Left Center Midfield,278,0.004245038443110891,7.950000000000001,51.0
+rarity_x_upside,15,Ruslan Malinovskiy,Ukraine,Left Wing,220,0.0042142807882968114,6.0,70.0
+rarity_x_upside,16,Jamal Musiala,Germany,Left Wing,558,0.004212952600236683,5.0,59.099999999999966
+rarity_x_upside,17,Esther Gonzalez Rodríguez,Spain Women's,Center Forward,272,0.0041701918911016805,4.0,78.04999999999998
+rarity_x_upside,18,Vinícius José Paixão de Oliveira Júnior,Brazil,Left Wing,213,0.004167442821490656,2.0,98.14999999999998
+rarity_x_upside,19,Johanna Rytting-Kaneryd,Sweden Women's,Right Wing,470,0.0041661664079757806,5.0,79.04999999999998
+rarity_x_upside,20,Klara Bühl,Germany Women's,Left Wing,557,0.0040842115583038805,8.0,62.099999999999966
+rarity_x_upside,21,Lamine Yamal Nasraoui Ebana,Spain,Right Wing,296,0.003994404648255053,10.0,88.19999999999993
+rarity_x_upside,22,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,Right Center Forward,8537,0.003990363260747783,17.0,35.04999999999998
+rarity_x_upside,23,Amine Adli,Bayer Leverkusen,Left Attacking Midfield,447,0.003989746171715633,6.0,78.04999999999998
+rarity_x_upside,24,Mikel Oyarzabal Ugarte,Spain,Right Wing,245,0.003983474690470275,2.0,121.04999999999998
+rarity_x_upside,25,Chloe Kelly,England Women's,Right Wing,316,0.0039766123983906495,11.0,65.04999999999998
+good_rarity,1,Ruslan Malinovskiy,Ukraine,Left Wing,220,0.2904544427272727,1.0,16.0
+good_rarity,2,Rafael Alexandre Conceição Leão,Portugal,Left Wing,204,0.2740407200980392,2.0,57.099999999999966
+good_rarity,3,Jeremy Doku,Belgium,Left Wing,332,0.2693865692771084,1.0,27.049999999999983
+good_rarity,4,Kerolin Nicoli Israel Ferraz,Brazil Women's,Right Defensive Midfield,208,0.26787622788461535,2.0,25.549999999999983
+good_rarity,5,Mary Boio Fowler,Australia Women's,Left Center Forward,204,0.2651667406862745,1.0,87.19999999999999
+good_rarity,6,Pernille Mosegaard Harder,Denmark Women's,Center Attacking Midfield,320,0.2599914234375,3.0,37.04999999999998
+good_rarity,7,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,Right Center Forward,8537,0.2575700848307368,6.0,17.0
+good_rarity,8,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,Center Attacking Midfield,279,0.2526172340501792,3.0,63.0
+good_rarity,9,Lamine Yamal Nasraoui Ebana,Spain,Right Wing,296,0.2513499540540541,2.950000000000001,111.79999999999973
+good_rarity,10,Clara Mateo,France Women's,Left Center Midfield,278,0.25037063884892086,4.950000000000001,70.5999999999998
+good_rarity,11,Victor Okoh Boniface,Bayer Leverkusen,Center Forward,560,0.2474943341071429,6.0,47.0
+good_rarity,12,Christoph Baumgartner,Austria,Center Attacking Midfield,254,0.2473064062992126,2.950000000000001,87.5999999999998
+good_rarity,13,Ana Borges,Portugal Women's,Right Back,326,0.2470107064417178,3.0,100.04999999999998
+good_rarity,14,Neymar da Silva Santos Junior,Paris Saint-Germain,Left Wing,2650,0.24404612252830188,13.0,37.0
+good_rarity,15,Caitlin Jade Foord,Australia Women's,Left Midfield,212,0.24198559528301886,4.0,76.09999999999997
+good_rarity,16,Piotr Zieliński,Poland,Right Center Midfield,508,0.24189269527559057,13.0,41.04999999999998
+good_rarity,17,Sofiane Boufal,Morocco,Left Wing,228,0.23963240263157895,11.0,64.09999999999997
+good_rarity,18,Jule Brand,Germany Women's,Right Wing,414,0.23938172560386475,8.950000000000001,76.19999999999993
+good_rarity,19,Chloe Kelly,England Women's,Right Wing,316,0.23780344113924054,6.950000000000001,109.24999999999991
+good_rarity,20,Harry Kane,England,Center Forward,480,0.23714517208333333,6.950000000000001,105.49999999999983
+good_rarity,21,Federico Chiesa,Italy,Right Wing,282,0.23671494078014182,12.0,78.04999999999998
+good_rarity,22,Lindsey Michelle Heaps,United States Women's,Left Center Midfield,236,0.23644320720338985,1.0,133.1
+good_rarity,23,Delphine Cascarino,France Women's,Right Wing,347,0.23641558443804034,10.9,114.0
+good_rarity,24,Xavi Simons,Netherlands,Right Wing,354,0.2360406251412429,14.0,78.24999999999991
+good_rarity,25,Ousmane Dembélé,Barcelona,Right Wing,1761,0.23576705150482682,21.900000000000002,54.04999999999998
+good_surprise,1,Ruslan Malinovskiy,Ukraine,Left Wing,220,2.045633876051698,1.0,26.34999999999988
+good_surprise,2,Kerolin Nicoli Israel Ferraz,Brazil Women's,Right Defensive Midfield,208,1.941083685096154,2.0,9.0
+good_surprise,3,Ana Borges,Portugal Women's,Right Back,326,1.8650050857361964,1.950000000000001,57.14999999999995
+good_surprise,4,Katie Bowen,New Zealand Women's,Left Center Back,255,1.8182573888509803,4.0,25.44999999999999
+good_surprise,5,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,Center Attacking Midfield,279,1.81687772795502,2.0,27.0
+good_surprise,6,Rafael Alexandre Conceição Leão,Portugal,Left Wing,204,1.8035244794411764,3.0,116.54999999999981
+good_surprise,7,Luka Modrić,Croatia,Right Center Midfield,1281,1.7638022219660034,5.0,41.0
+good_surprise,8,Giorgi Kochorashvili,Georgia,Left Defensive Midfield,226,1.7436643799557523,2.0,70.2999999999999
+good_surprise,9,Mary Boio Fowler,Australia Women's,Left Center Forward,204,1.7404146700312426,3.9000000000000004,96.1
+good_surprise,10,Piotr Zieliński,Poland,Right Center Midfield,508,1.724101163582677,10.0,40.04999999999998
+good_surprise,11,Jeremy Doku,Belgium,Left Wing,332,1.721954939733735,3.0,82.09999999999997
+good_surprise,12,Thomas Teye Partey,Ghana,Right Defensive Midfield,208,1.7126159969711539,14.0,48.39999999999998
+good_surprise,13,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,Right Center Forward,8537,1.693702776399822,16.0,38.04999999999998
+good_surprise,14,Clara Mateo,France Women's,Left Center Midfield,278,1.6926081349388489,6.0,147.24999999999991
+good_surprise,15,Toni Kroos,Germany,Left Defensive Midfield,1118,1.6881069070930232,8.0,83.04999999999998
+good_surprise,16,Pernille Mosegaard Harder,Denmark Women's,Center Attacking Midfield,320,1.6856556861295329,6.0,136.04999999999998
+good_surprise,17,Aaron Mooy,Australia,Left Defensive Midfield,229,1.6758964119213973,1.0,154.5999999999999
+good_surprise,18,Lindsey Michelle Heaps,United States Women's,Left Center Midfield,236,1.6724517751864405,1.0,183.0
+good_surprise,19,Neymar da Silva Santos Junior,Paris Saint-Germain,Left Wing,2650,1.6615560872135022,22.950000000000003,49.0
+good_surprise,20,Rafaelle Leone Carvalho Souza,Brazil Women's,Left Center Back,278,1.6595165744964029,2.0,119.54999999999998
+good_surprise,21,Hakim Ziyech,Morocco,Right Wing,336,1.6496375286011904,9.950000000000001,94.04999999999998
+good_surprise,22,Sherida Spitse,Netherlands Women's,Right Center Back,671,1.64779585219076,4.0,163.49999999999983
+good_surprise,23,Jule Brand,Germany Women's,Right Wing,414,1.6440668510072463,8.0,137.0
+good_surprise,24,Sofiane Boufal,Morocco,Left Wing,228,1.6411081468070177,14.0,102.19999999999993
+good_surprise,25,Christoph Baumgartner,Austria,Center Attacking Midfield,254,1.6402075736606299,5.0,151.09999999999997
+tail_rarity,1,Ruslan Malinovskiy,Ukraine,Left Wing,220,0.33229022090909094,1.0,21.049999999999983
+tail_rarity,2,Rafael Alexandre Conceição Leão,Portugal,Left Wing,204,0.3302545284313726,1.0,58.64999999999978
+tail_rarity,3,Clara Mateo,France Women's,Left Center Midfield,278,0.30816849280575537,2.0,22.0
+tail_rarity,4,Mary Boio Fowler,Australia Women's,Left Center Forward,204,0.3073663132352941,1.9000000000000004,72.59999999999997
+tail_rarity,5,Jeremy Doku,Belgium,Left Wing,332,0.30153360903614457,2.0,40.14999999999995
+tail_rarity,6,Jule Brand,Germany Women's,Right Wing,414,0.30006718019323675,2.0,48.0
+tail_rarity,7,Kerolin Nicoli Israel Ferraz,Brazil Women's,Right Defensive Midfield,208,0.2983079360576923,4.0,58.0
+tail_rarity,8,Pernille Mosegaard Harder,Denmark Women's,Center Attacking Midfield,320,0.2968762771875,4.0,43.14999999999995
+tail_rarity,9,Victor Okoh Boniface,Bayer Leverkusen,Center Forward,560,0.29564856624999997,6.0,38.099999999999966
+tail_rarity,10,Romain Saïss,Morocco,Left Center Back,204,0.295341162254902,2.9000000000000004,262.69999999999993
+tail_rarity,11,Ana Borges,Portugal Women's,Right Back,326,0.29091617975460127,3.0,52.099999999999966
+tail_rarity,12,Christoph Baumgartner,Austria,Center Attacking Midfield,254,0.2889604173228346,4.0,75.0
+tail_rarity,13,Robert Lewandowski,Poland,Left Center Forward,241,0.28682164356846473,4.950000000000001,66.04999999999998
+tail_rarity,14,Katie Bowen,New Zealand Women's,Left Center Back,255,0.28677039686274514,9.0,46.44999999999999
+tail_rarity,15,Francisca Ramos Ribeiro Nazareth Sousa,Portugal Women's,Center Attacking Midfield,279,0.28477459928315413,3.0,104.14999999999995
+tail_rarity,16,Caitlin Jade Foord,Australia Women's,Left Midfield,212,0.2842718613207547,5.950000000000001,92.09999999999997
+tail_rarity,17,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,Right Center Forward,8537,0.28263559288977397,17.0,37.0
+tail_rarity,18,Delphine Cascarino,France Women's,Right Wing,347,0.2770752645533141,9.0,109.19999999999999
+tail_rarity,19,Vladimír Coufal,Czech Republic,Right Back,406,0.27696345049261084,8.0,92.0
+tail_rarity,20,Cody Mathès Gakpo,Netherlands,Left Wing,323,0.275785706501548,8.0,120.44999999999985
+tail_rarity,21,Harry Kane,England,Center Forward,480,0.27564132229166666,11.0,93.19999999999993
+tail_rarity,22,Lamine Yamal Nasraoui Ebana,Spain,Right Wing,296,0.27494703513513513,9.950000000000001,178.24999999999991
+tail_rarity,23,Breel-Donald Embolo,Switzerland,Center Forward,318,0.2745034940251572,12.900000000000002,90.04999999999998
+tail_rarity,24,Giorgi Kochorashvili,Georgia,Left Defensive Midfield,226,0.2744187238938053,5.0,86.04999999999998
+tail_rarity,25,Piotr Zieliński,Poland,Right Center Midfield,508,0.27341787598425193,21.0,53.0
+c51_tail_rarity,1,Ruslan Malinovskiy,Ukraine,Left Wing,220,0.16482391818181819,1.0,15.049999999999983
+c51_tail_rarity,2,Rafael Alexandre Conceição Leão,Portugal,Left Wing,204,0.1594433019607843,1.0,22.099999999999966
+c51_tail_rarity,3,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,Right Center Forward,8537,0.1570544995197376,2.0,8.0
+c51_tail_rarity,4,Jeremy Doku,Belgium,Left Wing,332,0.15079479006024096,2.0,21.0
+c51_tail_rarity,5,Leandro Trossard,Belgium,Right Wing,207,0.14544416811594202,3.0,31.049999999999983
+c51_tail_rarity,6,Lamine Yamal Nasraoui Ebana,Spain,Right Wing,296,0.1444876820945946,5.0,20.0
+c51_tail_rarity,7,Neymar da Silva Santos Junior,Paris Saint-Germain,Left Wing,2650,0.14347946332075473,5.0,22.0
+c51_tail_rarity,8,Jamal Musiala,Germany,Left Wing,558,0.1383097964157706,3.0,63.0
+c51_tail_rarity,9,Kevin De Bruyne,Belgium,Center Attacking Midfield,578,0.13642512422145328,4.0,42.0
+c51_tail_rarity,10,Vinícius José Paixão de Oliveira Júnior,Brazil,Left Wing,213,0.13549320093896713,7.0,36.0
+c51_tail_rarity,11,Cody Mathès Gakpo,Netherlands,Left Wing,323,0.13460945510835912,3.0,95.04999999999998
+c51_tail_rarity,12,Ramona Bachmann,Switzerland Women's,Center Forward,330,0.1325617975757576,5.0,71.2999999999999
+c51_tail_rarity,13,Ángel Fabián Di María Hernández,Paris Saint-Germain,Right Wing,1337,0.13249843433059086,5.950000000000001,40.0
+c51_tail_rarity,14,Pernille Mosegaard Harder,Denmark Women's,Center Attacking Midfield,320,0.1319063003125,3.0,97.24999999999991
+c51_tail_rarity,15,Ousmane Dembélé,Barcelona,Right Wing,1761,0.1314800806927882,10.0,39.0
+c51_tail_rarity,16,Kylian Mbappé Lottin,Paris Saint-Germain,Center Forward,3542,0.13027463020892152,13.950000000000001,39.0
+c51_tail_rarity,17,Jule Brand,Germany Women's,Right Wing,414,0.12837757922705315,5.0,72.39999999999986
+c51_tail_rarity,18,Andrija Živković,Serbia,Right Wing Back,229,0.12784648340611354,6.0,124.2999999999999
+c51_tail_rarity,19,Florian Wirtz,Bayer Leverkusen,Left Attacking Midfield,2235,0.12719131744966444,15.0,46.04999999999998
+c51_tail_rarity,20,Delphine Cascarino,France Women's,Right Wing,347,0.1262241204610951,7.9,109.19999999999999
+c51_tail_rarity,21,Leroy Sané,Germany,Right Wing,399,0.12583579949874688,4.950000000000001,122.09999999999997
+c51_tail_rarity,22,Aleksandr Golovin,Russia,Left Attacking Midfield,225,0.12410190888888888,12.950000000000001,109.09999999999997
+c51_tail_rarity,23,Jéssica da Silva,Portugal Women's,Right Center Forward,226,0.12377747477876105,2.950000000000001,174.34999999999988
+c51_tail_rarity,24,Victor Okoh Boniface,Bayer Leverkusen,Center Forward,560,0.12361038196428571,11.0,80.09999999999997
+c51_tail_rarity,25,Clara Mateo,France Women's,Left Center Midfield,278,0.12345552014388489,3.0,131.5499999999998
+unxpass,1,Ruslan Malinovskiy,Ukraine,Left Wing,220,0.27275135,2.0,54.0
+unxpass,2,Lindsey Michelle Heaps,United States Women's,Left Center Midfield,236,0.27131688444444446,1.0,88.19999999999999
+unxpass,3,Ana Borges,Portugal Women's,Right Back,326,0.2678884276497696,2.0,60.04999999999998
+unxpass,4,Katie Bowen,New Zealand Women's,Left Center Back,255,0.26711183018867923,2.0,152.0
+unxpass,5,Mary Boio Fowler,Australia Women's,Left Center Forward,204,0.267096193258427,1.0,166.39999999999998
+unxpass,6,Giorgi Kochorashvili,Georgia,Left Defensive Midfield,226,0.2615013465277778,3.0,60.04999999999998
+unxpass,7,Toni Kroos,Germany,Left Defensive Midfield,1118,0.2577512631452581,4.950000000000001,53.14999999999995
+unxpass,8,Aaron Mooy,Australia,Left Defensive Midfield,229,0.2570397790849673,2.0,62.59999999999991
+unxpass,9,Hakim Ziyech,Morocco,Right Wing,336,0.25536651276595745,4.0,51.0
+unxpass,10,Clara Mateo,France Women's,Left Center Midfield,278,0.2522314789808917,4.0,167.0
+unxpass,11,Leonardo Bonucci,Italy,Right Center Back,562,0.2512625229166667,5.0,64.0
+unxpass,12,Rafaelle Leone Carvalho Souza,Brazil Women's,Left Center Back,278,0.25115140783132534,2.0,57.54999999999998
+unxpass,13,Ondrej Celustka,Czech Republic,Right Center Back,210,0.2511238633333333,1.9000000000000004,110.49999999999997
+unxpass,14,Romain Saïss,Morocco,Left Center Back,204,0.2508200572519084,2.0,406.79999999999967
+unxpass,15,Woo-Young Jung,South Korea,Right Defensive Midfield,215,0.2505997123376623,1.8500000000000014,69.29999999999995
+unxpass,16,Vanessa Brigitte Gilles,Canada Women's,Left Center Back,264,0.2500473603448276,2.0,103.0
+unxpass,17,Luka Modrić,Croatia,Right Center Midfield,1281,0.24755998829663964,9.950000000000001,64.0
+unxpass,18,Natalia Kuikka,WNT Finland,Right Center Back,364,0.2459978986175115,8.0,117.49999999999983
+unxpass,19,Daley Blind,Netherlands,Left Center Back,627,0.2435258416490486,16.0,49.0
+unxpass,20,Sherida Spitse,Netherlands Women's,Right Center Back,671,0.24179019702760085,6.950000000000001,112.19999999999993
+unxpass,21,Lionel Andrés Messi Cuccittini,Paris Saint-Germain,Right Center Forward,8537,0.240373438424969,20.950000000000003,51.04999999999998
+unxpass,22,Neymar da Silva Santos Junior,Paris Saint-Germain,Left Wing,2650,0.24006316342088405,22.0,57.099999999999966
+unxpass,23,Thomas Teye Partey,Ghana,Right Defensive Midfield,208,0.23947241560283689,19.0,68.69999999999999
+unxpass,24,Fabian Lukas Schär,Switzerland,Right Center Back,509,0.23892016503067484,4.950000000000001,150.04999999999998
+unxpass,25,Kadeisha Buchanan,Canada Women's,Right Center Back,210,0.23801698275862068,5.0,132.0

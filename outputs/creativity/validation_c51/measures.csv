@@ -1,0 +1,14 @@
+measure,family,definition,in_scope,available
+rarity,baseline,originality only: rarity (mid-PIT) of the chosen action,469733,True
+advantage,baseline,"value only: Q(s,a) - V(s)",469733,True
+difficulty,baseline,"1 - P(success) of completed actions, 0 if failed",469564,True
+surprise_x_adv,product,"-log π(a) x max(A, 0)",469733,True
+rarity_x_adv,product,"rarity x max(A, 0)",469733,True
+rarity_x_adv_completed,product,"rarity x max(A, 0), completed actions only",469564,True
+rarity_x_td,product,"rarity x max(r + γV(s') - V(s), 0) (realized)",469733,True
+rarity_x_upside,product,rarity x E[(return - V)+],469733,True
+good_rarity,set,rarity among positive-advantage actions,469733,True
+good_surprise,set,-log π(a | positive-advantage actions),469733,True
+tail_rarity,set,rarity among actions whose success branch beats V(s),469733,True
+c51_tail_rarity,set,rarity among actions with a heavier right tail than the state (C51),469733,True
+unxpass,set,passes: rarity among passes if A > 0,306312,True
