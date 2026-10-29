@@ -25,11 +25,12 @@ modeling (A.2).
 | FIFA World Cup 2022 | 64 | 82,307 | |
 | FIFA Women's World Cup 2023 | 64 | 75,411 | |
 | UEFA Euro 2020 / 2024 | 51 / 51 | 66,329 / 65,796 | |
-| UEFA Women's Euro 2022 / 2025 | 31 / 31 | 36,341 / 34,964 | |
+| Africa Cup of Nations 2023 | 1 | 1 | Single match; its 360 data link to only one decision |
+| UEFA Women's Euro 2022 / 2025 | 30 / 31 | 36,341 / 34,964 | |
 | La Liga 2020/21 | 35 | 52,355 | FC Barcelona matches only |
-| Ligue 1 2021/22, 2022/23 | 26 / 32 | 34,061 / 42,343 | Paris Saint-Germain matches only |
-| Bundesliga 2023/24 | 34 | 42,637 | Bayer Leverkusen matches only |
-| MLS 2023 | 6 | 3,678 | Inter Miami matches only |
+| Ligue 1 2021/22, 2022/23 | 26 / 31 | 34,061 / 42,343 | Paris Saint-Germain matches only |
+| Bundesliga 2023/24 | 31 | 42,637 | Bayer Leverkusen matches only |
+| MLS 2023 | 3 | 3,678 | Inter Miami matches only |
 | Total | 418 usable (426) | 536,223 | 389,507 men's, 146,716 women's |
 
 **Decisions.** We define a decision as the moment a player chooses an on-ball action. We consider five action
@@ -181,20 +182,21 @@ probability levels above $10^{-5}$. Rarity is uniformly distributed with a mean 
 calibration, and remains so in every competition and for men and women alike, with means between 0.50 and 0.52.
 Temperature scaling (Guo et al., 2017) does not improve calibration further.
 
-We then compare player scores with the external FIFA ratings, ranking both within competition and position group to
-remove differences in level and role. Creativity correlates with the vision rating (Spearman ρ = 0.17, 95% CI
-[0.08, 0.27]), whereas usefulness alone does not (ρ = 0.01), with a difference of 0.15 [0.07, 0.24]. Creativity
-further correlates with passing, ball control and dribbling (ρ between 0.12 and 0.19) but not with strength, jumping
-or stamina (|ρ| < 0.08), and players labeled as playmakers in the game score higher than other players in their
-position (AUC = 0.62).
-
-We further compare known creative players with other players in the same position. As no established list of such
+We then compare known creative players with other players in the same position. As no established list of such
 players exists, an AI assistant (Claude) compiled a list of 48 players (30 men, 18 women) with a reputation as creative
 playmakers, passers or dribblers from general football knowledge at our request. We fixed this list by a
 version-controlled commit before any player scores were computed or inspected, but note that a reputation-based list
 may favor famous players. Of the 539 players with at least 200 in-scope decisions, 42 are on the list. Ranking players
 within position groups, known creative players score higher than other players (AUC = 0.65, 95% CI [0.57, 0.73]),
-whereas usefulness alone discriminates less well (AUC = 0.55), with a difference of 0.10 [0.02, 0.18].
+whereas usefulness alone discriminates less well (AUC = 0.55), with a difference of 0.10 [0.02, 0.18]. As this list reflects reputation and the judgment of an AI assistant, the
+FIFA ratings, which EA Sports' scouts assess independently of us, serve as an external check.
+
+We further compare player scores with the external FIFA ratings, ranking both within competition and position group to
+remove differences in level and role. Creativity correlates with the vision rating (Spearman ρ = 0.17, 95% CI
+[0.08, 0.27]), whereas usefulness alone does not (ρ = 0.01), with a difference of 0.15 [0.07, 0.24]. Creativity
+further correlates with passing, ball control and dribbling (ρ between 0.12 and 0.19) but not with strength, jumping
+or stamina (|ρ| < 0.08), and players labeled as playmakers in the game score higher than other players in their
+position (AUC = 0.62).
 
 As StatsBomb annotations are not used as model inputs for the decision itself, they provide independent controls.
 Among passes, through balls score higher than other passes (AUC = 0.82), whereas goal kicks and throw-ins do not
@@ -310,9 +312,13 @@ of the confirmatory set.
 | After a tactical shift: creativity (SD) | +0.023 [0.009, 0.036] | <0.001 |
 | After a tactical substitution: creativity / opportunity (SD) | +0.011 [−0.002, 0.025] / +0.046 [0.024, 0.068] | 0.114 / – |
 | Two or more creative players in a possession → shot / goal | +6.8 pp [5.7, 7.8] / +1.1 pp [0.7, 1.5] | – |
+| Top player's share of the possession's creativity → shot, per SD | −3.6 pp [−4.0, −3.1] | – |
 | Share of variance in player creativity due to use / opportunity | 1.00 / 0.13 (covariance −0.14) | – |
 | Surprise premium, all decisions (per unit rarity; mean action value 0.0097) | +0.0019 [0.0017, 0.0021] | <0.001 |
 | Surprise premium, passes (per unit rarity; mean pass value 0.007) | +0.0024 [0.0022, 0.0026] | <0.001 |
+| Creative decision → next teammate's situation value, per SD | +0.049 SD [0.046, 0.052] | – |
+| Creative decision → next teammate's distance to nearest opponent, per SD | −0.19 yd [−0.21, −0.17] | <0.001 |
+| Creative decision → next teammate's creative opportunity, per SD | +0.010 SD [0.007, 0.013] | <0.001 |
 | Creativity / usefulness vs. FIFA vision rating (Spearman, within position) | 0.17 [0.08, 0.27] / 0.01 [−0.08, 0.11] | – |
 | Known creative players vs. other players, within position (AUC) | 0.65 [0.57, 0.73] | – |
 
